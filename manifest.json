@@ -2,7 +2,7 @@
   "name": "Ernährungs-Tracker",
   "short_name": "Tracker",
   "description": "Kalorien, Protein & Wasser – täglich tracken",
-  "start_url": "/index.html",
+  "start_url": "/ernaehrungs-tracker/",
   "display": "standalone",
   "background_color": "#f6f8fb",
   "theme_color": "#1F3864",
