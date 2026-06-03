@@ -70,6 +70,8 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .ring .val { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; color: var(--ink); }
 .card .label { font-size: 13px; font-weight: 700; }
 .card .goal { font-size: 11px; color: var(--grey); margin-top: 1px; }
+.card .rest { font-size: 10.5px; color: var(--grey); margin-top: 3px; font-weight: 600; }
+.card .rest.over { color: var(--amber); }
 
 /* Makro-Verteilungsbalken */
 .macrobar-wrap { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(20,30,50,.05); }
@@ -196,6 +198,7 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
     <button class="navbtn" id="prevDay" aria-label="Vorheriger Tag">‹</button>
     <div class="datelabel" id="today"></div>
     <button class="navbtn" id="nextDay" aria-label="Nächster Tag">›</button>
+    <button class="navbtn" id="copyDay" aria-label="Tag kopieren" title="Tag kopieren">⧉</button>
     <button class="todaychip" id="todayBtn" style="display:none">Heute</button>
   </div>
 
@@ -210,21 +213,25 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
       <div class="ring" id="ringKcal"></div>
       <div class="label">Kalorien</div>
       <div class="goal"><span id="kcalNow">0</span> / <span id="kcalGoal">3600</span></div>
+      <div class="rest" id="kcalRest"></div>
     </div>
     <div class="card">
       <div class="ring" id="ringPro"></div>
       <div class="label">Protein</div>
       <div class="goal"><span id="proNow">0</span> / <span id="proGoal">170</span> g</div>
+      <div class="rest" id="proRest"></div>
     </div>
     <div class="card">
       <div class="ring" id="ringCarb"></div>
       <div class="label">Kohlenhydrate</div>
       <div class="goal"><span id="carbNow">0</span> / <span id="carbGoal">450</span> g</div>
+      <div class="rest" id="carbRest"></div>
     </div>
     <div class="card">
       <div class="ring" id="ringWat"></div>
       <div class="label">Wasser</div>
       <div class="goal"><span id="watNow">0</span> / <span id="watGoal">3,0</span> L</div>
+      <div class="rest" id="watRest"></div>
     </div>
   </div>
 
@@ -325,6 +332,23 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
   </div>
 </div>
 
+<!-- Tag-kopieren-Modal -->
+<div class="modal-bg" id="copyModal">
+  <div class="modal">
+    <h3>Tag kopieren</h3>
+    <p class="muted" style="margin:0 0 12px">Mahlzeiten eines anderen Tages in den angezeigten Tag übernehmen (sie werden angehängt, nichts überschrieben).</p>
+    <label>Von Tag <input id="copyFrom" type="date"></label>
+    <div class="row" style="margin-top:10px">
+      <button class="chip" id="copyPrev">Vortag</button>
+      <button class="chip" id="copyToday">Heute</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="copyCancel">Abbrechen</button>
+      <button class="btn" id="copyDo">Übernehmen</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ---------- Speicher-Schlüssel ---------- */
 const LS_GOALS = "lf_goals", LS_DATA = "lf_data", LS_PRESETS = "lf_presets";
@@ -403,6 +427,16 @@ function eff(k){
 }
 function sumDay(k, field){ return readDay(k).items.reduce((s,i)=> s + (i[field]||0), 0); }
 
+/* Wie weit darf man vorausplanen? (28 Tage) */
+function maxAheadKey(){ const d=new Date(); d.setDate(d.getDate()+28); return keyOf(d); }
+
+/* „Noch übrig" je Ring: positiv = noch offen, negativ = über Ziel */
+function setRest(id, rem, unit){
+  const el=document.getElementById(id);
+  if(rem>=0){ el.textContent=`noch ${rem} ${unit}`; el.classList.remove("over"); }
+  else      { el.textContent=`${-rem} ${unit} über`; el.classList.add("over"); }
+}
+
 /* ---------- Ring zeichnen ---------- */
 function ring(el, pct, color){
   const r=42, c=2*Math.PI*r, off=c*(1-Math.max(0,Math.min(pct,1)));
@@ -428,9 +462,11 @@ function render(){
   const dt = dateFromKey(viewKey);
   const wd = dt.toLocaleDateString("de-DE",{weekday:"long"});
   const dm = dt.toLocaleDateString("de-DE",{day:"numeric",month:"long"});
-  let prefix = ""; if (viewKey===tk) prefix="Heute · "; else if (viewKey===yk) prefix="Gestern · ";
+  const mk = keyOf(new Date(Date.now()+86400000));
+  let prefix = "";
+  if (viewKey===tk) prefix="Heute · "; else if (viewKey===yk) prefix="Gestern · "; else if (viewKey===mk) prefix="Morgen · ";
   document.getElementById("today").textContent = `${prefix}${wd}, ${dm}`;
-  document.getElementById("nextDay").disabled = (viewKey >= tk);
+  document.getElementById("nextDay").disabled = (viewKey >= maxAheadKey());
   document.getElementById("todayBtn").style.display = (viewKey===tk) ? "none" : "inline-block";
 
   // Trainingstag
@@ -452,6 +488,15 @@ function render(){
   ring(document.getElementById("ringCarb"), carb/g.carb, "#E08A1E");
   ring(document.getElementById("ringWat"),  d.water/(g.wat*1000), "#2196c4");
   document.getElementById("watBig").textContent = de1(d.water/1000)+" L";
+
+  // „Noch übrig" je Ring
+  setRest("kcalRest", g.kcal-kcal, "kcal");
+  setRest("proRest",  g.pro-pro,   "g");
+  setRest("carbRest", g.carb-carb, "g");
+  const remMl = Math.round(g.wat*1000 - d.water);
+  const wr = document.getElementById("watRest");
+  if(remMl>=0){ wr.textContent=`noch ${de1(remMl/1000)} L`; wr.classList.remove("over"); }
+  else        { wr.textContent=`${de1(-remMl/1000)} L über`; wr.classList.add("over"); }
 
   // Makro-Verteilung (nach Kalorien)
   const pcal=pro*4, ccal=carb*4, fcal=fat*9, tot=pcal+ccal+fcal;
@@ -625,7 +670,7 @@ document.querySelectorAll(".water .chip").forEach(b=> b.onclick=()=>{
 /* Datums-Navigation */
 function shiftDay(delta){
   const dt=dateFromKey(viewKey); dt.setDate(dt.getDate()+delta);
-  const nk=keyOf(dt); if(nk>todayKey()) return; viewKey=nk; render();
+  const nk=keyOf(dt); if(nk>maxAheadKey()) return; viewKey=nk; render();
 }
 document.getElementById("prevDay").onclick=()=>shiftDay(-1);
 document.getElementById("nextDay").onclick=()=>shiftDay(1);
@@ -673,6 +718,28 @@ document.getElementById("gSave").onclick=()=>{
           carb:Math.round(num("gCarb",goals.carb)), fat:Math.round(num("gFat",goals.fat)),
           wat:num("gWat",goals.wat) };
   save(); modal.classList.remove("show"); render();
+};
+
+/* Tag kopieren (nach YAZIOs „copy diary") */
+const copyModal=document.getElementById("copyModal");
+const copyFromEl=document.getElementById("copyFrom");
+document.getElementById("copyDay").onclick=()=>{
+  const p=dateFromKey(viewKey); p.setDate(p.getDate()-1);
+  copyFromEl.value=keyOf(p); copyFromEl.max=maxAheadKey();
+  copyModal.classList.add("show");
+};
+document.getElementById("copyPrev").onclick=()=>{ const p=dateFromKey(viewKey); p.setDate(p.getDate()-1); copyFromEl.value=keyOf(p); };
+document.getElementById("copyToday").onclick=()=>{ copyFromEl.value=todayKey(); };
+document.getElementById("copyCancel").onclick=()=>copyModal.classList.remove("show");
+copyModal.addEventListener("click",e=>{ if(e.target===copyModal) copyModal.classList.remove("show"); });
+document.getElementById("copyDo").onclick=()=>{
+  const src=copyFromEl.value;
+  if(!src || src===viewKey){ copyModal.classList.remove("show"); return; }
+  const items=readDay(src).items;
+  if(!items.length){ alert("Dieser Tag hat keine Einträge zum Kopieren."); return; }
+  const tgt=day();
+  items.forEach(it=> tgt.items.push({ n:it.n, k:it.k, p:it.p, c:it.c, f:it.f, slot:it.slot }));
+  save(); copyModal.classList.remove("show"); showFlash(); render();
 };
 
 /* Service Worker */
