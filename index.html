@@ -205,14 +205,14 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
   <label class="training-toggle">
     <input type="checkbox" id="trainingDay">
     Trainingstag / Spiel
-    <span class="training-badge" id="trainingBadge">+300 kcal · +75 g KH</span>
+    <span class="training-badge" id="trainingBadge">+400 kcal · +85 g KH · +0,5 L</span>
   </label>
 
   <div class="cards">
     <div class="card">
       <div class="ring" id="ringKcal"></div>
       <div class="label">Kalorien</div>
-      <div class="goal"><span id="kcalNow">0</span> / <span id="kcalGoal">3600</span></div>
+      <div class="goal"><span id="kcalNow">0</span> / <span id="kcalGoal">3300</span></div>
       <div class="rest" id="kcalRest"></div>
     </div>
     <div class="card">
@@ -385,12 +385,21 @@ const todayKey = () => keyOf(new Date());
 function dateFromKey(k){ return new Date(k+"T12:00:00"); }
 
 /* ---------- Zustand laden + Migration alter Daten ---------- */
-let goals   = JSON.parse(localStorage.getItem(LS_GOALS)   || "null") || {kcal:3600, pro:170, carb:450, fat:85, wat:3.0};
+/* Basis-Ziele = RUHETAG (aus „Nährstoff-Zielwerte & Herz-Kreislauf-Prävention", Teil A).
+   170 g P (680) + 450 g KH (1800) + 90 g F (810) ≈ 3.300 kcal — stimmig.
+   Der Trainings-/Spieltag kommt über den Aufschlag TRAIN dazu. */
+let goals   = JSON.parse(localStorage.getItem(LS_GOALS)   || "null") || {kcal:3300, pro:170, carb:450, fat:90, wat:3.0};
 let store   = JSON.parse(localStorage.getItem(LS_DATA)    || "{}");
 let presets = JSON.parse(localStorage.getItem(LS_PRESETS) || "[]");
 
 if (goals.carb == null) goals.carb = 450;
-if (goals.fat  == null) goals.fat  = 85;
+if (goals.fat  == null) goals.fat  = 90;
+// Einmal-Migration (2026-07): früher stand 3.600 kcal als Basis — das ist aber schon
+// der Trainingswert. Basis gehört auf den Ruhetag (3.300 kcal), Fett auf 90 g.
+if (goals.kcal === 3600 && goals.pro === 170 && goals.carb === 450) {
+  goals.kcal = 3300;
+  goals.fat  = 90;
+}
 for (const k in store) {
   const d = store[k];
   if (!d.items) continue;
@@ -420,10 +429,20 @@ function defaultSlot(){
   return "snack";
 }
 
-/* Wirksame Ziele eines Tages (Trainingstag hebt kcal + KH) */
+/* Aufschlag Ruhetag → Trainings-/Spieltag (Teil A der Nährstoff-Zielwerte):
+   3.300 → 3.700 kcal · 170 → 175 g P · 450 → 535 g KH · 90 → 95 g F · 3,0 → 3,5 L */
+const TRAIN = { kcal:400, pro:5, carb:85, fat:5, wat:0.5 };
+
+/* Wirksame Ziele eines Tages */
 function eff(k){
-  const t = readDay(k).training;
-  return { kcal: goals.kcal + (t?300:0), pro: goals.pro, carb: goals.carb + (t?75:0), fat: goals.fat, wat: goals.wat };
+  const t = readDay(k).training ? 1 : 0;
+  return {
+    kcal: goals.kcal + t*TRAIN.kcal,
+    pro:  goals.pro  + t*TRAIN.pro,
+    carb: goals.carb + t*TRAIN.carb,
+    fat:  goals.fat  + t*TRAIN.fat,
+    wat:  goals.wat  + t*TRAIN.wat,
+  };
 }
 function sumDay(k, field){ return readDay(k).items.reduce((s,i)=> s + (i[field]||0), 0); }
 
@@ -524,9 +543,11 @@ function render(){
 }
 
 function proteinStreak(){
+  // vergleicht je Tag gegen dessen wirksames Ziel (Trainingstag = 175 g statt 170 g)
+  const hit = k => sumDay(k,"p") >= eff(k).pro;
   let s=0; const d=new Date(); d.setDate(d.getDate()-1);          // ab gestern rückwärts
-  while (sumDay(keyOf(d),"p") >= goals.pro){ s++; d.setDate(d.getDate()-1); if(s>365) break; }
-  if (sumDay(todayKey(),"p") >= goals.pro) s++;                   // heute mitzählen, wenn schon erreicht
+  while (hit(keyOf(d))){ s++; d.setDate(d.getDate()-1); if(s>365) break; }
+  if (hit(todayKey())) s++;                                       // heute mitzählen, wenn schon erreicht
   return s;
 }
 
