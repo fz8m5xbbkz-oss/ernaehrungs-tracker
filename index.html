@@ -36,7 +36,25 @@ body {
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
 }
-.wrap { max-width: 760px; margin: 0 auto; padding: max(18px, env(safe-area-inset-top)) 16px 90px; }
+.wrap { max-width: 760px; margin: 0 auto; padding: max(18px, env(safe-area-inset-top)) 16px 120px; }
+
+/* Ansichten + Tab-Leiste */
+.view { display: none; }
+.view.on { display: block; }
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+  background: rgba(255,255,255,.97); border-top: 1px solid var(--line);
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  backdrop-filter: saturate(180%) blur(12px);
+}
+.tabbtn {
+  border: none; background: none; border-radius: 11px; cursor: pointer;
+  min-height: 52px; padding: 6px 2px; font-size: 10.5px; color: var(--grey); line-height: 1.2;
+}
+.tabbtn .ic { display: block; font-size: 19px; margin-bottom: 2px; }
+.tabbtn.active { color: var(--navy); font-weight: 800; background: #eef4fc; }
+@media (min-width: 760px) { .tabbar { max-width: 760px; margin: 0 auto; border-radius: 16px 16px 0 0; } }
 
 /* Kopf */
 header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -80,6 +98,18 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .hint.on { display: flex; }
 .hint .hx { background: none; border: none; color: #a4762c; font-size: 15px; cursor: pointer; padding: 0 2px; line-height: 1; }
 
+/* Tagesflags */
+.flagbar { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin: 10px 0 0; }
+.flagchip { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 9px 13px; font-size: 12.5px; cursor: pointer; color: var(--grey); min-height: 40px; }
+.flagchip.on { border-color: var(--navy); background: #eef4fc; color: var(--navy); font-weight: 700; }
+.flagzeit { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--grey); }
+.flagzeit input { border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; font-size: 14px; min-height: 40px; }
+
+/* Supplement-Begründungen */
+.suppzeile { font-size: 11.5px; color: var(--grey); line-height: 1.5; padding: 6px 0; border-bottom: 1px solid #f4f6fa; }
+.suppzeile:last-child { border-bottom: none; }
+.suppzeile b { color: var(--ink); }
+
 /* Migrations-Bestätigung (einmalig) */
 .notice { display: none; background: #eef4fc; border: 1px solid #cfe0f5; border-radius: 12px; padding: 11px 13px; margin-bottom: 12px; font-size: 12.5px; color: var(--navy); line-height: 1.45; }
 .notice.on { display: block; }
@@ -95,6 +125,14 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .wdrow select { border: 1px solid var(--line); border-radius: 9px; padding: 8px; font-size: 13px; background: #fff; min-height: 40px; }
 .modal-scroll { max-height: 68vh; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 4px; }
 
+/* Umschalter Tag / Woche */
+.modeseg { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 14px 0 0; flex-wrap: wrap; }
+.seg2 { display: inline-flex; background: #e4ebf6; border-radius: 11px; padding: 3px; }
+.seg2 button { border: none; background: none; border-radius: 9px; padding: 8px 18px; font-size: 12.5px; font-weight: 700; color: var(--grey); cursor: pointer; min-height: 40px; }
+.seg2 button.active { background: #fff; color: var(--navy); box-shadow: 0 1px 3px rgba(20,30,50,.13); }
+.modeseg .info { font-size: 11.5px; color: var(--grey); flex: 1; text-align: right; min-width: 120px; }
+.wochennote { font-size: 11.5px; color: var(--grey); margin: 8px 2px 0; line-height: 1.45; }
+
 /* Ringe */
 .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 14px 0; }
 @media (min-width: 620px) { .cards { grid-template-columns: repeat(4, 1fr); } }
@@ -106,7 +144,9 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .card .label { font-size: 13px; font-weight: 700; }
 .card .goal { font-size: 11px; color: var(--grey); margin-top: 1px; }
 .card .rest { font-size: 10.5px; color: var(--grey); margin-top: 3px; font-weight: 600; }
-.card .rest.over { color: var(--amber); }
+/* Bewusst KEINE Warnfarbe bei Überschreitung: eine Abweichung ist kein Versagen.
+   Die Woche gleicht aus — siehe Wochenring und „Tagesprofile & Zielwerte". */
+.card .rest.over { color: var(--grey); }
 
 /* Makro-Verteilungsbalken */
 .macrobar-wrap { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(20,30,50,.05); }
@@ -188,6 +228,73 @@ ul.log .meta { color: var(--grey); font-size: 11.5px; }
 .seg button.active[data-m="c"] { background: var(--amber); }
 .chartbox { height: 180px; margin-top: 4px; }
 
+/* KH-Baustein-Rechner */
+.khhead { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+.khrow { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 10px 2px; border-bottom: 1px solid #f0f3f8; font-size: 13px; }
+.khrow:last-child { border-bottom: none; }
+.khrow .nm { flex: 1; min-width: 0; }
+.khrow .nm small { display: block; color: var(--grey); font-size: 11px; margin-top: 2px; }
+.khrow .rechts { display: flex; flex-direction: column; align-items: flex-end; flex: none; }
+.khrow .menge { font-weight: 800; color: var(--amber); white-space: nowrap; }
+.khrow .kcal { color: var(--grey); font-size: 11.5px; white-space: nowrap; margin-top: 1px; }
+
+/* Rezepte */
+.rez { border: 1px solid var(--line); border-radius: 13px; margin-bottom: 9px; overflow: hidden; }
+.rez.dim { opacity: .5; }
+.rezhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px; cursor: pointer; min-height: 56px; }
+.rezhead .nm { font-size: 13.5px; font-weight: 700; }
+.rezhead .mt { font-size: 11.5px; color: var(--grey); margin-top: 2px; }
+.rezbody { display: none; padding: 0 12px 12px; border-top: 1px solid var(--line); }
+.rezbody.on { display: block; }
+.rezbody h5 { font-size: 12px; color: var(--navy); margin: 11px 0 5px; }
+.rezbody ul { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.6; color: var(--ink); }
+.badge { display: inline-block; border-radius: 999px; padding: 2px 8px; font-size: 10px; font-weight: 700; margin-left: 5px; vertical-align: middle; }
+.badge.ger { background: #eaf6ea; color: var(--green); }
+.badge.sch { background: #fff6e9; color: #8a5a12; }
+.badge.off { background: #fdeeee; color: #a03434; }
+.badge.kue { background: #eef4fc; color: var(--navy); }
+.portwahl { display: flex; align-items: center; gap: 8px; margin-top: 11px; flex-wrap: wrap; }
+.portwahl input { width: 62px; border: 1px solid var(--line); border-radius: 9px; padding: 9px; font-size: 14px; text-align: center; min-height: 40px; }
+.ortbar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--grey); }
+
+/* Prep-Planer */
+.preprow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 2px; border-bottom: 1px solid #f0f3f8; font-size: 13px; }
+.preprow .tagname small { display: block; color: var(--grey); font-size: 11px; margin-top: 1px; }
+.ortwahl { display: inline-flex; gap: 5px; flex: none; }
+.ortbtn { width: 46px; height: 44px; border: 1px solid var(--line); background: #fff; border-radius: 11px; font-size: 17px; cursor: pointer; }
+.ortbtn.on { border-color: var(--navy); background: #eef4fc; }
+.prepplan { background: #eef4fc; border: 1px solid #cfe0f5; border-radius: 12px; padding: 12px; margin-top: 12px; }
+.prepplan .kochtag { font-size: 13.5px; font-weight: 700; color: var(--navy); margin-bottom: 3px; }
+.einkaufrow { display: flex; align-items: center; gap: 10px; padding: 11px 2px; border-bottom: 1px solid #f0f3f8; font-size: 13px; cursor: pointer; min-height: 46px; }
+.einkaufrow input { width: 21px; height: 21px; accent-color: var(--green); flex: none; }
+.einkaufrow span { flex: 1; }
+.einkaufrow b { color: var(--navy); white-space: nowrap; }
+.einkaufrow.ab { color: var(--grey); text-decoration: line-through; }
+.einkaufrow.ab b { color: var(--grey); }
+
+/* Zeilen, Skalen, Statistik (Schlaf + Haut) */
+.zeile { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+.zeile:last-of-type { border-bottom: none; }
+.zeile input[type="time"] { border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; font-size: 15px; min-height: 44px; background: #fff; }
+.skala { display: inline-flex; gap: 6px; }
+.punkt { width: 44px; height: 44px; border: 1px solid var(--line); background: #fff; border-radius: 11px; font-size: 14px; font-weight: 700; color: var(--grey); cursor: pointer; }
+.punkt.on { background: var(--navy); color: #fff; border-color: transparent; }
+.statzeile { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f0f3f8; font-size: 13px; }
+.statzeile:last-child { border-bottom: none; }
+
+/* Haut: Routine-Schritte in fester Reihenfolge */
+.schritt { display: flex; align-items: center; gap: 11px; padding: 12px 2px; border-bottom: 1px solid #f0f3f8; font-size: 13.5px; cursor: pointer; min-height: 48px; }
+.schritt:last-child { border-bottom: none; }
+.schritt input { width: 22px; height: 22px; accent-color: var(--green); flex: none; }
+.schritt .nr { width: 22px; height: 22px; border-radius: 50%; background: #eef1f6; color: var(--grey); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none; }
+.schritt.fertig { color: var(--green); }
+.fotoleiste { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 8px; }
+.fotokachel { position: relative; flex: none; width: 84px; }
+.fotokachel img { width: 84px; height: 108px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); display: block; }
+.fotokachel .dat { font-size: 10px; color: var(--grey); text-align: center; margin-top: 3px; }
+.fotokachel .weg { position: absolute; top: 3px; right: 3px; background: rgba(255,255,255,.92); border: none; border-radius: 6px; font-size: 11px; padding: 3px 6px; cursor: pointer; color: #c0392b; }
+.notizfeld { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px; font-size: 13.5px; font-family: inherit; resize: vertical; min-height: 62px; }
+
 .muted { color: var(--grey); font-size: 11.5px; }
 footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22px; }
 
@@ -245,12 +352,27 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
     <button class="todaychip" id="todayBtn" style="display:none">Heute</button>
   </div>
 
+  <!-- ============ Ansicht: Heute ============ -->
+  <div class="view on" id="view-heute">
+
   <div class="profilbar" id="profilbar"></div>
 
   <div class="hint" id="profilHint">
     <span id="profilHintText"></span>
     <button class="hx" id="profilHintClose" aria-label="Hinweis schließen">✕</button>
   </div>
+
+  <div class="flagbar" id="flagbar"></div>
+  <div id="timingHinweise"></div>
+
+  <div class="modeseg">
+    <span class="seg2" id="ringSeg">
+      <button data-r="tag" class="active">Tag</button>
+      <button data-r="woche">Woche</button>
+    </span>
+    <span class="info" id="ringInfo"></span>
+  </div>
+  <div class="wochennote" id="wochenNote" style="display:none"></div>
 
   <div class="cards">
     <div class="card">
@@ -338,6 +460,13 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
   <div class="section">
     <h2>Supplements heute</h2>
     <div class="supps" id="supps"></div>
+    <div id="suppInfo" style="margin-top:12px"></div>
+    <div id="koffeinZaehler"></div>
+  </div>
+
+  <div class="section">
+    <h2>Wochenrückblick</h2>
+    <div id="wochenRueckblick"></div>
   </div>
 
   <div class="section">
@@ -352,13 +481,53 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
     <div class="chartbox"><canvas id="chart"></canvas></div>
   </div>
 
-  <div style="display:flex; gap:10px;">
-    <button class="btn ghost" id="exportBtn" style="flex:1">↓ Export</button>
-    <button class="btn danger" id="resetDay" style="flex:1">Tag zurücksetzen</button>
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <button class="btn ghost" id="exportBtn" style="flex:1 1 46%">↓ JSON</button>
+    <button class="btn ghost" id="exportMdTag" style="flex:1 1 46%">↓ Tag als Markdown</button>
+    <button class="btn ghost" id="exportMdWoche" style="flex:1 1 46%">↓ Woche als Markdown</button>
+    <button class="btn danger" id="resetDay" style="flex:1 1 46%">Tag zurücksetzen</button>
   </div>
+
+  </div><!-- /view-heute -->
+
+  <!-- ============ Ansicht: Rezepte ============ -->
+  <div class="view" id="view-rezepte">
+    <div class="section">
+      <h2>KH-Baustein-Rechner</h2>
+      <p class="muted" style="margin:0 0 10px">Protein konstant lassen, Beilage skalieren.</p>
+      <div id="khRechner"></div>
+    </div>
+    <div class="section">
+      <h2>Prep-Planer</h2>
+      <p class="muted" style="margin:0 0 10px">Welche Tage bist du unterwegs? Die App sagt, was du
+        wann vorkochen musst — und was dafür eingekauft wird.</p>
+      <div class="row" id="prepSpanne" style="margin-bottom:10px"></div>
+      <div id="prepTage"></div>
+      <div id="prepPlan"></div>
+    </div>
+
+    <div class="section">
+      <h2>Rezepte <span class="muted" id="rezepteOrt"></span></h2>
+      <div class="row" id="rezeptFilter" style="margin-bottom:10px"></div>
+      <div id="rezeptListe"></div>
+    </div>
+  </div>
+
+  <!-- ============ Ansicht: Haut ============ -->
+  <div class="view" id="view-haut"></div>
+
+  <!-- ============ Ansicht: Schlaf ============ -->
+  <div class="view" id="view-schlaf"></div>
 
   <footer>Lokal gespeichert · keine Daten verlassen dein Gerät</footer>
 </div>
+
+<nav class="tabbar" id="tabbar">
+  <button class="tabbtn active" data-v="heute"><span class="ic">📊</span>Heute</button>
+  <button class="tabbtn" data-v="rezepte"><span class="ic">🍳</span>Rezepte</button>
+  <button class="tabbtn" data-v="haut"><span class="ic">🧴</span>Haut</button>
+  <button class="tabbtn" data-v="schlaf"><span class="ic">😴</span>Schlaf</button>
+</nav>
 
 <!-- Ziele-Modal: vier Profile + Wochentags-Vorbelegung -->
 <div class="modal-bg" id="goalModal">
@@ -443,10 +612,25 @@ const WD_NAMEN  = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freita
 const SETTINGS_DEF = {
   koffein_deadline: "15:00",
   koffein_max_tage: 2,
-  skincare_start:   "2026-05-31",
-  klingen_intervall: 6,
+  skincare_start:   "2026-05-31",   // Routine-Start laut „Skincare MOC"
+  klingen_intervall: 6,             // Klinge alle 5–7 Rasuren
   wochenstart:      "mo",
+  klinge_gewechselt: null,          // Datum des letzten Klingenwechsels
+  eval_start:        null,          // Beginn des laufenden 12-Wochen-Fensters (leer = skincare_start)
 };
+
+/* Hautroutine — Reihenfolge ist fachlich festgelegt und im UI NICHT sortierbar.
+   Quelle: „Meine Basis-Routine" / „Skincare MOC". */
+const HAUT_AM = [
+  { id:"wasser", label:"Gesicht mit lauwarmem Wasser abspülen" },
+  { id:"moist",  label:"Ceramid-Moisturizer" },
+  { id:"spf",    label:"SPF 50 — immer als letzter Schritt" },
+];
+const HAUT_PM = [
+  { id:"cleanser",  label:"BHA-Reinigung (Salicylsäure 2 %)" },
+  { id:"wirkstoff", label:"Wirkstoff (Niacinamid 10 %, später Azelainsäure 10 %)" },
+  { id:"moist",     label:"Ceramid-Moisturizer" },
+];
 
 /* Hinweistexte je Profil (dezent, wegklickbar). Belege: „Post-Workout & Leber (2026-08)" §1.3 */
 const PROFIL_HINWEIS = {
@@ -467,13 +651,153 @@ const PRESETS = [
   {n:"Skyr 250 g",          k:140, p:28, c:8,  f:0 },
 ];
 
-const SUPPS = ["Kreatin", "B12", "Algenöl", "Vitamin D"];
+/* Supplemente — Quelle: „Supplement-Einnahmeplan" (Vault).
+   `monate`: nur in diesen Monaten einblenden (0 = Januar). */
+const SUPPS = [
+  { n:"B-Komplex",          hinweis:"Morgens zum Frühstück. Kaffee erst 1 h später — sonst sinkt die Eisenaufnahme um ~40 %." },
+  { n:"Jod/Kombitablette",  hinweis:"Morgens zum Frühstück, wegen des Eisenfumarats mit Essen. Hepcidin ist morgens am niedrigsten." },
+  { n:"Kreatin",            hinweis:"Timing ist nachweislich egal — Konstanz ist der Wirkfaktor. An eine feste Gewohnheit koppeln." },
+  { n:"Algenöl",            hinweis:"Zur größten Fettmahlzeit — die Aufnahme steigt deutlich mit Fett." },
+  { n:"Vitamin D",          hinweis:"Nur Oktober bis März, zur größten Fettmahlzeit. 800–1.000 IE.", monate:[9,10,11,0,1,2] },
+  { n:"Paranüsse",          hinweis:"1–2 Stück decken den Selenbedarf. Nicht mehr — der Sicherheitskorridor ist eng." },
+];
 
 const SLOTS = [
   {id:"frueh",  label:"Frühstück", ic:"🌅"},
   {id:"mittag", label:"Mittag",    ic:"☀️"},
   {id:"abend",  label:"Abend",     ic:"🌙"},
   {id:"snack",  label:"Snack",     ic:"⚡"},
+];
+
+/* ---------- Rezepte ----------
+   Quelle: „Rezepte" (Vault). Nährwerte gelten PRO PORTION.
+   ZUTATEN SIND IMMER AUF EINE PORTION NORMIERT — in der Notiz stehen sie teils für
+   4 Portionen. Nur so rechnet der Prep-Planer sauber hoch. `portionen` = übliche
+   Batch-Größe beim Kochen.
+   `genauigkeit`: "gerechnet"  = KH/Fett stehen in „Rezepte" (Post-Workout A–D)
+                  "geschaetzt" = KH/Fett aus „Tracker App-Spec", dort ausdrücklich als
+                                 „aus kcal/Protein abgeleitet" gekennzeichnet
+                  "offen"      = KH/Fett nirgends belegt, nicht geraten */
+const RECIPES_DEF = [
+  { id:"porridge", name:"Power-Porridge", slot:"frueh", portionen:1, zeit_min:5,
+    k:620, p:38, c:72, f:20, genauigkeit:"geschaetzt", kuechenbedarf:false, profile:["training","regen"],
+    hinweis:"Ohne Herd als Overnight Oats möglich.",
+    zutaten:[{name:"Haferflocken",menge:100,einheit:"g"},{name:"Sojamilch, angereichert",menge:300,einheit:"ml"},
+             {name:"Proteinpulver (Soja/Erbse)",menge:1,einheit:"Scoop"},{name:"Erdnussmus",menge:1,einheit:"EL"},
+             {name:"Beeren (TK)",menge:1,einheit:"Handvoll"},{name:"Leinsamen, geschrotet",menge:1,einheit:"EL"}],
+    schritte:["Haferflocken mit Sojamilch 3–4 Min köcheln (oder über Nacht quellen lassen).",
+              "Vom Herd nehmen, Proteinpulver bzw. Skyr einrühren — nicht mitkochen.",
+              "Mit Erdnussmus, Beeren und Leinsamen toppen."] },
+
+  { id:"tofuruehrei", name:"Tofu-Rührei auf Brot", slot:"frueh", portionen:1, zeit_min:10,
+    k:480, p:34, c:40, f:20, genauigkeit:"geschaetzt", kuechenbedarf:true, profile:[],
+    zutaten:[{name:"Tofu natur",menge:200,einheit:"g"},{name:"Zwiebel",menge:0.5,einheit:"Stück"},
+             {name:"Paprika",menge:0.5,einheit:"Stück"},{name:"Olivenöl",menge:1,einheit:"TL"},
+             {name:"Vollkornbrot",menge:2,einheit:"Scheibe"},{name:"Sojasauce",menge:1,einheit:"TL"}],
+    schritte:["Zwiebel und Paprika in Öl andünsten.",
+              "Tofu zerbröseln, dazugeben, mit Kurkuma, Paprikapulver und Sojasauce 4–5 Min braten.",
+              "Auf getoastetem Vollkornbrot servieren."] },
+
+  { id:"quinoabowl", name:"Tofu-Quinoa-Bowl", slot:"mittag", portionen:4, zeit_min:30,
+    k:620, p:42, c:58, f:24, genauigkeit:"geschaetzt", kuechenbedarf:true, profile:["ruhe"],
+    hinweis:"Hält 3–4 Tage — der klassische Meal-Prep-Kandidat.",
+    zutaten:[{name:"Tofu fest",menge:150,einheit:"g"},{name:"Quinoa",menge:75,einheit:"g"},
+             {name:"TK-Gemüse",menge:0.5,einheit:"Beutel"},{name:"Kichererbsen (Dose)",menge:0.25,einheit:"Dose"},
+             {name:"Sojasauce",menge:0.75,einheit:"EL"},{name:"Olivenöl",menge:0.5,einheit:"EL"}],
+    schritte:["Quinoa nach Packungsangabe garen.","Tofu in Öl goldbraun braten, mit Sojasauce ablöschen.",
+              "TK-Gemüse und Kichererbsen 5 Min mitbraten.","Mit Quinoa mischen und auf Boxen verteilen."] },
+
+  { id:"tempeh", name:"Tempeh-Stir-Fry mit Nudeln", slot:"mittag", portionen:2, zeit_min:20,
+    k:640, p:40, c:52, f:30, genauigkeit:"geschaetzt", kuechenbedarf:true, profile:["training"],
+    zutaten:[{name:"Tempeh",menge:150,einheit:"g"},{name:"Vollkornnudeln",menge:100,einheit:"g"},
+             {name:"TK-Gemüse",menge:0.5,einheit:"Beutel"},{name:"Sojasauce",menge:1.5,einheit:"EL"},
+             {name:"Olivenöl",menge:0.5,einheit:"EL"},{name:"Ingwer",menge:1,einheit:"Stück"}],
+    schritte:["Nudeln kochen.","Tempeh in Öl knusprig braten, Ingwer und Knoblauch dazu.",
+              "Gemüse mit Sojasauce 5 Min braten, Nudeln untermischen."] },
+
+  { id:"dal", name:"Rote-Linsen-Dal", slot:"abend", portionen:3, zeit_min:25,
+    k:450, p:25, c:62, f:11, genauigkeit:"geschaetzt", kuechenbedarf:true, profile:["ruhe"],
+    hinweis:"Einfrierbar.",
+    zutaten:[{name:"Rote Linsen",menge:100,einheit:"g"},{name:"Tomaten (Dose)",menge:0.33,einheit:"Dose"},
+             {name:"Zwiebel",menge:0.33,einheit:"Stück"},{name:"Knoblauch",menge:0.67,einheit:"Zehe"},
+             {name:"Olivenöl",menge:0.33,einheit:"EL"},{name:"Sojamilch, angereichert",menge:67,einheit:"ml"}],
+    schritte:["Zwiebel, Knoblauch und Ingwer in Öl andünsten, Gewürze kurz mitrösten.",
+              "Linsen, Tomaten und Wasser zugeben, 15–18 Min köcheln.",
+              "Mit Sojamilch verfeinern. Dazu Vollkornbrot oder gespülter Reis."] },
+
+  { id:"kichererbsen", name:"Kichererbsen-Gemüse-Pfanne", slot:"abend", portionen:2, zeit_min:15,
+    k:420, p:22, c:52, f:14, genauigkeit:"geschaetzt", kuechenbedarf:true, profile:["ruhe"],
+    zutaten:[{name:"Kichererbsen (Dose)",menge:1,einheit:"Dose"},{name:"Paprika",menge:0.5,einheit:"Stück"},
+             {name:"Zwiebel",menge:0.5,einheit:"Stück"},{name:"Tomaten (Dose)",menge:0.5,einheit:"Dose"},
+             {name:"Olivenöl",menge:0.5,einheit:"EL"}],
+    schritte:["Zwiebel und Paprika in Öl andünsten.","Kichererbsen, Tomaten und Gewürze 8–10 Min köcheln.",
+              "Spinat unterrühren. Dazu Brot oder Kartoffeln."] },
+
+  { id:"joghurtbowl", name:"High-Protein-Joghurt-Bowl", slot:"snack", portionen:1, zeit_min:3,
+    k:330, p:24, c:38, f:9, genauigkeit:"geschaetzt", kuechenbedarf:false, profile:[],
+    hinweis:"Eisen und Zink kommen über die Kerne.",
+    zutaten:[{name:"Sojajoghurt, angereichert",menge:250,einheit:"g"},{name:"Beeren (TK)",menge:1,einheit:"Handvoll"},
+             {name:"Kürbiskerne",menge:1,einheit:"EL"},{name:"Erdnussmus",menge:1,einheit:"TL"}],
+    schritte:["Alles verrühren."] },
+
+  { id:"shake", name:"Post-Workout-Shake", slot:"snack", portionen:1, zeit_min:2,
+    k:320, p:32, c:28, f:9, genauigkeit:"geschaetzt", kuechenbedarf:false, profile:["training"],
+    zutaten:[{name:"Sojamilch, angereichert",menge:300,einheit:"ml"},{name:"Proteinpulver (Soja/Erbse)",menge:1,einheit:"Scoop"},
+             {name:"Banane",menge:1,einheit:"Stück"},{name:"Haferflocken",menge:1,einheit:"EL"}],
+    schritte:["Mixen. Innerhalb von 1–2 h nach der Belastung."] },
+
+  /* --- Post-Workout & Regeneration (durchgerechnet, „Rezepte" Teil 6) --- */
+  { id:"pw_a", name:"A — Tofu-Reis-Standard", slot:"mittag", portionen:4, zeit_min:15,
+    k:1050, p:48, c:151, f:26, leucin:3.5, genauigkeit:"gerechnet", kuechenbedarf:true, profile:["training","regen"],
+    hinweis:"Der Arbeitspferd-Slot. Hält 4 Tage. Reis spülen und in viel Wasser kochen (Arsen ↓).",
+    zutaten:[{name:"Tofu fest",menge:200,einheit:"g"},{name:"Reis",menge:180,einheit:"g"},
+             {name:"Brokkoli",menge:200,einheit:"g"},{name:"Sesamöl",menge:8,einheit:"g"},
+             {name:"Sojasauce",menge:1,einheit:"EL"},{name:"Knoblauch",menge:1,einheit:"Zehe"}],
+    schritte:["Tofu in Sojasauce und Knoblauch marinieren, in Öl goldbraun braten.",
+              "Reis gespült in viel Wasser kochen.","Brokkoli dämpfen, alles mischen."] },
+
+  { id:"pw_b", name:"B — Flüssig nach dem Spiel", slot:"snack", portionen:1, zeit_min:2,
+    k:790, p:39, c:121, f:17, leucin:2.8, genauigkeit:"gerechnet", kuechenbedarf:false, profile:["spiel"],
+    hinweis:"Flüssig, weil die Belastung den Appetit unterdrückt — ein Praktikabilitätsargument, kein „anaboles Fenster\". Der einzige Slot der Woche, in dem schneller Zucker einen Zweck hat.",
+    zutaten:[{name:"Sojamilch, angereichert",menge:400,einheit:"ml"},{name:"Sojaflocken",menge:40,einheit:"g"},
+             {name:"Banane",menge:1,einheit:"Stück"},{name:"Datteln",menge:80,einheit:"g"},
+             {name:"Kakao",menge:15,einheit:"g"},{name:"Ahornsirup",menge:30,einheit:"g"}],
+    schritte:["Mixen."] },
+
+  { id:"pw_c", name:"C — Ruhetags-Nährstoffslot (Leber)", slot:"mittag", portionen:1, zeit_min:20,
+    k:790, p:48, c:97, f:23, leucin:3.5, genauigkeit:"gerechnet", kuechenbedarf:true, profile:["ruhe"],
+    hinweis:"Nur Hühner- oder Rinderleber, nie Schwein oder Kalb (Vitamin-A-Obergrenze). Ruhetag-Vormittag wegen Hepcidin. Kein Kaffee oder Tee ±1 h. Die Vitamin-C-Quelle ist Pflicht, nicht Deko.",
+    zutaten:[{name:"Hühnerleber",menge:125,einheit:"g"},{name:"Kartoffeln",menge:500,einheit:"g"},
+             {name:"Salat mit Paprika",menge:150,einheit:"g"},{name:"Butter",menge:10,einheit:"g"},
+             {name:"Tofu fest",menge:100,einheit:"g"},{name:"Zitrone",menge:0.5,einheit:"Stück"}],
+    schritte:["Kartoffeln im Ofen garen.","Zwiebeln in Butter andünsten, Leber medium braten — nicht durch, sonst zäh.",
+              "Salat mit Paprika und Zitrone dazu."] },
+
+  { id:"pw_d", name:"D — Abend-Slot (Post-Workout + Pre-Sleep)", slot:"abend", portionen:1, zeit_min:5,
+    k:1070, p:50, c:139, f:32, leucin:3.6, genauigkeit:"gerechnet", kuechenbedarf:false, profile:["training","regen"],
+    hinweis:"Für Di/Do nach dem Training gegen 21:15. Langsam verdaulich, deckt die Nacht ab. Am Vorabend vorbereitbar.",
+    zutaten:[{name:"Sojajoghurt, angereichert",menge:400,einheit:"g"},{name:"Haferflocken",menge:90,einheit:"g"},
+             {name:"Sojaflocken",menge:30,einheit:"g"},{name:"Banane",menge:1,einheit:"Stück"},
+             {name:"Datteln",menge:50,einheit:"g"},{name:"Nussmus",menge:20,einheit:"g"},
+             {name:"Beeren (TK)",menge:100,einheit:"g"}],
+    schritte:["Alles verrühren und 10 Min quellen lassen."] },
+
+  { id:"burger", name:"Bohnen-Burger", slot:"abend", portionen:3, zeit_min:25,
+    k:520, p:26, c:null, f:null, genauigkeit:"offen", kuechenbedarf:true, profile:[],
+    hinweis:"Wochenende. KH und Fett sind im Vault nicht durchgerechnet — beim Übernehmen bitte selbst ergänzen.",
+    zutaten:[{name:"Schwarze Bohnen (Dose)",menge:0.33,einheit:"Dose"},{name:"Haferflocken",menge:1,einheit:"EL"},
+             {name:"Zwiebel",menge:0.33,einheit:"Stück"},{name:"Vollkornbrötchen",menge:1,einheit:"Stück"}],
+    schritte:["Bohnen mit Haferflocken, Zwiebel und Gewürzen kneten.","Patties formen, je Seite 3–4 Min braten.",
+              "Im Brötchen belegen."] },
+];
+
+/* KH-Bausteine — „Rezepte", Tabelle „Die eine Stellschraube" (jeweils ~130 g KH) */
+const KH_BAUSTEINE = [
+  { name:"Reis (roh)",          basis_g:165, basis_kh:130, kcal:595 },
+  { name:"Kartoffeln",          basis_g:765, basis_kh:130, kcal:590 },
+  { name:"Vollkornnudeln (roh)",basis_g:210, basis_kh:130, kcal:735 },
+  { name:"Couscous/Bulgur (roh)",basis_g:180, basis_kh:130, kcal:655 },
+  { name:"Haferflocken + 1 Banane + 4 Datteln", basis_g:100, basis_kh:130, kcal:645, sonderform:true },
 ];
 
 /* ---------- Datum: lokale Tagesschlüssel (kein UTC-Versatz) ---------- */
@@ -504,6 +828,8 @@ function normalizeDay(d){
     if (it.zeit === undefined) it.zeit = null;      // Uhrzeit erst ab v5 erfasst
   });
   if (d.supps == null) d.supps = {};
+  // v3 kannte nur „B12"; seit v5 steht der B-Komplex dort (er liefert zusätzlich Riboflavin)
+  if (d.supps["B12"] !== undefined && d.supps["B-Komplex"] === undefined) d.supps["B-Komplex"] = d.supps["B12"];
   if (!d.flags) d.flags = { klausur:false, lernblock:false, ort:"heim", blockbeginn:null };
   if (!d.skin)  d.skin  = {
     am: { wasser:false, moist:false, spf:false },
@@ -559,7 +885,9 @@ if (!settings) settings = {...SETTINGS_DEF};
 PROFILE_IDS.forEach(p => { if (!profiles[p]) profiles[p] = {...PROFILE_DEF[p]}; });
 for (const s in SETTINGS_DEF) if (settings[s] === undefined) settings[s] = SETTINGS_DEF[s];
 
-/* 3. Tage migrieren: training:bool → profil:string, neue Felder auffüllen. */
+/* 3. Tage aufbereiten: training:bool → profil:string, neue Felder auffüllen.
+   Läuft bei JEDEM Start, nicht nur bei der Migration — so bekommen alte Tage auch
+   Felder, die erst später dazukommen. */
 for (const k in store) {
   const d = normalizeDay(store[k]);
   if (!d.profil) {
@@ -568,14 +896,14 @@ for (const k in store) {
   }
   delete d.training;   // überführt; der Rückweg liegt in lf_backup_v3
 }
+if (storedVersion < APP_VERSION) save();
 
-/* 4. Migrierten Stand sofort festschreiben — sonst läuft die Umstellung bei jedem
-   Start erneut und lf_version bliebe auf dem alten Wert stehen. */
-save();
 
 let viewKey     = todayKey();
 let activeSlot  = defaultSlot();
 let chartMetric = "k";
+let ringModus   = "tag";        // "tag" | "woche"
+let aktiveView  = "heute";      // "heute" | "rezepte" | "haut" | "schlaf"
 
 function blankDay(k){ return normalizeDay({ items:[], water:0, supps:{}, profil: wdProfil(k) }); }
 function readDay(k){ return store[k] || blankDay(k); }                                    // nur lesen, legt nichts an
@@ -608,14 +936,51 @@ function profilOf(k){ const d = store[k]; return (d && d.profil) || wdProfil(k);
 function eff(k){ return { ...(profiles[profilOf(k)] || profiles.ruhe) }; }
 function sumDay(k, field){ return readDay(k).items.reduce((s,i)=> s + (i[field]||0), 0); }
 
+/* ---------- Wochenrechnung ----------
+   „Ein schwacher Tag ist durch einen starken ausgleichbar. Die Wochensumme zählt
+   mehr als der einzelne Tag." — „Tagesprofile & Zielwerte", Makro-Wochenbudget. */
+function wochenStartKey(k){
+  const d = dateFromKey(k), wd = d.getDay();                       // 0 = Sonntag
+  const versatz = (settings.wochenstart === "so") ? wd : (wd === 0 ? 6 : wd - 1);
+  d.setDate(d.getDate() - versatz);
+  return keyOf(d);
+}
+function wochenKeys(k){
+  const start = dateFromKey(wochenStartKey(k)), arr = [];
+  for (let i = 0; i < 7; i++){ const d = new Date(start); d.setDate(d.getDate() + i); arr.push(keyOf(d)); }
+  return arr;
+}
+/* Wochenziel = Summe der sieben Tagesprofile — NICHT fest verdrahtet. Ändert sich
+   automatisch mit den Profilen und der Wochentagszuordnung. Mit den Vorgabewerten
+   ergibt das 25.400 kcal · 1.215 g P · 3.740 g KH · 615 g F. */
+function wochenZiel(k){
+  return wochenKeys(k).reduce((s, key) => {
+    const g = eff(key);
+    return { kcal:s.kcal+g.kcal, pro:s.pro+g.pro, carb:s.carb+g.carb, fat:s.fat+g.fat, wat:s.wat+g.wat };
+  }, {kcal:0, pro:0, carb:0, fat:0, wat:0});
+}
+function wochenIst(k){
+  return wochenKeys(k).reduce((s, key) => ({
+    kcal:  s.kcal  + sumDay(key,"k"), pro:  s.pro  + sumDay(key,"p"),
+    carb:  s.carb  + sumDay(key,"c"), fat:  s.fat  + sumDay(key,"f"),
+    water: s.water + readDay(key).water
+  }), {kcal:0, pro:0, carb:0, fat:0, water:0});
+}
+/* Tage der Woche, die noch vor uns liegen (heute mitgezählt). 0 = Woche ist vorbei. */
+function wochenRestTage(k){
+  const tk = todayKey();
+  return wochenKeys(k).filter(x => x >= tk).length;
+}
+
 /* Wie weit darf man vorausplanen? (28 Tage) */
 function maxAheadKey(){ const d=new Date(); d.setDate(d.getDate()+28); return keyOf(d); }
 
-/* „Noch übrig" je Ring: positiv = noch offen, negativ = über Ziel */
+/* „Noch übrig" je Ring: positiv = noch offen, negativ = über Ziel.
+   Sachlich formuliert, ohne Warnfarbe — eine Überschreitung ist kein Versagen. */
 function setRest(id, rem, unit){
   const el=document.getElementById(id);
-  if(rem>=0){ el.textContent=`noch ${rem} ${unit}`; el.classList.remove("over"); }
-  else      { el.textContent=`${-rem} ${unit} über`; el.classList.add("over"); }
+  if(rem>=0){ el.textContent=`noch ${nf(rem)} ${unit}`; el.classList.remove("over"); }
+  else      { el.textContent=`${nf(-rem)} ${unit} über`; el.classList.add("over"); }
 }
 
 /* ---------- Ring zeichnen ---------- */
@@ -630,8 +995,9 @@ function ring(el, pct, color){
      <div class="val">${Math.round(pct*100)}%</div>`;
 }
 
-/* ---------- Deutsche Zahl ---------- */
+/* ---------- Deutsche Zahlen ---------- */
 const de1 = x => x.toFixed(1).replace(".", ",");
+const nf  = x => Math.round(x).toLocaleString("de-DE");     // Tausenderpunkt
 
 /* ---------- Hauptrender ---------- */
 function render(){
@@ -653,29 +1019,35 @@ function render(){
   // Tagesprofil
   renderProfil();
 
-  // Summen + wirksame Ziele
-  const g = eff(viewKey);
-  const kcal=sumDay(viewKey,"k"), pro=sumDay(viewKey,"p"), carb=sumDay(viewKey,"c"), fat=sumDay(viewKey,"f");
+  // Summen + wirksame Ziele — je nach Umschalter Tag oder ganze Woche
+  const wModus = (ringModus === "woche");
+  const g   = wModus ? wochenZiel(viewKey) : eff(viewKey);
+  const ist = wModus ? wochenIst(viewKey)
+                     : { kcal:sumDay(viewKey,"k"), pro:sumDay(viewKey,"p"),
+                         carb:sumDay(viewKey,"c"), fat:sumDay(viewKey,"f"), water:d.water };
+  const kcal = ist.kcal, pro = ist.pro, carb = ist.carb, fat = ist.fat;
 
-  document.getElementById("kcalNow").textContent=kcal; document.getElementById("kcalGoal").textContent=g.kcal;
-  document.getElementById("proNow").textContent=pro;   document.getElementById("proGoal").textContent=g.pro;
-  document.getElementById("carbNow").textContent=carb; document.getElementById("carbGoal").textContent=g.carb;
-  document.getElementById("watNow").textContent=de1(d.water/1000); document.getElementById("watGoal").textContent=de1(g.wat);
+  document.getElementById("kcalNow").textContent = nf(kcal); document.getElementById("kcalGoal").textContent = nf(g.kcal);
+  document.getElementById("proNow").textContent  = nf(pro);  document.getElementById("proGoal").textContent  = nf(g.pro);
+  document.getElementById("carbNow").textContent = nf(carb); document.getElementById("carbGoal").textContent = nf(g.carb);
+  document.getElementById("watNow").textContent  = de1(ist.water/1000); document.getElementById("watGoal").textContent = de1(g.wat);
 
   ring(document.getElementById("ringKcal"), kcal/g.kcal, "#1F3864");
   ring(document.getElementById("ringPro"),  pro/g.pro,   "#2E7D32");
   ring(document.getElementById("ringCarb"), carb/g.carb, "#E08A1E");
-  ring(document.getElementById("ringWat"),  d.water/(g.wat*1000), "#2196c4");
-  document.getElementById("watBig").textContent = de1(d.water/1000)+" L";
+  ring(document.getElementById("ringWat"),  ist.water/(g.wat*1000), "#2196c4");
+  document.getElementById("watBig").textContent = de1(d.water/1000)+" L";   // Wasser-Sektion bleibt tagesbezogen
 
   // „Noch übrig" je Ring
   setRest("kcalRest", g.kcal-kcal, "kcal");
   setRest("proRest",  g.pro-pro,   "g");
   setRest("carbRest", g.carb-carb, "g");
-  const remMl = Math.round(g.wat*1000 - d.water);
+  const remMl = Math.round(g.wat*1000 - ist.water);
   const wr = document.getElementById("watRest");
   if(remMl>=0){ wr.textContent=`noch ${de1(remMl/1000)} L`; wr.classList.remove("over"); }
   else        { wr.textContent=`${de1(-remMl/1000)} L über`; wr.classList.add("over"); }
+
+  renderWochenInfo(wModus);
 
   // Makro-Verteilung (nach Kalorien)
   const pcal=pro*4, ccal=carb*4, fcal=fat*9, tot=pcal+ccal+fcal;
@@ -684,9 +1056,9 @@ function render(){
   document.getElementById("mbC").style.width=w(ccal);
   document.getElementById("mbF").style.width=w(fcal);
   document.getElementById("mbLeg").innerHTML =
-    `<span><span class="dot" style="background:var(--green)"></span>Eiweiß <b>${pro} g</b></span>
-     <span><span class="dot" style="background:var(--amber)"></span>KH <b>${carb} g</b></span>
-     <span><span class="dot" style="background:var(--violet)"></span>Fett <b>${fat} g</b></span>`;
+    `<span><span class="dot" style="background:var(--green)"></span>Eiweiß <b>${nf(pro)} g</b></span>
+     <span><span class="dot" style="background:var(--amber)"></span>KH <b>${nf(carb)} g</b></span>
+     <span><span class="dot" style="background:var(--violet)"></span>Fett <b>${nf(fat)} g</b></span>`;
 
   // Streak
   const st = proteinStreak();
@@ -695,11 +1067,18 @@ function render(){
   if (st>0) document.getElementById("streakText").textContent =
     `${st} ${st===1?"Tag":"Tage"} in Folge Protein-Ziel getroffen — weiter so!`;
 
-  renderSlots();
-  renderMyPresets();
-  renderLog(d);
-  renderSupps(d);
-  drawChart();
+  // Nur die sichtbare Ansicht neu zeichnen
+  if (aktiveView === "heute"){
+    renderFlags(); renderTiming();
+    renderSlots(); renderMyPresets(); renderLog(d); renderSupps(d);
+    renderKoffein(); renderRueckblick(); drawChart();
+  } else if (aktiveView === "rezepte"){
+    renderKhRechner(); renderPrep(); renderRezepte();
+  } else if (aktiveView === "haut"){
+    renderHaut();
+  } else if (aktiveView === "schlaf"){
+    renderSchlaf();
+  }
 }
 
 function proteinStreak(){
@@ -709,6 +1088,739 @@ function proteinStreak(){
   while (hit(keyOf(d))){ s++; d.setDate(d.getDate()-1); if(s>365) break; }
   if (hit(todayKey())) s++;                                       // heute mitzählen, wenn schon erreicht
   return s;
+}
+
+/* ---------- Ansichten ---------- */
+function switchView(v){
+  aktiveView = v;
+  document.querySelectorAll(".view").forEach(el => el.classList.toggle("on", el.id === "view-" + v));
+  document.querySelectorAll("#tabbar .tabbtn").forEach(b => b.classList.toggle("active", b.dataset.v === v));
+  window.scrollTo(0, 0);
+  render();
+}
+
+/* ---------- KH-Baustein-Rechner ----------
+   Kernidee aus „Rezepte": Protein konstant lassen, Beilage skalieren.
+   Die Bausteintabelle gilt für ~130 g KH und wird linear auf die Rest-KH skaliert. */
+function renderKhRechner(){
+  const el = document.getElementById("khRechner");
+  const ziel = eff(viewKey).carb;
+  const rest = ziel - sumDay(viewKey, "c");
+
+  if (rest <= 0){
+    el.innerHTML = `<p class="muted">Das KH-Ziel dieses Tages (${nf(ziel)} g) ist erreicht.
+      ${rest < 0 ? `Aktuell ${nf(-rest)} g darüber — die Woche gleicht das aus.` : ""}</p>`;
+    return;
+  }
+  const zeilen = KH_BAUSTEINE.map(b => {
+    const faktor = rest / b.basis_kh;
+    const menge  = Math.round(b.basis_g * faktor);
+    const kcal   = Math.round(b.kcal * faktor);
+    return `<div class="khrow">
+        <span class="nm">${b.sonderform ? "Haferflocken" : b.name}
+          ${b.sonderform ? "<small>dazu Banane und Datteln anteilig</small>" : ""}</span>
+        <span class="rechts"><span class="menge">${nf(menge)} g</span><span class="kcal">${nf(kcal)} kcal</span></span>
+      </div>`;
+  }).join("");
+
+  el.innerHTML = `<div class="khhead">Noch ${nf(rest)} g Kohlenhydrate — das entspricht:</div>${zeilen}`;
+}
+
+/* ---------- Rezepte ---------- */
+function renderRezepte(){
+  const d = readDay(viewKey);
+  const ort = (d.flags && d.flags.ort) || "heim";
+  const profil = profilOf(viewKey);
+
+  // Ort-Umschalter: Logistikfaktor, kein Ernährungsfaktor
+  document.getElementById("rezepteOrt").textContent = ort === "auswaerts" ? "· ohne Küche zuerst" : "";
+  const filter = document.getElementById("rezeptFilter");
+  filter.innerHTML = "";
+  const ortbar = document.createElement("div");
+  ortbar.className = "ortbar";
+  ortbar.innerHTML = `<span>📍 Heute:</span>`;
+  [["heim","zu Hause"],["auswaerts","auswärts"]].forEach(([wert, label]) => {
+    const b = document.createElement("button");
+    b.className = "chip" + (ort === wert ? " active" : "");
+    b.textContent = label;
+    if (ort === wert) { b.style.borderColor = "var(--navy)"; b.style.background = "#eef4fc"; b.style.fontWeight = "700"; }
+    b.onclick = () => { day().flags.ort = wert; save(); render(); };
+    ortbar.appendChild(b);
+  });
+  filter.appendChild(ortbar);
+
+  // Sortierung: passend zum Profil zuerst; auswärts rutschen Küchenrezepte ans Ende
+  const sortiert = [...RECIPES_DEF].sort((a, b) => {
+    if (ort === "auswaerts" && a.kuechenbedarf !== b.kuechenbedarf) return a.kuechenbedarf ? 1 : -1;
+    const ap = a.profile.includes(profil) ? 0 : 1, bp = b.profile.includes(profil) ? 0 : 1;
+    return ap - bp;
+  });
+
+  const liste = document.getElementById("rezeptListe");
+  liste.innerHTML = "";
+  sortiert.forEach(r => {
+    const gedimmt = (ort === "auswaerts" && r.kuechenbedarf);
+    const box = document.createElement("div");
+    box.className = "rez" + (gedimmt ? " dim" : "");
+
+    const genau = { gerechnet:["ger","durchgerechnet"], geschaetzt:["sch","geschätzt"], offen:["off","KH/Fett offen"] }[r.genauigkeit];
+    const makros = r.c == null ? `${r.k} kcal · ${r.p} g P` : `${r.k} kcal · ${r.p} g P · ${r.c} g KH · ${r.f} g F`;
+
+    box.innerHTML = `
+      <div class="rezhead">
+        <div>
+          <div class="nm">${r.name}${r.profile.includes(profil) ? ' <span class="badge kue">passt heute</span>' : ""}</div>
+          <div class="mt">${makros}</div>
+          <div class="mt">${r.zeit_min} Min · ergibt ${r.portionen} ${r.portionen === 1 ? "Portion" : "Portionen"}
+            <span class="badge ${genau[0]}">${genau[1]}</span>
+            ${r.kuechenbedarf ? '<span class="badge kue">Küche nötig</span>' : ""}</div>
+        </div>
+        <span class="muted">▾</span>
+      </div>
+      <div class="rezbody">
+        ${r.hinweis ? `<p class="muted" style="margin:10px 0 0">${r.hinweis}</p>` : ""}
+        ${r.leucin ? `<p class="muted" style="margin:6px 0 0">Leucin ~${de1(r.leucin)} g</p>` : ""}
+        <h5>Zutaten <span class="muted">(je Portion)</span></h5>
+        <ul>${r.zutaten.map(z => `<li>${mengeText(z.menge)} ${z.einheit} ${z.name}</li>`).join("")}</ul>
+        <h5>Zubereitung</h5>
+        <ul>${r.schritte.map(s => `<li>${s}</li>`).join("")}</ul>
+        <div class="portwahl">
+          <label class="muted">Portionen</label>
+          <input type="number" min="0.5" step="0.5" value="1" inputmode="decimal" data-port="${r.id}">
+          <button class="btn" data-uebernehmen="${r.id}">In den Tag übernehmen</button>
+        </div>
+      </div>`;
+
+    box.querySelector(".rezhead").onclick = () => box.querySelector(".rezbody").classList.toggle("on");
+    box.querySelector("[data-uebernehmen]").onclick = () => {
+      const anz = parseFloat(box.querySelector("[data-port]").value.replace(",", ".")) || 1;
+      activeSlot = r.slot;
+      addItem({
+        n: `${r.name}${anz !== 1 ? ` (${mengeText(anz)}×)` : ""}`,
+        k: Math.round(r.k * anz), p: Math.round(r.p * anz),
+        c: r.c == null ? 0 : Math.round(r.c * anz), f: r.f == null ? 0 : Math.round(r.f * anz)
+      });
+      switchView("heute");
+    };
+    liste.appendChild(box);
+  });
+}
+
+/* ---------- Fotospeicher (IndexedDB) ----------
+   Fotos gehören nicht in localStorage (5-MB-Grenze). Sie verlassen das Gerät nie:
+   kein Upload, kein Teilen, kein externer Dienst. */
+function dbOeffnen(){
+  return new Promise((ok, fehler) => {
+    const req = indexedDB.open("lf_tracker", 1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains("lf_photos")) db.createObjectStore("lf_photos", { keyPath:"id" });
+    };
+    req.onsuccess = e => ok(e.target.result);
+    req.onerror   = () => fehler(req.error);
+  });
+}
+async function fotoSpeichern(blob, winkel){
+  const db = await dbOeffnen();
+  return new Promise((ok, fehler) => {
+    const tx = db.transaction("lf_photos", "readwrite");
+    tx.objectStore("lf_photos").put({ id: Date.now() + "-" + Math.random().toString(36).slice(2,7),
+                                      datum: viewKey, blob, winkel });
+    tx.oncomplete = () => ok(); tx.onerror = () => fehler(tx.error);
+  });
+}
+async function fotosLaden(){
+  const db = await dbOeffnen();
+  return new Promise((ok, fehler) => {
+    const req = db.transaction("lf_photos", "readonly").objectStore("lf_photos").getAll();
+    req.onsuccess = () => ok((req.result || []).sort((a,b) => a.datum.localeCompare(b.datum)));
+    req.onerror   = () => fehler(req.error);
+  });
+}
+async function fotoLoeschen(id){
+  const db = await dbOeffnen();
+  return new Promise(ok => {
+    const tx = db.transaction("lf_photos", "readwrite");
+    tx.objectStore("lf_photos").delete(id);
+    tx.oncomplete = () => ok();
+  });
+}
+
+/* ---------- Haut ----------
+   Rein deskriptiv und kosmetisch. Keine Diagnose, kein Score, keine Muttermal-Bewertung —
+   Naevi gehören zum Hautarzt („Skincare MOC", Sicherheits-Leitplanken). */
+function renderHaut(){
+  const d = readDay(viewKey);
+  const sk = d.skin;
+  const istSpieltag = profilOf(viewKey) === "spiel";
+
+  /* Zwei getrennte Daten: skincare_start ist der Routine-Start (31.05.2026, fix) und
+     trägt die Angabe „läuft seit Woche X". eval_start ist der Beginn des laufenden
+     Bewertungsfensters und wandert weiter, wenn eine Auswertung erledigt ist.
+     12 Wochen sind der Standard-Endpunkt aller Akne-Studien („Skincare MOC"). */
+  const start     = new Date(settings.skincare_start + "T12:00:00");
+  const evalStart = new Date((settings.eval_start || settings.skincare_start) + "T12:00:00");
+  const woche     = Math.floor((dateFromKey(viewKey) - start) / 86400000 / 7) + 1;
+  const evalTage  = Math.floor((dateFromKey(viewKey) - evalStart) / 86400000);
+  const restTage  = 84 - evalTage;
+  const faellig   = evalTage >= 84;
+
+  // Klingenzähler
+  const seit = settings.klinge_gewechselt;
+  const rasuren = Object.keys(store).filter(k => (!seit || k > seit) && store[k].skin && store[k].skin.rasur).length;
+
+  // Konsistenz der letzten 4 Wochen
+  const vier = letzteTage(28, viewKey);
+  const amVoll = vier.filter(k => { const s = readDay(k).skin; return s && s.am && s.am.wasser && s.am.moist && s.am.spf; }).length;
+  const pmVoll = vier.filter(k => { const s = readDay(k).skin; return s && s.pm && s.pm.cleanser && s.pm.wirkstoff && s.pm.moist; }).length;
+
+  document.getElementById("view-haut").innerHTML = `
+    ${faellig ? `<div class="notice on" style="display:block">
+      <b>12 Wochen sind um.</b><br>
+      Das ist der Standard-Endpunkt aller Akne-Studien — vorher aussagelos, danach ist Weiterwarten
+      nicht mehr evidenzgestützt. Drei Fragen:
+      <ul style="margin:8px 0 0; padding-left:18px; line-height:1.6">
+        <li>Sind die Komedonen unverändert?</li>
+        <li>Ist die Rötung besser geworden?</li>
+        <li>Eskalation mit dem Hautarzt besprechen?</li>
+      </ul>
+      <button id="fensterWeiter">Fenster auf die nächsten 12 Wochen stellen</button>
+    </div>` : ""}
+
+    <div class="section">
+      <h2>Morgens</h2>
+      <div id="hautAm"></div>
+      <p class="muted" style="margin:10px 0 0">SPF bildet einen dünnen Filterfilm. Wird danach noch
+        Moisturizer aufgetragen, bricht der Film mechanisch auf — deshalb ist diese Reihenfolge fest.</p>
+    </div>
+
+    <div class="section">
+      <h2>Abends</h2>
+      <div id="hautPm"></div>
+    </div>
+
+    <div class="section">
+      <h2>Heute außerdem</h2>
+      ${istSpieltag ? `<label class="schritt${sk.spf_nachgelegt ? " fertig" : ""}">
+        <input type="checkbox" id="skSpfNach" ${sk.spf_nachgelegt ? "checked" : ""}>
+        <span>SPF zur Halbzeit nachgelegt</span></label>
+        <p class="muted" style="margin:6px 0 12px">Nachlegen schlägt Lichtschutzfaktor: Schweiß reißt
+        fleckige Lücken in den Film. Bei Wochenendspielen der wirksamste Einzelpunkt.</p>` : ""}
+
+      <label class="schritt${sk.rasur ? " fertig" : ""}">
+        <input type="checkbox" id="skRasur" ${sk.rasur ? "checked" : ""}>
+        <span>Rasiert</span></label>
+      <div class="statzeile"><span>Rasuren mit dieser Klinge</span><b>${rasuren}</b></div>
+      ${rasuren >= settings.klingen_intervall
+        ? `<p class="muted" style="margin:6px 0 0">Klinge wechseln (Intervall: alle 5–7 Rasuren).</p>` : ""}
+      <button class="btn ghost" id="klingeNeu" style="margin-top:9px">Klinge gewechselt</button>
+    </div>
+
+    <div class="section">
+      <h2>Zustand</h2>
+      <p class="muted" style="margin:0 0 10px">Beschreibend, nicht bewertend — 1 ruhig bis 5 stark gereizt.</p>
+      <div class="zeile"><span>Heute</span><span class="skala" id="skZustand"></span></div>
+      <textarea class="notizfeld" id="skNotiz" placeholder="Notiz (optional)" style="margin-top:11px">${sk.notiz || ""}</textarea>
+    </div>
+
+    <div class="section">
+      <h2>Baseline-Fotos</h2>
+      <p class="muted" style="margin:0 0 10px">Gleiche Beleuchtung, gleicher Abstand, gleicher Winkel —
+        sonst ist der Vergleich wertlos. Die Fotos bleiben auf dem Gerät.</p>
+      <div class="fotoleiste" id="fotoLeiste"><span class="muted">lädt …</span></div>
+      <div class="row">
+        ${["frontal","links","rechts"].map(w =>
+          `<label class="chip">📷 ${w}<input type="file" accept="image/*" capture="user" data-winkel="${w}" style="display:none"></label>`).join("")}
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Konsistenz — 4 Wochen</h2>
+      <div class="statzeile"><span>Morgenroutine vollständig</span><b>${amVoll} von 28 Tagen (${Math.round(amVoll/28*100)} %)</b></div>
+      <div class="statzeile"><span>Abendroutine vollständig</span><b>${pmVoll} von 28 Tagen (${Math.round(pmVoll/28*100)} %)</b></div>
+      <div class="statzeile"><span>Routine läuft seit</span><b>Woche ${woche}</b></div>
+      ${!faellig ? `<div class="statzeile"><span>Bis zur Auswertung</span><b>noch ${restTage} Tage</b></div>` : ""}
+      <p class="muted" style="margin:10px 0 0">Das ist die einzige Zahl, die die App zur Haut ausrechnet.</p>
+    </div>`;
+
+  // Routineschritte
+  const bauen = (ziel, liste, gruppe) => {
+    const el = document.getElementById(ziel); el.innerHTML = "";
+    liste.forEach((s, i) => {
+      const an = !!(sk[gruppe] && sk[gruppe][s.id]);
+      const lab = document.createElement("label");
+      lab.className = "schritt" + (an ? " fertig" : "");
+      lab.innerHTML = `<input type="checkbox" ${an ? "checked" : ""}><span class="nr">${i+1}</span><span>${s.label}</span>`;
+      lab.querySelector("input").onchange = e => {
+        const dd = day(); if (!dd.skin[gruppe]) dd.skin[gruppe] = {};
+        dd.skin[gruppe][s.id] = e.target.checked; save(); render();
+      };
+      el.appendChild(lab);
+    });
+  };
+  bauen("hautAm", HAUT_AM, "am");
+  bauen("hautPm", HAUT_PM, "pm");
+
+  // Zustandsskala
+  const skala = document.getElementById("skZustand");
+  for (let i = 1; i <= 5; i++){
+    const b = document.createElement("button");
+    b.className = "punkt" + (sk.zustand === i ? " on" : "");
+    b.textContent = i;
+    b.onclick = () => { day().skin.zustand = (sk.zustand === i ? null : i); save(); render(); };
+    skala.appendChild(b);
+  }
+
+  const setzen = (id, fn) => { const el = document.getElementById(id); if (el) el.onchange = fn; };
+  setzen("skSpfNach", e => { day().skin.spf_nachgelegt = e.target.checked; save(); render(); });
+  setzen("skRasur",   e => { day().skin.rasur = e.target.checked; save(); render(); });
+  const notiz = document.getElementById("skNotiz");
+  if (notiz) notiz.onchange = e => { day().skin.notiz = e.target.value; save(); };
+  const klinge = document.getElementById("klingeNeu");
+  if (klinge) klinge.onclick = () => { settings.klinge_gewechselt = viewKey; save(); render(); };
+  const weiter = document.getElementById("fensterWeiter");
+  if (weiter) weiter.onclick = () => {
+    settings.eval_start = viewKey;      // neues Fenster ab heute; Routine-Start bleibt unberührt
+    save(); render();
+  };
+
+  // Foto-Eingaben
+  document.querySelectorAll('#view-haut input[type="file"]').forEach(inp => {
+    inp.onchange = async e => {
+      const datei = e.target.files && e.target.files[0];
+      if (!datei) return;
+      await fotoSpeichern(datei, inp.dataset.winkel);
+      e.target.value = "";
+      renderFotos();
+    };
+  });
+  renderFotos();
+}
+
+async function renderFotos(){
+  const leiste = document.getElementById("fotoLeiste");
+  if (!leiste) return;
+  let fotos = [];
+  try { fotos = await fotosLaden(); }
+  catch { leiste.innerHTML = '<span class="muted">Fotospeicher nicht verfügbar.</span>'; return; }
+  if (!fotos.length){ leiste.innerHTML = '<span class="muted">Noch keine Aufnahmen.</span>'; return; }
+  leiste.innerHTML = "";
+  fotos.forEach(f => {
+    const kachel = document.createElement("div");
+    kachel.className = "fotokachel";
+    const url = URL.createObjectURL(f.blob);
+    kachel.innerHTML = `<img src="${url}" alt="${f.winkel} vom ${f.datum}">
+      <button class="weg" title="Foto löschen">✕</button>
+      <div class="dat">${dateFromKey(f.datum).toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})} · ${f.winkel}</div>`;
+    kachel.querySelector(".weg").onclick = async () => {
+      if (!confirm("Dieses Foto löschen?")) return;
+      await fotoLoeschen(f.id); URL.revokeObjectURL(url); renderFotos();
+    };
+    leiste.appendChild(kachel);
+  });
+}
+
+/* ---------- Schlaf ----------
+   Genau drei Eingaben. Die App misst nichts, was sie nicht messen kann:
+   keine Schlafphasen, kein Tiefschlaf, kein Score. */
+function bettMinuten(bett){
+  const [h,m] = bett.split(":").map(Number);
+  let min = h*60 + m;
+  if (min < 12*60) min += 24*60;      // 00:30 zählt als 24:30, sonst zerreißt die Statistik
+  return min;
+}
+function schlafDauer(s){
+  if (!s || !s.bett || !s.auf) return null;
+  const [bh,bm] = s.bett.split(":").map(Number), [ah,am] = s.auf.split(":").map(Number);
+  let min = (ah*60+am) - (bh*60+bm);
+  if (min <= 0) min += 24*60;
+  return min;
+}
+const alsStunden = min => `${Math.floor(min/60)} h ${String(min%60).padStart(2,"0")} min`;
+
+function letzteTage(n, ab){
+  const arr = [], d = dateFromKey(ab || todayKey());
+  for (let i = 0; i < n; i++){ arr.push(keyOf(d)); d.setDate(d.getDate()-1); }
+  return arr;
+}
+function standardabweichung(werte){
+  if (werte.length < 2) return null;
+  const m = werte.reduce((a,b)=>a+b,0) / werte.length;
+  return Math.sqrt(werte.reduce((s,x)=>s+(x-m)**2,0) / (werte.length-1));
+}
+
+function renderSchlaf(){
+  const d = readDay(viewKey), s = d.sleep || {bett:null, auf:null, subjektiv:null};
+  const dauer = schlafDauer(s);
+
+  // 7-Tage-Mittel und Regelmäßigkeit
+  const letzte7 = letzteTage(7, viewKey).map(k => readDay(k).sleep).filter(x => x && x.bett && x.auf);
+  const dauern  = letzte7.map(schlafDauer).filter(x => x != null);
+  const mittel  = dauern.length ? dauern.reduce((a,b)=>a+b,0)/dauern.length : null;
+  const sd      = standardabweichung(letzte7.map(x => bettMinuten(x.bett)));
+
+  document.getElementById("view-schlaf").innerHTML = `
+    <div class="section">
+      <h2>Schlaf — ${dateFromKey(viewKey).toLocaleDateString("de-DE",{weekday:"long", day:"numeric", month:"long"})}</h2>
+      <p class="muted" style="margin:0 0 12px">Die Nacht <b>auf</b> diesen Tag.</p>
+      <label class="zeile">Zu Bett <input type="time" id="slBett" value="${s.bett||""}"></label>
+      <label class="zeile">Aufgestanden <input type="time" id="slAuf" value="${s.auf||""}"></label>
+      <div class="zeile"><span>Gefühlte Qualität</span><span class="skala" id="slQual"></span></div>
+      ${dauer != null ? `<p class="muted" style="margin:12px 0 0">Dauer: <b>${alsStunden(dauer)}</b></p>` : ""}
+    </div>
+
+    <div class="section">
+      <h2>Sieben Tage</h2>
+      ${dauern.length
+        ? `<div class="statzeile"><span>Mittlere Dauer</span><b>${alsStunden(Math.round(mittel))}</b></div>
+           <div class="statzeile"><span>Regelmäßigkeit <span class="muted">(Streuung der Zubettgehzeit)</span></span>
+             <b>${sd != null ? "± " + Math.round(sd) + " min" : "—"}</b></div>
+           <p class="muted" style="margin:10px 0 0">Erfasst an ${dauern.length} von 7 Tagen.
+             Die App zeigt bewusst Regelmäßigkeit statt eines Scores — sie ist die Größe, die sich beeinflussen lässt.</p>`
+        : `<p class="muted" style="margin:0">Noch keine Nächte erfasst.</p>`}
+    </div>
+    ${schlafVergleich()}`;
+
+  // Qualitätsskala 1–5
+  const skala = document.getElementById("slQual");
+  for (let i = 1; i <= 5; i++){
+    const b = document.createElement("button");
+    b.className = "punkt" + (s.subjektiv === i ? " on" : "");
+    b.textContent = i;
+    b.onclick = () => { day().sleep.subjektiv = (s.subjektiv === i ? null : i); save(); render(); };
+    skala.appendChild(b);
+  }
+  document.getElementById("slBett").onchange = e => { day().sleep.bett = e.target.value || null; save(); render(); };
+  document.getElementById("slAuf").onchange  = e => { day().sleep.auf  = e.target.value || null; save(); render(); };
+}
+
+/* Deskriptiver Vergleich ab 14 erfassten Nächten — ohne Ursachenbehauptung. */
+function schlafVergleich(){
+  const keys = letzteTage(28, viewKey).filter(k => { const s = readDay(k).sleep; return s && s.bett && s.auf; });
+  if (keys.length < 14) return `<div class="section"><h2>Trainingstage im Vergleich</h2>
+    <p class="muted" style="margin:0">Ab 14 erfassten Nächten vergleicht die App Trainingstage mit den übrigen Tagen.
+    Bisher erfasst: ${keys.length}.</p></div>`;
+
+  const grp = { training:[], rest:[] }, qual = { training:[], rest:[] };
+  keys.forEach(k => {
+    const ziel = profilOf(k) === "training" ? "training" : "rest";
+    grp[ziel].push(schlafDauer(readDay(k).sleep));
+    const q = readDay(k).sleep.subjektiv; if (q) qual[ziel].push(q);
+  });
+  if (!grp.training.length || !grp.rest.length) return "";
+  const mw = a => a.reduce((x,y)=>x+y,0)/a.length;
+  const diff = Math.round(mw(grp.training) - mw(grp.rest));
+  const qd = (qual.training.length && qual.rest.length) ? (mw(qual.training) - mw(qual.rest)) : null;
+
+  return `<div class="section"><h2>Trainingstage im Vergleich</h2>
+    <div class="statzeile"><span>Trainingstage (${grp.training.length})</span><b>${alsStunden(Math.round(mw(grp.training)))}</b></div>
+    <div class="statzeile"><span>Übrige Tage (${grp.rest.length})</span><b>${alsStunden(Math.round(mw(grp.rest)))}</b></div>
+    <p class="muted" style="margin:10px 0 0">Im Schnitt ${Math.abs(diff)} min
+      ${diff < 0 ? "kürzer" : "länger"} an Trainingstagen${qd != null
+        ? `, die gefühlte Qualität liegt ${Math.abs(qd).toFixed(1).replace(".",",")} Punkte ${qd < 0 ? "niedriger" : "höher"}` : ""}.
+      Das ist eine Beobachtung, keine Ursache.</p></div>`;
+}
+
+/* ---------- Prep-Planer + Einkaufsliste ----------
+   Der Ort ist ein Logistik-, kein Ernährungsfaktor: Er ändert keine Makros, sondern
+   nur, was vorgekocht mit muss. Gerechnet wird mit den auf eine Portion normierten
+   Zutatenmengen — geschätzt wird hier nichts. */
+let prepTageAnzahl = 4;
+
+function renderPrep(){
+  // Spannen-Auswahl
+  const spanne = document.getElementById("prepSpanne");
+  spanne.innerHTML = "";
+  [3,4,5,7].forEach(n => {
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.textContent = `${n} Tage`;
+    if (n === prepTageAnzahl){ b.style.borderColor = "var(--navy)"; b.style.background = "#eef4fc"; b.style.fontWeight = "700"; }
+    b.onclick = () => { prepTageAnzahl = n; renderPrep(); };
+    spanne.appendChild(b);
+  });
+
+  // Tage ab dem angezeigten Tag
+  const tage = [];
+  const d0 = dateFromKey(viewKey);
+  for (let i = 0; i < prepTageAnzahl; i++){ const d = new Date(d0); d.setDate(d.getDate()+i); tage.push(keyOf(d)); }
+
+  const liste = document.getElementById("prepTage");
+  liste.innerHTML = "";
+  tage.forEach(k => {
+    const tag = readDay(k);
+    const ort = (tag.flags && tag.flags.ort) || "heim";
+    const zeile = document.createElement("div");
+    zeile.className = "preprow";
+    zeile.innerHTML = `<span class="tagname">${dateFromKey(k).toLocaleDateString("de-DE",{weekday:"short", day:"numeric", month:"short"})}
+      <small>${PROFILE_META[profilOf(k)].lang}</small></span>`;
+    const schalter = document.createElement("div");
+    schalter.className = "ortwahl";
+    [["heim","🏠"],["auswaerts","🎒"]].forEach(([wert, ic]) => {
+      const b = document.createElement("button");
+      b.className = "ortbtn" + (ort === wert ? " on" : "");
+      b.innerHTML = ic;
+      b.title = wert === "heim" ? "zu Hause (Küche da)" : "auswärts (eingeschränkte Küche)";
+      b.onclick = () => {
+        if (!store[k]) store[k] = blankDay(k);
+        normalizeDay(store[k]).flags.ort = wert;
+        save(); renderPrep();
+      };
+      schalter.appendChild(b);
+    });
+    zeile.appendChild(schalter);
+    liste.appendChild(zeile);
+  });
+
+  renderPrepPlan(tage);
+}
+
+function renderPrepPlan(tage){
+  const ziel = document.getElementById("prepPlan");
+  const auswaerts = tage.filter(k => ((readDay(k).flags || {}).ort) === "auswaerts");
+
+  if (!auswaerts.length){
+    ziel.innerHTML = `<p class="muted" style="margin:12px 0 0">Alle ${tage.length} Tage zu Hause —
+      es muss nichts vorgekocht werden. Markiere die Tage, an denen du unterwegs bist.</p>`;
+    return;
+  }
+
+  /* Für jeden Auswärts-Tag ein vorkochbares Rezept wählen: batchfähig (mehrere
+     Portionen) und zum Tagesprofil passend. Ohne Profil-Treffer greift der
+     Arbeitspferd-Slot A. */
+  const bedarf = {};
+  auswaerts.forEach(k => {
+    const profil = profilOf(k);
+    const kandidaten = RECIPES_DEF.filter(r => r.portionen > 1 && r.genauigkeit !== "offen");
+    const passend = kandidaten.filter(r => r.profile.includes(profil));
+    const r = (passend[0] || kandidaten.find(x => x.id === "pw_a") || kandidaten[0]);
+    if (!r) return;
+    bedarf[r.id] = (bedarf[r.id] || 0) + 1;
+  });
+
+  // Kochtag: der letzte Tag zu Hause vor dem ersten Auswärts-Tag
+  const ersterWeg = auswaerts[0];
+  const heimVorher = tage.filter(k => k < ersterWeg && ((readDay(k).flags || {}).ort || "heim") === "heim");
+  const kochtag = heimVorher.length ? heimVorher[heimVorher.length - 1] : tage[0];
+  const kochtagName = dateFromKey(kochtag).toLocaleDateString("de-DE", { weekday:"long" });
+  const von = dateFromKey(auswaerts[0]).toLocaleDateString("de-DE",{weekday:"short"});
+  const bis = dateFromKey(auswaerts[auswaerts.length-1]).toLocaleDateString("de-DE",{weekday:"short"});
+
+  const posten = Object.entries(bedarf).map(([id, anz]) => {
+    const r = RECIPES_DEF.find(x => x.id === id);
+    return `${anz} ${anz === 1 ? "Portion" : "Portionen"} ${r.name}`;
+  }).join(" · ");
+
+  // Wo ein Rezept mehr ergibt, als gebraucht wird, gehört das dazugesagt
+  const ueberschuss = Object.entries(bedarf)
+    .map(([id, anz]) => ({ r: RECIPES_DEF.find(x => x.id === id), anz }))
+    .filter(x => x.r.portionen > x.anz)
+    .map(x => `${x.r.name} ergibt ${x.r.portionen} Portionen`);
+
+  // Einkaufsliste: Zutaten × Portionen, nach Name und Einheit summiert
+  const summe = {};
+  Object.entries(bedarf).forEach(([id, anz]) => {
+    const r = RECIPES_DEF.find(x => x.id === id);
+    r.zutaten.forEach(z => {
+      const key = z.name + "|" + z.einheit;
+      summe[key] = (summe[key] || 0) + z.menge * anz;
+    });
+  });
+  const eingekauft = JSON.parse(localStorage.getItem("lf_einkauf") || "{}");
+  /* Zählbare Einheiten aufrunden — eine drittel Dose kauft man nicht. */
+  const ZAEHLBAR = ["Dose","Stück","Beutel","Scheibe","Zehe","Scoop"];
+  const zeilen = Object.entries(summe).sort((a,b) => a[0].localeCompare(b[0], "de")).map(([key, menge]) => {
+    const [name, einheit] = key.split("|");
+    const ab = !!eingekauft[key];
+    const anzeige = ZAEHLBAR.includes(einheit) ? Math.ceil(menge) : Math.round(menge*10)/10;
+    return `<label class="einkaufrow${ab ? " ab" : ""}">
+      <input type="checkbox" data-ek="${key}" ${ab ? "checked" : ""}>
+      <span>${name}</span><b>${mengeText(anzeige)} ${einheit}</b></label>`;
+  }).join("");
+
+  ziel.innerHTML = `
+    <div class="prepplan">
+      <div class="kochtag">${kochtagName}: ${posten}</div>
+      <div class="muted">deckt ${von}${von !== bis ? " bis " + bis : ""} — ${auswaerts.length}
+        ${auswaerts.length === 1 ? "Tag" : "Tage"} auswärts</div>
+      ${ueberschuss.length ? `<div class="muted" style="margin-top:6px">${ueberschuss.join(" · ")} —
+        der Rest hält im Kühlschrank 3–4 Tage.</div>` : ""}
+    </div>
+    <h5 style="font-size:12.5px; color:var(--navy); margin:16px 0 6px">Einkaufsliste</h5>
+    ${zeilen}
+    <button class="btn ghost" id="ekReset" style="margin-top:10px">Haken zurücksetzen</button>`;
+
+  ziel.querySelectorAll("[data-ek]").forEach(cb => {
+    cb.onchange = () => {
+      const ek = JSON.parse(localStorage.getItem("lf_einkauf") || "{}");
+      if (cb.checked) ek[cb.dataset.ek] = true; else delete ek[cb.dataset.ek];
+      localStorage.setItem("lf_einkauf", JSON.stringify(ek));
+      cb.closest(".einkaufrow").classList.toggle("ab", cb.checked);
+    };
+  });
+  ziel.querySelector("#ekReset").onclick = () => { localStorage.removeItem("lf_einkauf"); renderPrep(); };
+}
+
+/* Krumme Mengen lesbar machen: 0.33 → „⅓", 1 → „1" */
+function mengeText(m){
+  if (Math.abs(m - Math.round(m)) < 0.01) return String(Math.round(m));
+  const brueche = { 0.25:"¼", 0.33:"⅓", 0.5:"½", 0.67:"⅔", 0.75:"¾" };
+  const nah = Object.keys(brueche).find(b => Math.abs(m - parseFloat(b)) < 0.02);
+  return nah ? brueche[nah] : de1(m);
+}
+
+/* ---------- Tagesflags ----------
+   Zwei orthogonale Schalter statt weiterer Profile: Sie ändern die Makros NICHT,
+   sondern nur Verteilung und Hinweise. */
+function renderFlags(){
+  const bar = document.getElementById("flagbar");
+  const d = readDay(viewKey), f = d.flags;
+  bar.innerHTML = "";
+
+  const chip = (label, an, klick, titel) => {
+    const b = document.createElement("button");
+    b.className = "flagchip" + (an ? " on" : "");
+    b.textContent = label; if (titel) b.title = titel;
+    b.onclick = klick;
+    bar.appendChild(b);
+  };
+  chip("🧠 Klausur", f.klausur, () => { day().flags.klausur = !f.klausur; save(); render(); },
+       "Warnt vor zu großen Mahlzeiten kurz vor dem Block");
+  chip("📖 Lernblock", f.lernblock, () => { day().flags.lernblock = !f.lernblock; save(); render(); });
+  chip(f.ort === "auswaerts" ? "🎒 auswärts" : "🏠 zu Hause", false,
+       () => { day().flags.ort = (f.ort === "auswaerts" ? "heim" : "auswaerts"); save(); render(); },
+       "Steuert Rezeptauswahl und Prep-Planer");
+
+  if (f.klausur || f.lernblock){
+    const wrap = document.createElement("label");
+    wrap.className = "flagzeit";
+    wrap.innerHTML = `<span>Block beginnt</span>`;
+    const inp = document.createElement("input");
+    inp.type = "time"; inp.value = f.blockbeginn || "";
+    inp.onchange = e => { day().flags.blockbeginn = e.target.value || null; save(); render(); };
+    wrap.appendChild(inp);
+    bar.appendChild(wrap);
+  }
+}
+
+/* ---------- Timing-Hinweise ----------
+   Kontextabhängig, dezent, wegklickbar — nie ein Modal, nie blockierend.
+   Quellen: „Wochenplan", „Post-Workout & Leber (2026-08)", „Ernährung & Kognition (2026-08)". */
+function timingHinweise(){
+  const liste = [];
+  const p = profilOf(viewKey);
+  const d = readDay(viewKey), f = d.flags;
+
+  if (p === "training"){
+    liste.push({ id:"pre", text:"Die Prä-Mahlzeit gegen 16:30 ist der eigentliche Hebel — nicht die Mahlzeit danach. Sie hält die Aminosäuren 3–6 h hoch und deckt Training und Nachher-Phase ab." });
+    liste.push({ id:"intra", text:"105 min Belastung liegen über der 75-Minuten-Schwelle: 30–60 g Kohlenhydrate während des Trainings sind Pflicht, nicht Kür." });
+  }
+  if (p === "spiel"){
+    liste.push({ id:"spieltag", text:"Koffein ~270 mg (3 mg/kg) 45–60 min vor Anpfiff · zur Halbzeit 20–30 g Kohlenhydrate flüssig · direkt nach dem Spiel flüssig 60–90 g KH + 25–30 g Protein." });
+  }
+  const vortag = keyOf(new Date(dateFromKey(viewKey).getTime() - 86400000));
+  if (profilOf(vortag) === "spiel" && p !== "spiel"){
+    liste.push({ id:"nachspiel", text:"Tag nach dem Spiel: Kohlenhydrate nicht senken — die Typ-II-Sprintfasern füllen bis zu 72 h auf." });
+  }
+
+  // Klausur-/Lernblock: zu große Mahlzeit zu kurz vor dem Block
+  if ((f.klausur || f.lernblock) && f.blockbeginn){
+    const blockMin = zeitInMin(f.blockbeginn);
+    d.items.forEach(it => {
+      if (!it.zeit || it.k <= 850) return;
+      const abstand = blockMin - zeitInMin(it.zeit);
+      if (abstand > 0 && abstand < 120){
+        liste.push({ id:"klausur-" + it.zeit, text:`„${it.n}" liegt mit ${nf(it.k)} kcal weniger als 2 h vor dem Block. Besser aufteilen: ~650 kcal und ~350 kcal fettarm (unter 20 g). Die Tagessumme bleibt gleich, das Volumen wandert nach hinten.` });
+      }
+    });
+  }
+
+  // Organfleisch-Slot: einmal pro Woche, Ruhetag-Vormittag
+  if (p === "ruhe" && !organSlotDieseWoche()){
+    liste.push({ id:"organ", text:"Ruhetag-Vormittag ist der Slot für Hühner- oder Rinderleber — nie Schwein oder Kalb (Vitamin-A-Obergrenze). Kein Kaffee oder Tee ±1 h, eine Vitamin-C-Quelle dazu ist Pflicht." });
+  }
+  return liste;
+}
+
+const zeitInMin = z => { const [h,m] = z.split(":").map(Number); return h*60 + m; };
+const KOFFEIN_WORTE = ["kaffee","espresso","koffein","cola","energy","mate"];
+const LEBER_WORTE   = ["leber","organ"];
+
+function organSlotDieseWoche(){
+  return wochenKeys(viewKey).some(k =>
+    readDay(k).items.some(it => LEBER_WORTE.some(w => it.n.toLowerCase().includes(w))));
+}
+function koffeinTageDieseWoche(){
+  return wochenKeys(viewKey).filter(k =>
+    readDay(k).items.some(it => KOFFEIN_WORTE.some(w => it.n.toLowerCase().includes(w)))).length;
+}
+
+function renderTiming(){
+  const ziel = document.getElementById("timingHinweise");
+  const offen = timingHinweise().filter(h => !hinweiseZu.has(viewKey + ":" + h.id));
+  ziel.innerHTML = "";
+  offen.forEach(h => {
+    const box = document.createElement("div");
+    box.className = "hint on";
+    box.innerHTML = `<span>${h.text}</span>`;
+    const x = document.createElement("button");
+    x.className = "hx"; x.textContent = "✕"; x.setAttribute("aria-label","Hinweis schließen");
+    x.onclick = () => { hinweiseZu.add(viewKey + ":" + h.id); renderTiming(); };
+    box.appendChild(x);
+    ziel.appendChild(box);
+  });
+}
+
+function renderKoffein(){
+  const el = document.getElementById("koffeinZaehler");
+  if (!el) return;
+  const tage = koffeinTageDieseWoche();
+  const max  = settings.koffein_max_tage;
+  el.innerHTML = `<div class="statzeile" style="margin-top:12px" title="Schützt den Schlaf UND die Wirkung am Spieltag vor Toleranz">
+      <span>Koffein diese Woche</span><b>${tage} von ${max} Tagen · Deadline ${settings.koffein_deadline}</b></div>
+    ${tage > max ? `<p class="muted" style="margin:6px 0 0">Über dem Richtwert. Zwei Tage pro Woche halten die
+      Wirkung am Spieltag hoch — Toleranz kostet mehr als sie bringt.</p>` : ""}`;
+}
+
+/* ---------- Wochenrückblick: die vier Bereiche nebeneinander ---------- */
+function renderRueckblick(){
+  const el = document.getElementById("wochenRueckblick");
+  if (!el) return;
+  const keys = wochenKeys(viewKey), bis = todayKey();
+  const gelaufen = keys.filter(k => k <= bis);
+
+  const ziel = wochenZiel(viewKey), ist = wochenIst(viewKey);
+  const proTage = gelaufen.filter(k => sumDay(k,"p") >= eff(k).pro).length;
+  const trainingTage = keys.filter(k => profilOf(k) === "training").length;
+  const amVoll = gelaufen.filter(k => { const s = readDay(k).skin; return s && s.am && s.am.wasser && s.am.moist && s.am.spf; }).length;
+  const pmVoll = gelaufen.filter(k => { const s = readDay(k).skin; return s && s.pm && s.pm.cleanser && s.pm.wirkstoff && s.pm.moist; }).length;
+  const naechte = gelaufen.map(k => readDay(k).sleep).filter(s => s && s.bett && s.auf);
+  const schnitt = naechte.length ? naechte.map(schlafDauer).reduce((a,b)=>a+b,0)/naechte.length : null;
+
+  el.innerHTML = `
+    <div class="statzeile"><span>🍽️ Energie</span><b>${nf(ist.kcal)} / ${nf(ziel.kcal)} kcal</b></div>
+    <div class="statzeile"><span>🥩 Proteinziel getroffen</span><b>${proTage} von ${gelaufen.length} Tagen</b></div>
+    <div class="statzeile"><span>⚽ Trainingstage</span><b>${trainingTage} geplant</b></div>
+    <div class="statzeile"><span>🧴 Routine morgens / abends</span><b>${amVoll} / ${pmVoll} von ${gelaufen.length}</b></div>
+    <div class="statzeile"><span>😴 Schlaf im Schnitt</span><b>${schnitt ? alsStunden(Math.round(schnitt)) : "—"}</b></div>`;
+}
+
+/* ---------- Info-Zeile zum Ring-Modus ---------- */
+function renderWochenInfo(wModus){
+  const info = document.getElementById("ringInfo");
+  const note = document.getElementById("wochenNote");
+  if (!wModus){
+    info.textContent = `${PROFILE_META[profilOf(viewKey)].lang} · Ziel ${nf(eff(viewKey).kcal)} kcal`;
+    note.style.display = "none";
+    return;
+  }
+  const keys = wochenKeys(viewKey);
+  const fmt  = k => dateFromKey(k).toLocaleDateString("de-DE", {day:"numeric", month:"short"});
+  const rest = wochenRestTage(viewKey);
+  info.textContent = `${fmt(keys[0])} – ${fmt(keys[6])}`;
+  note.style.display = "block";
+  note.textContent = (rest > 0 ? `Noch ${rest} ${rest === 1 ? "Tag" : "Tage"} in dieser Woche. ` : "Woche abgeschlossen. ")
+    + "Ein schwacher Tag ist durch einen starken ausgleichbar — die Wochensumme zählt mehr als der einzelne Tag.";
 }
 
 /* ---------- Tagesprofil-Selektor ---------- */
@@ -794,14 +1906,21 @@ function renderLog(d){
 }
 
 function renderSupps(d){
-  const sc=document.getElementById("supps"); sc.innerHTML="";
-  SUPPS.forEach(s=>{
-    const on=!!d.supps[s];
-    const el=document.createElement("label"); el.className="supp"+(on?" done":"");
-    el.innerHTML=`<input type="checkbox" ${on?"checked":""}> ${s}`;
-    el.querySelector("input").addEventListener("change",e=>{ day().supps[s]=e.target.checked; save(); render(); });
+  const sc = document.getElementById("supps"); sc.innerHTML = "";
+  const monat = dateFromKey(viewKey).getMonth();
+  SUPPS.filter(s => !s.monate || s.monate.includes(monat)).forEach(s => {
+    const on = !!d.supps[s.n];
+    const el = document.createElement("label");
+    el.className = "supp" + (on ? " done" : "");
+    el.innerHTML = `<input type="checkbox" ${on ? "checked" : ""}> ${s.n}`;
+    el.title = s.hinweis;
+    el.querySelector("input").addEventListener("change", e => { day().supps[s.n] = e.target.checked; save(); render(); });
     sc.appendChild(el);
   });
+  // Timing-Begründungen darunter, damit sie nicht nur im Tooltip hängen
+  const info = document.getElementById("suppInfo");
+  if (info) info.innerHTML = SUPPS.filter(s => !s.monate || s.monate.includes(monat))
+    .map(s => `<div class="suppzeile"><b>${s.n}</b> ${s.hinweis}</div>`).join("");
 }
 
 /* ---------- Chart ---------- */
@@ -907,6 +2026,20 @@ document.getElementById("profilHintClose").onclick=()=>{
 if (zeigeMigNotice) document.getElementById("migNotice").classList.add("on");
 document.getElementById("migOk").onclick=()=>document.getElementById("migNotice").classList.remove("on");
 
+/* Tab-Leiste */
+document.getElementById("tabbar").addEventListener("click", e => {
+  const b = e.target.closest(".tabbtn"); if (!b) return;
+  switchView(b.dataset.v);
+});
+
+/* Umschalter Tag / Woche */
+document.getElementById("ringSeg").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  ringModus = b.dataset.r;
+  document.querySelectorAll("#ringSeg button").forEach(x => x.classList.toggle("active", x === b));
+  render();
+});
+
 /* Chart-Umschalter */
 document.getElementById("seg").addEventListener("click",e=>{
   const b=e.target.closest("button"); if(!b) return;
@@ -919,6 +2052,73 @@ document.getElementById("seg").addEventListener("click",e=>{
 document.getElementById("resetDay").onclick=()=>{
   if(confirm("Diesen Tag wirklich zurücksetzen?")){ delete store[viewKey]; save(); render(); }
 };
+
+/* ---------- Markdown-Export für Obsidian ----------
+   Fotos bleiben ausgenommen — sie liegen in IndexedDB und verlassen das Gerät nicht. */
+function datei(name, inhalt, typ){
+  const blob = new Blob([inhalt], { type: typ });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function mdTag(k){
+  const d = readDay(k), g = eff(k);
+  const z = { kcal:sumDay(k,"k"), pro:sumDay(k,"p"), carb:sumDay(k,"c"), fat:sumDay(k,"f") };
+  const dauer = schlafDauer(d.sleep);
+  const zeilen = [];
+  zeilen.push("---");
+  zeilen.push(`datum: ${k}`);
+  zeilen.push(`typ: tracker-tag`);
+  zeilen.push(`profil: ${profilOf(k)}`);
+  zeilen.push(`kcal: ${z.kcal}`);
+  zeilen.push(`protein_g: ${z.pro}`);
+  zeilen.push(`kh_g: ${z.carb}`);
+  zeilen.push(`fett_g: ${z.fat}`);
+  zeilen.push(`wasser_l: ${(d.water/1000).toFixed(1)}`);
+  if (d.gewicht) zeilen.push(`gewicht_kg: ${d.gewicht}`);
+  if (dauer) zeilen.push(`schlaf_min: ${dauer}`);
+  if (d.sleep && d.sleep.subjektiv) zeilen.push(`schlaf_subjektiv: ${d.sleep.subjektiv}`);
+  if (d.flags && d.flags.ort) zeilen.push(`ort: ${d.flags.ort}`);
+  zeilen.push("---", "");
+  zeilen.push(`# Tracker — ${dateFromKey(k).toLocaleDateString("de-DE",{weekday:"long", day:"numeric", month:"long", year:"numeric"})}`, "");
+  zeilen.push(`**${PROFILE_META[profilOf(k)].lang}** — Ziel ${nf(g.kcal)} kcal · ${g.pro} g Protein · ${g.carb} g KH · ${g.fat} g Fett`, "");
+
+  SLOTS.forEach(s => {
+    const items = d.items.filter(i => i.slot === s.id);
+    if (!items.length) return;
+    zeilen.push(`## ${s.label}`);
+    items.forEach(i => zeilen.push(`- ${i.zeit ? i.zeit + " · " : ""}${i.n} — ${i.k} kcal · ${i.p} g P · ${i.c} g KH · ${i.f} g F`));
+    zeilen.push("");
+  });
+
+  const supps = Object.entries(d.supps || {}).filter(([, an]) => an).map(([n]) => n);
+  if (supps.length) zeilen.push(`## Supplemente`, supps.map(s => `- ${s}`).join("\n"), "");
+  if (d.skin && (d.skin.zustand || d.skin.notiz)){
+    zeilen.push(`## Haut`);
+    if (d.skin.zustand) zeilen.push(`- Zustand: ${d.skin.zustand} von 5 (beschreibend, keine Bewertung)`);
+    if (d.skin.notiz)   zeilen.push(`- Notiz: ${d.skin.notiz}`);
+    zeilen.push("");
+  }
+  if (dauer) zeilen.push(`## Schlaf`, `- ${d.sleep.bett} bis ${d.sleep.auf} — ${alsStunden(dauer)}`, "");
+  return zeilen.join("\n");
+}
+function mdWoche(){
+  const keys = wochenKeys(viewKey), ziel = wochenZiel(viewKey), ist = wochenIst(viewKey);
+  const kopf = ["---", `typ: tracker-woche`, `von: ${keys[0]}`, `bis: ${keys[6]}`,
+    `kcal: ${ist.kcal}`, `kcal_ziel: ${ziel.kcal}`, `protein_g: ${ist.pro}`, `protein_ziel_g: ${ziel.pro}`,
+    `kh_g: ${ist.carb}`, `kh_ziel_g: ${ziel.carb}`, `fett_g: ${ist.fat}`, `fett_ziel_g: ${ziel.fat}`, "---", "",
+    `# Trackerwoche ${keys[0]} bis ${keys[6]}`, "",
+    "Ein schwacher Tag ist durch einen starken ausgleichbar — die Wochensumme zählt mehr als der einzelne Tag.", "",
+    "| Tag | Profil | kcal | Protein | KH | Fett |", "|---|---|---|---|---|---|"];
+  keys.forEach(k => kopf.push(`| ${dateFromKey(k).toLocaleDateString("de-DE",{weekday:"short", day:"numeric", month:"short"})} `
+    + `| ${PROFILE_META[profilOf(k)].lang} | ${sumDay(k,"k")} / ${eff(k).kcal} | ${sumDay(k,"p")} / ${eff(k).pro} g `
+    + `| ${sumDay(k,"c")} / ${eff(k).carb} g | ${sumDay(k,"f")} / ${eff(k).fat} g |`));
+  kopf.push("", `**Woche gesamt:** ${nf(ist.kcal)} / ${nf(ziel.kcal)} kcal · ${nf(ist.pro)} / ${nf(ziel.pro)} g Protein `
+    + `· ${nf(ist.carb)} / ${nf(ziel.carb)} g KH · ${nf(ist.fat)} / ${nf(ziel.fat)} g Fett`);
+  return kopf.join("\n");
+}
+document.getElementById("exportMdTag").onclick   = () => datei(`tracker-${viewKey}.md`, mdTag(viewKey), "text/markdown");
+document.getElementById("exportMdWoche").onclick = () => datei(`tracker-woche-${wochenKeys(viewKey)[0]}.md`, mdWoche(), "text/markdown");
 
 /* Export */
 document.getElementById("exportBtn").onclick=()=>{
