@@ -230,6 +230,11 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .slotgroup:first-child { margin-top: 4px; }
 .slothead { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--grey); padding: 4px 2px; border-bottom: 1px solid var(--line); }
 .slothead .sum { font-weight: 600; color: var(--navy); }
+.fettdeckel { font-size: 11px; color: var(--grey); padding: 5px 2px 0; line-height: 1.45; }
+.fettdeckel.drueber { color: #8a5a12; }
+
+/* Natrium-Korridor */
+.natriumzeile { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--grey); margin: 9px 2px 0; }
 ul.log { list-style: none; margin: 0; padding: 0; }
 ul.log li { display: flex; align-items: center; justify-content: space-between; padding: 9px 2px; border-bottom: 1px solid #f0f3f8; font-size: 13.5px; }
 ul.log li:last-child { border-bottom: none; }
@@ -390,6 +395,7 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
     <button class="hx" id="profilHintClose" aria-label="Hinweis schließen">✕</button>
   </div>
 
+  <div class="natriumzeile" id="natriumZeile"></div>
   <div class="flagbar" id="flagbar"></div>
   <div id="timingHinweise"></div>
 
@@ -677,6 +683,22 @@ const HAUT_PM = [
   { id:"moist",     label:"Ceramid-Moisturizer", wissen:"ceramide" },
 ];
 
+/* Natrium-Zielkorridor je Tagestyp — neu 08/2026 („Herz-Kreislauf-Prävention").
+   Der WHO-Wert < 2.000 mg stammt aus einem Präventionsrahmen für überwiegend
+   sitzende Erwachsene. Fußball kostet 0,5–2 g Natrium pro Einheit über Schweiß.
+   Bewusst nur als Korridor angezeigt, nicht als Ring: Die App erfasst kein
+   Natrium je Lebensmittel — eine Prozentzahl wäre erfunden. */
+const NATRIUM = {
+  ruhe:     { max:2000 },
+  training: { min:2000, max:2800 },
+  regen:    { max:2200 },
+  spiel:    { min:2500, max:3500 },
+};
+const natriumText = p => {
+  const n = NATRIUM[p] || NATRIUM.ruhe;
+  return n.min ? `${nf(n.min)}–${nf(n.max)} mg` : `unter ${nf(n.max)} mg`;
+};
+
 /* Hinweistexte je Profil (dezent, wegklickbar). Belege: „Post-Workout & Leber (2026-08)" §1.3 */
 const PROFIL_HINWEIS = {
   regen: { text:"Kein Ruhetag — Sprintfasern füllen bis 72 h nach dem Spiel auf. Kohlenhydrate bleiben hoch, Fett bewusst runter.", wissen:"kh_regen" },
@@ -700,16 +722,23 @@ const PRESETS = [
    `monate`: nur in diesen Monaten einblenden (0 = Januar). */
 const SUPPS = [
   { n:"B-Komplex",          wissen:"b12",       hinweis:"Morgens zum Frühstück. Kaffee erst 1 h später — sonst sinkt die Eisenaufnahme um ~40 %." },
-  { n:"Jod/Kombitablette",  wissen:"jod",       hinweis:"Morgens zum Frühstück, wegen des Eisenfumarats mit Essen. Hepcidin ist morgens am niedrigsten." },
-  { n:"Kreatin",            wissen:"kreatin",   hinweis:"Timing ist nachweislich egal — Konstanz ist der Wirkfaktor. An eine feste Gewohnheit koppeln." },
+  { n:"Jod/Kombitablette",  wissen:"jod",       hinweis:"100 µg morgens zum Frühstück — der Referenzwert wurde 2025 von 200 auf 150 µg gesenkt. Mit Essen wegen des Eisenfumarats." },
+  { n:"Kreatin",            wissen:"kreatin",   hinweis:"5 g täglich (bei 90 kg nicht 3 g). Timing ist nachweislich egal — Konstanz ist der Wirkfaktor." },
   { n:"Algenöl",            wissen:"algenoel",  hinweis:"Zur größten Fettmahlzeit — die Aufnahme steigt deutlich mit Fett." },
-  { n:"Vitamin D",          wissen:"vitamin_d", hinweis:"Nur Oktober bis März, zur größten Fettmahlzeit. 800–1.000 IE.", monate:[9,10,11,0,1,2] },
+  /* Fenster auf September–April gezogen: Vorlesung, Pendeln und Bibliothek senken die
+     UVB-Exposition auch in den Randmonaten („Ernährung — Übersicht (MOC)", 08/2026). */
+  { n:"Vitamin D",          wissen:"vitamin_d", hinweis:"September bis April, zur größten Fettmahlzeit. 800–1.000 IE.", monate:[8,9,10,11,0,1,2,3] },
   { n:"Paranüsse",          wissen:"selen",     hinweis:"1–2 Stück decken den Selenbedarf. Nicht mehr — der Sicherheitskorridor ist eng." },
 ];
 
+/* Mahlzeiten-Slots — entsprechen M1–M4 aus dem „Wochenplan" plus Snack.
+   Der Prä-Training-Slot (M3, ~16:30) hat als EINZIGER eine eigene Fettgrenze:
+   18 g. Grund: Fett verzögert die Magenentleerung am stärksten, und diese
+   Mahlzeit muss 2,5 h Vorlauf und 105 min Training tragen („Rezepte", M3). */
 const SLOTS = [
   {id:"frueh",  label:"Frühstück", ic:"🌅"},
   {id:"mittag", label:"Mittag",    ic:"☀️"},
+  {id:"prae",   label:"Prä 16:30", ic:"⏱️", fettdeckel:18},
   {id:"abend",  label:"Abend",     ic:"🌙"},
   {id:"snack",  label:"Snack",     ic:"⚡"},
 ];
@@ -791,6 +820,47 @@ const RECIPES_DEF = [
              {name:"Banane",menge:1,einheit:"Stück"},{name:"Haferflocken",menge:1,einheit:"EL"}],
     schritte:["Mixen. Innerhalb von 1–2 h nach der Belastung."] },
 
+  /* --- Prä-Training (M3, ~16:30) — der wichtigste Slot, „Rezepte" 08/2026 ---
+     Ziel: ~850 kcal · 44 g P · 130 g KH · NUR 18 g Fett. Die Fettgrenze schließt
+     die üblichen Tofu-Gerichte aus (290 g Tofu = 44 g Protein, aber 23 g Fett).
+     Funktioniert unverändert auch als Prä-Klausur-Mahlzeit — Sport- und
+     Kognitionsseite verlangen hier dieselbe Mahlzeitenform. */
+  { id:"m3_a", name:"M3-A — Skyr-Bowl", slot:"prae", portionen:1, zeit_min:3,
+    k:907, p:54, c:139, f:17, genauigkeit:"gerechnet", kuechenbedarf:false, profile:["training"],
+    hinweis:"Kein Kochen, mitnehmbar. Die Nüsse sind der einzige Hebel — max. 30 g, bei 50 g sind es 27,6 g Fett. Exakt auf Ziel justiert: 375 g Skyr · 25 g Honig · 25 g Nüsse · 55 g Datteln · 2 Bananen = 832 kcal · 50 P · 130 KH · 15 F. Bei täglichem Skyr eher der Punkt zum Nachjustieren (Haut).",
+    zutaten:[{name:"Skyr",menge:400,einheit:"g"},{name:"Honig",menge:30,einheit:"g"},
+             {name:"Nüsse",menge:30,einheit:"g"},{name:"Datteln",menge:60,einheit:"g"},
+             {name:"Banane",menge:2,einheit:"Stück"}],
+    schritte:["Alles verrühren. Nüsse und Datteln grob hacken.",
+              "Freier Zucker ist nur der Honig — Datteln und Bananen zählen WHO-seitig nicht."] },
+
+  { id:"m3_b", name:"M3-B — Sojagranulat-Bolognese", slot:"prae", portionen:1, zeit_min:15,
+    k:838, p:46, c:127, f:12, genauigkeit:"gerechnet", kuechenbedarf:true, profile:["training","spiel"],
+    hinweis:"Die fettärmste Option. Helle statt Vollkornpasta ist hier bewusst — weniger Ballaststoffe vor der Belastung. Prep-tauglich, hält 3 Tage.",
+    zutaten:[{name:"Sojagranulat/TVP",menge:50,einheit:"g"},{name:"Pasta hell",menge:130,einheit:"g"},
+             {name:"Passata",menge:250,einheit:"g"},{name:"Gemüse",menge:100,einheit:"g"},
+             {name:"Olivenöl",menge:8,einheit:"g"}],
+    schritte:["Sojagranulat in Brühe quellen lassen.","Passata mit Gemüse einkochen, Granulat zugeben.",
+              "Pasta kochen und untermischen."] },
+
+  { id:"m3_c", name:"M3-C — Kichari (Reis + Linsen)", slot:"prae", portionen:1, zeit_min:25,
+    k:860, p:46, c:128, f:13, genauigkeit:"gerechnet", kuechenbedarf:true, profile:["training","spiel"],
+    hinweis:"Milchfrei — die Alternative zu M3-A, wenn du Skyr reduzieren willst.",
+    zutaten:[{name:"Rote Linsen",menge:90,einheit:"g"},{name:"Reis",menge:85,einheit:"g"},
+             {name:"Sojagranulat/TVP",menge:20,einheit:"g"},{name:"Gemüse",menge:200,einheit:"g"},
+             {name:"Olivenöl",menge:8,einheit:"g"},{name:"Sojajoghurt, angereichert",menge:100,einheit:"g"}],
+    schritte:["Reis und Linsen zusammen weich kochen.","Gemüse und Sojagranulat mitgaren.",
+              "Mit Sojajoghurt toppen."] },
+
+  { id:"m3_d", name:"M3-D — Couscous-Bowl mit Seitan", slot:"prae", portionen:1, zeit_min:10,
+    k:875, p:48, c:132, f:13, genauigkeit:"gerechnet", kuechenbedarf:false, profile:["training"],
+    hinweis:"Kalt und mitnehmbar — für Tage, an denen du um 16:30 nicht zu Hause bist.",
+    zutaten:[{name:"Couscous",menge:115,einheit:"g"},{name:"Seitan",menge:120,einheit:"g"},
+             {name:"Gemüse",menge:150,einheit:"g"},{name:"Datteln",menge:50,einheit:"g"},
+             {name:"Olivenöl",menge:9,einheit:"g"},{name:"Zitrone",menge:0.5,einheit:"Stück"}],
+    schritte:["Couscous mit heißem Wasser quellen lassen.","Seitan würfeln, Gemüse klein schneiden.",
+              "Alles mischen, mit Zitrone und Kräutern abschmecken."] },
+
   /* --- Post-Workout & Regeneration (durchgerechnet, „Rezepte" Teil 6) --- */
   { id:"pw_a", name:"A — Tofu-Reis-Standard", slot:"mittag", portionen:4, zeit_min:15,
     k:1050, p:48, c:151, f:26, leucin:3.5, genauigkeit:"gerechnet", kuechenbedarf:true, profile:["training","regen"],
@@ -849,9 +919,9 @@ const WISSEN = {
   protein: { titel:"Protein 170–175 g (1,9 g/kg)", bereich:"Ernährung", ampel:"rot",
     antwort:"Diese Höhe deckt den Aufbaubedarf und gleicht aus, dass pflanzliches Protein pro Gramm etwas weniger Leucin liefert.",
     mechanismus:"Leucin ist die Aminosäure, die den Muskelaufbau anstößt. Pro Mahlzeit braucht es davon etwa 2,5–3 g, damit der Reiz überhaupt auslöst. Sojaprotein enthält 7,5–8 g Leucin je 100 g Protein, Whey 11–13 g — deshalb liegt die Zielmenge bei pflanzenbetonter Kost etwas höher.",
-    studienlage:"Morton 2018 und Messina 2018/2021 stützen den Bereich um 1,9 g/kg. Areta 2013 liefert die Leucinschwelle von 2,5–3 g pro Mahlzeit. Deine 43,8 g je Mahlzeit ergeben bei Sojabasis ~3,4 g Leucin — über dem Korridor. Ein Vergleich von 2024 fand pflanzliches Protein nur 12 ± 16 % unter Whey.",
-    grenze:"Vier Mahlzeiten reichen, eine fünfte bringt nichts — sie wäre nur aus Kaloriengründen sinnvoll, nicht aus Timing-Gründen. Mehr Protein als 1,9 g/kg ist nicht belegt besser.",
-    quelle:"Profil & Bedarf · Post-Workout & Leber (2026-08)" },
+    studienlage:"Morton 2018 und Messina 2018/2021 stützen 1,9 g/kg, Areta 2013 die Leucinschwelle. Deine 43,8 g je Mahlzeit ergeben bei Sojabasis ~3,4 g Leucin. ⚠️ Präzisiert 08/2026: Der Leucinanteil ist bei Soja und Hühnerbrust praktisch gleich (7,5–8 %) — der Vorsprung existiert nur gegenüber Whey (11–13 %).",
+    grenze:"Die Mahlzeitenzahl ist flexibler als lange angenommen: Trommelen 2023 fand keine Obergrenze der anabolen Antwort pro Mahlzeit. Auch drei Mahlzeiten à 55–65 g funktionieren — der wichtigste Freiheitsgrad, wenn ab September der Stundenplan das Vier-Mahlzeiten-Raster sprengt.",
+    quelle:"Profil & Bedarf · Post-Workout & Leber (2026-08) · Muskelfleisch & Fleischqualität (2026-08)" },
 
   kohlenhydrate: { titel:"Kohlenhydrate 450–630 g je Profil", bereich:"Ernährung", ampel:"rot",
     antwort:"Glykogen ist dein Spielsprit — die Menge richtet sich danach, wie viel du an dem Tag davon verbrauchst.",
@@ -895,6 +965,13 @@ const WISSEN = {
     grenze:"Vor Klausuren und vor Belastung sind große Ballaststoffmengen ein Bauchgefühlrisiko — dann die faserreichen Anteile in die Nachmittags- und Abendmahlzeiten verschieben. Die Tagessumme bleibt gleich.",
     quelle:"Einkaufsliste Woche · Ernährung & Kognition (2026-08) §8.1" },
 
+  natrium: { titel:"Natrium nach Tagestyp", bereich:"Ernährung", ampel:"gelb",
+    antwort:"Ein Wert für alle Tage passt nicht — Fußball kostet dich pro Einheit ein halbes bis zwei Gramm Natrium über den Schweiß.",
+    mechanismus:"Die verbreitete Grenze von unter 2.000 mg stammt aus einem Präventionsrahmen für überwiegend sitzende Erwachsene mit Blutdruck als Endpunkt. Wer drei- bis viermal pro Woche 1–2 Liter Schweiß mit 20–80 mmol Natrium pro Liter verliert, hat einen anderen Bedarf. Nicht das Salzen zählt, sondern verstecktes Natrium: 1 EL Sojasauce liegt bei rund 900 mg.",
+    studienlage:"Korridor seit 08/2026: Ruhetag unter 2.000 mg · Regen-/Ladetag unter 2.200 · Trainingstag 2.000–2.800 · Spieltag 2.500–3.500. Der eigentliche Blutdruck-Hebel ist ohnehin das Kalium-Natrium-Verhältnis — und das dreht pflanzenbetonte Kost automatisch in die richtige Richtung.",
+    grenze:"Das sind begründete Setzungen, keine gemessenen Werte — belastbar wäre nur, sich vor und nach zwei Einheiten zu wiegen. Die App zeigt den Korridor deshalb nur als Orientierung und rechnet bewusst keinen Prozentstand.",
+    quelle:"Herz-Kreislauf-Prävention, Stand 08/2026" },
+
   /* ---- Supplemente ---- */
   b12: { titel:"Vitamin B12 — 50–100 µg statt 4 µg", bereich:"Supplemente", ampel:"rot",
     antwort:"Die 4 µg sind der Referenzwert für die Gesamtzufuhr aus Nahrung, keine Supplementdosis.",
@@ -903,19 +980,19 @@ const WISSEN = {
     grenze:"Hannibal schreibt ausdrücklich, es gebe keinen internationalen Konsens zu Dosis und Frequenz, und nennt selbst 4–20 µg Gesamtzufuhr als ausreichend. Der Korridor 50–100 µg ist gängige Praxis und risikoarm, aber kein bewiesenes Optimum.",
     quelle:"Supplement-Stack (2026-07) · Post-Workout & Leber (2026-08) Teil 4" },
 
-  jod: { titel:"Jod als Kaliumiodid — und warum kein Kelp", bereich:"Supplemente", ampel:"rot",
-    antwort:"Deutschland gilt nach WHO-Kriterien wieder als Jodmangelgebiet, und Jodsalz allein schließt die Lücke nicht.",
-    mechanismus:"Jodsalz wird industriell nur in etwa 30 % der salzhaltigen Produkte eingesetzt, bei Brot sogar nur in rund 10 %. Mehr Salz zu essen kollidiert außerdem mit dem Natriumdeckel. Ein Kaliumiodid-Präparat löst beide Ziele gleichzeitig, weil es die Dosis vom Salz entkoppelt.",
-    studienlage:"Die Urin-Jodausscheidung bei Jugendlichen fiel von 118 µg/L (2003–06) auf 89 µg/L (2014–17) — KiGGS/DEGS. Kelp und Seetang sind ungeeignet: Der Gehalt schwankt in US-Präparaten zwischen 33 und 610 µg pro Dosis, bei Seetang bis zum Hundertfachen der Referenzzufuhr.",
-    grenze:"Die EFSA-Obergrenze liegt bei 600 µg pro Tag. Wer zusätzlich viel Jodsalz oder Algen isst, muss zusammenzählen. Innereien enthalten übrigens praktisch kein Jod — Leber ersetzt das Präparat nicht.",
-    quelle:"Supplement-Stack (2026-07) Teil 2" },
+  jod: { titel:"Jod — 100 µg, seit der Referenzwert gesenkt wurde", bereich:"Supplemente", ampel:"rot",
+    antwort:"Deutschland gilt nach WHO-Kriterien wieder als Jodmangelgebiet — aber der Zielwert ist seit 2025 niedriger, also reicht die kleinere Dosis.",
+    mechanismus:"Jodsalz wird industriell nur in etwa 30 % der salzhaltigen Produkte eingesetzt, bei Brot sogar nur in rund 10 %. Mehr Salz zu essen kollidiert außerdem mit dem Natriumkorridor. Ein Kaliumiodid-Präparat löst beide Ziele gleichzeitig, weil es die Dosis vom Salz entkoppelt.",
+    studienlage:"Die Urin-Jodausscheidung bei Jugendlichen fiel von 118 µg/L (2003–06) auf 89 µg/L (2014–17) — KiGGS/DEGS. ⚠️ Neu 08/2026: DGE und ÖGE haben den Referenzwert von 200 auf 150 µg pro Tag gesenkt. 150 µg Präparat plus Jodsalz plus Sojaprodukte liegt seitdem darüber — deshalb 100 µg, das untere Ende.",
+    grenze:"Die EFSA-Obergrenze liegt bei 600 µg pro Tag. Kelp und Seetang bleiben ungeeignet: Der Gehalt schwankt in Präparaten zwischen 33 und 610 µg pro Dosis. Innereien enthalten praktisch kein Jod — Leber ersetzt das Präparat nicht.",
+    quelle:"Supplement-Stack (2026-07) · Ernährung — Übersicht (MOC), Stand 08/2026" },
 
-  kreatin: { titel:"Kreatin — Masse und Kraft, nicht Antritt", bereich:"Supplemente", ampel:"rot",
-    antwort:"Kreatin ist das bestbelegte Supplement für Kraft und Muskelmasse — der erhoffte Sprintvorteil wurde 2025 aber nicht bestätigt.",
+  kreatin: { titel:"Kreatin 5 g — Masse und Kraft, nicht Antritt", bereich:"Supplemente", ampel:"rot",
+    antwort:"Bei 90 kg sind 5 g die richtige Erhaltungsdosis, nicht 3 — belegt ist der Effekt auf Kraft und Masse, nicht auf den Antritt.",
     mechanismus:"Kreatin füllt die Phosphokreatin-Speicher im Muskel, aus denen die ersten Sekunden einer maximalen Belastung gespeist werden. Bei pflanzenbetonter Kost sind diese Speicher niedriger, der Zuwachs durch Supplementierung also größer.",
     studienlage:"ISSN Position Stand (Kreider 2017): wirksamstes ergogenes Supplement für Hochintensität und Magermasse, sicher bis 30 g/Tag über 5 Jahre. Bonne 2025 (Physiological Reports, n = 15 Veganer/Vegetarier): Muskelkreatin +18,8 mmol/kg und Magermasse +1,15 kg, Wiederholungssprint-Leistung aber unverändert. Auf Gedächtnis: SMD 0,31 (Xu 2024).",
     grenze:"Der Nullbefund zum Sprint hat n = 15 und nutzte 15-Sekunden-Sprints mit 3 Minuten Pause — weder Fußball-Antritte von 2–6 s noch dichte Belastung. Der Sprinteffekt ist damit nicht belegt und nicht widerlegt.",
-    quelle:"Supplement-Stack (2026-07)" },
+    quelle:"Supplement-Stack (2026-07) · Ernährung — Übersicht (MOC), Dosis präzisiert 08/2026" },
 
   algenoel: { titel:"Algenöl — zwei verschiedene Dosisziele", bereich:"Supplemente", ampel:"rot",
     antwort:"250–500 mg EPA und DHA dienen der Herzgesundheit, für einen Regenerationseffekt braucht es etwa das Vierfache.",
@@ -924,9 +1001,9 @@ const WISSEN = {
     grenze:"Auf EPA plus DHA gesamt achten, nicht nur auf DHA — viele Algenöle sind reine DHA-Öle im Verhältnis 1:3. Für Kognition gibt es bei 18- bis 35-Jährigen mit 1 g pro Tag keinen Effekt.",
     quelle:"Supplement-Stack (2026-07) · Ernährung & Kognition (2026-08) §5.4" },
 
-  vitamin_d: { titel:"Vitamin D — warum die Dosis heruntergesetzt wurde", bereich:"Supplemente", ampel:"rot",
-    antwort:"800–1.000 IE von Oktober bis März statt der früher angesetzten 2.000 IE.",
-    mechanismus:"In Deutschland reicht die Sonneneinstrahlung von Oktober bis März nicht für eine nennenswerte Eigensynthese in der Haut. Vitamin D ist fettlöslich, die Aufnahme steigt deutlich, wenn es zur größten Fettmahlzeit genommen wird.",
+  vitamin_d: { titel:"Vitamin D — kleinere Dosis, längeres Fenster", bereich:"Supplemente", ampel:"rot",
+    antwort:"800–1.000 IE statt der früher angesetzten 2.000 — dafür von September bis April statt nur Oktober bis März.",
+    mechanismus:"In Deutschland reicht die Sonneneinstrahlung im Winterhalbjahr nicht für eine nennenswerte Eigensynthese in der Haut. Das Fenster wurde 08/2026 auf September bis April erweitert, weil Vorlesung, Pendeln und Bibliothek die UVB-Exposition auch in den Randmonaten senken. Vitamin D ist fettlöslich, die Aufnahme steigt deutlich zur größten Fettmahlzeit.",
     studienlage:"Die Endocrine Society rät 2024 (Demay et al., JCEM) bei Gesunden unter 75 Jahren ausdrücklich gegen Dosen oberhalb der IOM-Referenzzufuhr von 600 IE und gegen ein Routine-Screening des Blutspiegels. D-A-CH setzt den Schätzwert ohne Sonne bei 800 IE an. 800–1.000 IE ist der Korridor, den beide tragen.",
     grenze:"Das Panel konnte keine Blutspiegel-Schwelle für „ausreichend\" festlegen — selbst wer misst, hat keinen leitliniengedeckten Zielwert. 2.000 IE bleiben unbedenklich (Obergrenze 4.000), sind aber nicht mehr begründet.",
     quelle:"Supplement-Stack (2026-07)" },
@@ -935,8 +1012,8 @@ const WISSEN = {
     antwort:"Ein bis zwei Paranüsse täglich decken den Bedarf, mehr sollten es ausdrücklich nicht sein.",
     mechanismus:"Selen gelangt über den Boden in die Pflanze. Paranüsse aus selenreichen Böden enthalten ein Vielfaches dessen aus armen Böden — der Gehalt schwankt um mehr als den Faktor 10. Das macht die Nuss zu einer wirksamen, aber unpräzisen Quelle.",
     studienlage:"Die vegane Ist-Zufuhr liegt in Studien bei etwa 25 µg gegenüber einem D-A-CH-Zielwert von 70 µg. Ein Multinutrient-RCT 2025 verbesserte bei Veganern den Selen- und Jodstatus messbar, den Eisen- und Zinkstatus dagegen nicht.",
-    grenze:"Wer die Paranüsse nicht wirklich täglich isst, fährt mit 50–70 µg Natriumselenit zuverlässiger. Beides zusammen ist wegen des engen Korridors keine gute Idee.",
-    quelle:"Supplement-Stack (2026-07) · Supplement-Einnahmeplan" },
+    grenze:"Wer die Paranüsse nicht wirklich täglich isst, fährt mit 50–70 µg Natriumselenit zuverlässiger. Beides zusammen ist wegen des engen Korridors keine gute Idee — die EFSA-Obergrenze liegt bei 255 µg pro Tag. Selen ist zugleich der einzige Streich-Kandidat im Stack, sobald Geflügel und Seefisch regelmäßig laufen: 100 g Hühnerbrust liefern bereits rund ein Drittel des Tagesziels.",
+    quelle:"Supplement-Stack (2026-07) · Muskelfleisch & Fleischqualität (2026-08)" },
 
   koffein: { titel:"Koffein 3 mg/kg am Spieltag", bereich:"Supplemente", ampel:"rot",
     antwort:"Rund 270 mg 45–60 Minuten vor Anpfiff sind am Spieltag die wirksamste Einzelmaßnahme — mehr bringt nichts.",
@@ -949,9 +1026,9 @@ const WISSEN = {
   beta_alanin: { titel:"Beta-Alanin — gestrichen", bereich:"Gestrichen", ampel:"schwarz",
     antwort:"Der Effekt liegt bei Belastungen von einer bis zehn Minuten — Fußball-Antritte dauern zwei bis sechs Sekunden.",
     mechanismus:"Beta-Alanin erhöht den Carnosingehalt im Muskel, der Säure abpuffert. Diese Pufferung zahlt sich erst aus, wenn eine Belastung lange genug dauert, um den Muskel deutlich zu übersäuern. Kurze Antritte mit Erholungspausen dazwischen erreichen diesen Zustand nicht.",
-    studienlage:"Metaanalyse 2024 (IJSNEM, 18 Studien, 331 trainierte Männer): g = 0,39, mit dem Effekt konzentriert auf Belastungen von 1–10 Minuten.",
-    grenze:"Der Befund sagt nicht, dass Beta-Alanin unwirksam ist — nur, dass die Wirkung in einem Belastungsbereich liegt, der im Fußball kaum vorkommt. Dazu kämen 4–12 Wochen Ladephase und Kribbeln auf der Haut.",
-    quelle:"Supplement-Stack (2026-07)" },
+    studienlage:"Metaanalyse 2024 (IJSNEM, 18 Studien, 331 trainierte Männer): g = 0,39, mit dem Effekt konzentriert auf Belastungen von 1–10 Minuten. ⚠️ Bestätigt 08/2026: Eine neue Multilevel-Metaanalyse (17 RCTs, Literatursuche bis 01/2026) prüfte die Wiederholungssprintfähigkeit direkt — kein Effekt, keine Dosis-Wirkungs-Beziehung.",
+    grenze:"Der ältere Befund sagte nur, dass die Wirkung in einem anderen Belastungsbereich liegt. Die neue Analyse misst genau die für dich relevante Fähigkeit und findet nichts — damit ist der Fall stärker als zuvor. Dazu kämen 4–12 Wochen Ladephase und Kribbeln auf der Haut.",
+    quelle:"Supplement-Stack (2026-07) · Bestandsrevision (2026-08)" },
 
   natriumbicarbonat: { titel:"Natriumbicarbonat — geprüft und verworfen", bereich:"Gestrichen", ampel:"schwarz",
     antwort:"Vom IOC gelistet, für Teamsport aber uneinheitlich — und das Magen-Darm-Risiko am Spieltag ist der Deal-Breaker.",
@@ -1024,6 +1101,35 @@ const WISSEN = {
     studienlage:"Der Zeitdruck nach dem Spiel betrifft die Kohlenhydrate, nicht das Protein: Typ-II-Fasern brauchen bis zu 72 Stunden zur vollständigen Glykogenrestitution. Isokalorisch verglichen bringt Protein zusätzlich zu Kohlenhydraten für die Glykogensynthese nichts (Margolis 2021).",
     grenze:"Das gilt für den Spieltag mit weniger als 24 Stunden bis zur nächsten Belastung. Bei deinem üblichen Abstand von über 24 Stunden zählt nur die Tagesbilanz — dann ist schneller Zucker ohne Nutzen.",
     quelle:"Post-Workout & Leber (2026-08) §2.3 · Wochenplan" },
+
+  m3_fett: { titel:"Warum M3 nur 18 g Fett haben darf", bereich:"Training", ampel:"rot",
+    antwort:"Diese eine Mahlzeit muss 4,75 Stunden und ein volles Training tragen — Fett würde sie zu langsam verfügbar machen.",
+    mechanismus:"Fett verzögert die Magenentleerung stärker als jeder andere Nährstoff — bei einer Mahlzeit, die bis 21:15 tragen und ab 19:00 ein Training überstehen soll, ist das der falsche Effekt. Die Grenze schließt die üblichen Tofu-Gerichte aus: 290 g Tofu liefern die 44 g Protein, bringen aber 23 g Fett mit. Gebraucht werden Sojagranulat, Seitan, Magerquark oder Linsen.",
+    studienlage:"Zielwert des Slots: ~850 kcal · 44 g Protein · 130 g KH · 18 g Fett. Bemerkenswert ist die Konvergenz: Die Kognitionsrecherche kommt aus ganz anderer Richtung — Leistungsabfall nach dem Mittagessen — auf dieselbe Form: 750–850 kcal, fettarm unter 20 g, ballaststoffreduziert, mindestens 2 h Abstand.",
+    grenze:"Nur zwei Slots der Woche haben eine eigene Fettgrenze, beide vor einer Belastung. Überall sonst ist Fett unproblematisch — auch direkt nach dem Training.",
+    quelle:"Rezepte, Abschnitt M3 · Ernährung & Kognition (2026-08) §2.2" },
+
+  /* ---- Fleisch ---- */
+  huehnerbrust: { titel:"Was Hühnerbrust wirklich liefert", bereich:"Ernährung", ampel:"rot",
+    antwort:"Fast reines Protein plus Selen — sie schließt keine deiner Nährstofflücken.",
+    mechanismus:"Für die als kritisch markierten Nährstoffe ist Hühnerbrust keine relevante Quelle: Zink, Eisen, Vitamin B12 und Riboflavin liegen alle bei 4–8 % des Tagesbedarfs je 100 g. Wer Muskelfleisch aus Mikronährstoffgründen isst, greift zur falschen Sorte — dann wären Hähnchenschenkel oder mageres Rind richtig.",
+    studienlage:"Je 100 g roh: ~120 kcal, 22–23 g Protein, 2,6 g Fett, ~22 µg Selen (etwa ein Drittel des Tagesziels). Der reale Vorteil ist die Kaloriendichte: 140 g Hühnerbrust liefern dieselben ~31 g Protein wie 210 g Tofu, aber 105 kcal und 12 g Fett weniger. Magerquark schlägt sie beim Protein je Euro allerdings um Faktor 2.",
+    grenze:"Das sind Praktikabilitätsargumente — Kalorienbudget und Küchentempo —, keine Ernährungsargumente. Das ist eine ausreichende Begründung, nur eine andere als erwartet. Wochenkorridor: höchstens 150 g rotes Fleisch inklusive Leber, 300–500 g Geflügel, ein- bis zweimal Seefisch.",
+    quelle:"Muskelfleisch & Fleischqualität (2026-08)" },
+
+  gefluegel_hygiene: { titel:"Geflügel im Meal Prep — die eigentliche Gefahr", bereich:"Ernährung", ampel:"rot",
+    antwort:"Etwa jede zweite Packung frischer Hähnchenbrust trägt Campylobacter — und dein 3–4-Tage-Prep liegt genau am Limit, nicht darunter.",
+    mechanismus:"Die Infektionsdosis ist niedrig, teils unter 500 Keimen. Der häufigste Einzelfehler ist Waschen: Spritzwasser verteilt die Keime über die halbe Küche. Tiefgekühlte Ware ist mikrobiologisch die bessere Wahl — Einfrieren senkt die Campylobacter-Zahl um Größenordnungen.",
+    studienlage:"BfR-Zoonosen-Monitoring: 45–55 % der frischen Hähnchenware im Einzelhandel, seit Jahren stabil; Salmonellen 4–6 %. Regeln: nicht waschen · Kerntemperatur mindestens 70 °C für 2 Minuten · getrenntes Brett · binnen 2 Stunden auf unter 7 °C herunterkühlen · gegart höchstens 3–4 Tage bei maximal 4 °C.",
+    grenze:"Das Risiko ist vollständig durch Küchenroutine lösbar — ein Einstichthermometer für rund 15 € erledigt den wichtigsten Punkt. Kritisch wird es beim Pendeln: Eine Portion, die um 7:00 aus dem Kühlschrank geht und um 13:00 gegessen wird, war sechs Stunden warm.",
+    quelle:"Muskelfleisch & Fleischqualität (2026-08) §2.6" },
+
+  gefluegelaufschnitt: { titel:"Kein Geflügelaufschnitt", bereich:"Gestrichen", ampel:"schwarz",
+    antwort:"Eine Portion frisst drei Viertel deines Ruhetags-Natriumbudgets — und es ist die einzige Gruppe-1-Kategorie in Reichweite.",
+    mechanismus:"Aufschnitt ist verarbeitetes Fleisch: gepökelt, mit Phosphaten und Wasser gestreckt. Die Grenze zwischen unproblematischem und problematischem Fleisch verläuft am Pökelsalz, nicht an der Panade. Bei Naturware entfallen Wasserzusatz, Phosphate, Citrate und Carrageen in einem Schritt.",
+    studienlage:"150 g Geflügelaufschnitt enthalten rund 1.500 mg Natrium — etwa 75 % des Ruhetagsbudgets von unter 2.000 mg. Verarbeitetes Fleisch ist von der IARC als Gruppe 1 eingestuft, mit rund 18 % höherem relativem Risiko für Kolorektalkarzinom je 50 g pro Tag.",
+    grenze:"Das relative Risiko sagt nichts über dein absolutes — bei einer Zufuhr nahe null ist der Beitrag ohnehin gering. Der Punkt ist die Natriumlast im Alltag, nicht die Krebszahl. Kaufregel für Naturware: eine Zutat, Protein mindestens 21 g/100 g, Salz höchstens 0,2 g/100 g.",
+    quelle:"Muskelfleisch & Fleischqualität (2026-08) §3.4 · Herz-Kreislauf-Prävention" },
 
   /* ---- Klausur und Lernen ---- */
   mahlzeitengroesse: { titel:"Warum die Mahlzeit vor einem Block kleiner sein soll", bereich:"Klausur", ampel:"rot",
@@ -1301,7 +1407,8 @@ function defaultSlot(){
   const h = new Date().getHours();
   if (h < 11) return "frueh";
   if (h < 15) return "mittag";
-  if (h < 21) return "abend";
+  if (h < 18) return "prae";     // M3-Fenster gegen 16:30
+  if (h < 22) return "abend";
   return "snack";
 }
 
@@ -2300,6 +2407,8 @@ function renderProfil(){
     bar.appendChild(b);
   });
   renderProfilHinweis(aktiv);
+  const nz = document.getElementById("natriumZeile");
+  if (nz) nz.innerHTML = `<span>🧂 Natrium heute: <b>${natriumText(aktiv)}</b></span>${iBtn("natrium")}`;
 }
 
 function renderProfilHinweis(profil){
@@ -2350,7 +2459,17 @@ function renderLog(d){
     if (!entries.length) return;
     const sum = entries.reduce((s,x)=>s+x.it.k,0);
     const grp=document.createElement("div"); grp.className="slotgroup";
-    grp.innerHTML=`<div class="slothead"><span>${slot.ic} ${slot.label}</span><span class="sum">${sum} kcal</span></div>`;
+    // Slots mit eigener Fettgrenze (M3) zeigen sie an und melden eine Überschreitung
+    let fettzeile = "";
+    if (slot.fettdeckel){
+      const fett = entries.reduce((s,x)=>s+(x.it.f||0),0);
+      const drueber = fett > slot.fettdeckel;
+      fettzeile = `<div class="fettdeckel${drueber ? " drueber" : ""}">
+        Fett ${fett} von ${slot.fettdeckel} g ${drueber
+          ? `— ${fett - slot.fettdeckel} g über der Grenze. Fett verzögert die Magenentleerung; diese Mahlzeit muss 2,5 h und ein volles Training tragen.`
+          : ""} ${iBtn("m3_fett")}</div>`;
+    }
+    grp.innerHTML=`<div class="slothead"><span>${slot.ic} ${slot.label}</span><span class="sum">${sum} kcal</span></div>${fettzeile}`;
     const ul=document.createElement("ul"); ul.className="log";
     entries.forEach(({it,i})=>{
       const li=document.createElement("li");
