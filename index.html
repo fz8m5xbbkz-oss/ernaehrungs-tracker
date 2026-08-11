@@ -54,11 +54,46 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .datelabel { flex: 1; text-align: center; font-size: 13.5px; font-weight: 600; color: var(--ink); }
 .todaychip { border: 1px solid var(--navy); background: var(--navy); color: #fff; border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
 
-/* Trainingstag */
-.training-toggle { display: inline-flex; align-items: center; gap: 8px; margin: 6px 0 2px; font-size: 13px; color: var(--grey); cursor: pointer; }
-.training-toggle input { width: 18px; height: 18px; accent-color: var(--green); }
-.training-badge { display: none; background: #eaf6ea; border: 1px solid #bfe3bf; border-radius: 999px; padding: 3px 9px; font-size: 11px; color: var(--green); font-weight: 700; }
-.training-badge.on { display: inline-block; }
+/* Tagesprofil-Selektor (v5 — ersetzt den binären Trainingstag-Toggle) */
+.profilbar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0 2px; }
+.profil-pill {
+  min-height: 48px;                       /* Tap-Ziel ≥ 44 px (Einhandbedienung) */
+  border: 1px solid var(--line); background: #fff; border-radius: 12px;
+  padding: 6px 3px; cursor: pointer; text-align: center; color: var(--grey);
+  font-size: 11.5px; line-height: 1.25; transition: .12s;
+  box-shadow: 0 1px 2px rgba(20,30,50,.05);
+}
+.profil-pill .ic { display: block; font-size: 15px; margin-bottom: 1px; }
+.profil-pill:active { transform: scale(.97); }
+.profil-pill.active { font-weight: 700; color: #fff; border-color: transparent; }
+.profil-pill.active[data-p="ruhe"]     { background: var(--blue); }
+.profil-pill.active[data-p="training"] { background: var(--green); }
+.profil-pill.active[data-p="regen"]    { background: var(--amber); }
+.profil-pill.active[data-p="spiel"]    { background: var(--violet); }
+
+/* Hinweiskarte (dezent, wegklickbar — nie ein Modal) */
+.hint {
+  display: none; align-items: flex-start; gap: 9px;
+  background: #fff8ec; border: 1px solid #f0dcb8; border-radius: 12px;
+  padding: 10px 12px; margin: 10px 0 0; font-size: 12.5px; color: #7a5312; line-height: 1.45;
+}
+.hint.on { display: flex; }
+.hint .hx { background: none; border: none; color: #a4762c; font-size: 15px; cursor: pointer; padding: 0 2px; line-height: 1; }
+
+/* Migrations-Bestätigung (einmalig) */
+.notice { display: none; background: #eef4fc; border: 1px solid #cfe0f5; border-radius: 12px; padding: 11px 13px; margin-bottom: 12px; font-size: 12.5px; color: var(--navy); line-height: 1.45; }
+.notice.on { display: block; }
+.notice button { display: block; background: var(--navy); color: #fff; border: none; border-radius: 8px; padding: 9px 14px; font-size: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; min-height: 40px; }
+
+/* Profil-Editor im Ziele-Modal */
+.ptabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 12px; }
+.ptab { min-height: 40px; border: 1px solid var(--line); background: #fff; border-radius: 10px; font-size: 11.5px; cursor: pointer; color: var(--grey); padding: 4px 2px; }
+.ptab.active { background: var(--navy); color: #fff; border-color: transparent; font-weight: 700; }
+.wdmap { margin-top: 14px; }
+.wdmap h4 { font-size: 12.5px; color: var(--navy); margin: 0 0 4px; }
+.wdrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.wdrow select { border: 1px solid var(--line); border-radius: 9px; padding: 8px; font-size: 13px; background: #fff; min-height: 40px; }
+.modal-scroll { max-height: 68vh; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 4px; }
 
 /* Ringe */
 .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 14px 0; }
@@ -179,6 +214,14 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
     <button id="installBtn">Installieren</button>
   </div>
 
+  <div class="notice" id="migNotice">
+    <b>Auf 4 Tagesprofile umgestellt.</b><br>
+    Deine bisherigen Daten wurden übernommen: Trainingstage bleiben Trainingstage, alle
+    übrigen Tage haben das Profil ihres Wochentags bekommen. Eine vollständige Sicherung
+    des alten Stands liegt im Gerät (<code>lf_backup_v3</code>) und lässt sich über Export retten.
+    <button id="migOk">Verstanden</button>
+  </div>
+
   <header>
     <div class="brand">
       <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
@@ -202,11 +245,12 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
     <button class="todaychip" id="todayBtn" style="display:none">Heute</button>
   </div>
 
-  <label class="training-toggle">
-    <input type="checkbox" id="trainingDay">
-    Trainingstag / Spiel
-    <span class="training-badge" id="trainingBadge">+400 kcal · +85 g KH · +0,5 L</span>
-  </label>
+  <div class="profilbar" id="profilbar"></div>
+
+  <div class="hint" id="profilHint">
+    <span id="profilHintText"></span>
+    <button class="hx" id="profilHintClose" aria-label="Hinweis schließen">✕</button>
+  </div>
 
   <div class="cards">
     <div class="card">
@@ -316,15 +360,27 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
   <footer>Lokal gespeichert · keine Daten verlassen dein Gerät</footer>
 </div>
 
-<!-- Ziele-Modal -->
+<!-- Ziele-Modal: vier Profile + Wochentags-Vorbelegung -->
 <div class="modal-bg" id="goalModal">
   <div class="modal">
-    <h3>Tagesziele</h3>
-    <label>Kalorien <input id="gKcal" type="number" inputmode="numeric"></label>
-    <label>Protein (g) <input id="gPro" type="number" inputmode="numeric"></label>
-    <label>Kohlenhydrate (g) <input id="gCarb" type="number" inputmode="numeric"></label>
-    <label>Fett (g) <input id="gFat" type="number" inputmode="numeric"></label>
-    <label>Wasser (L) <input id="gWat" type="number" inputmode="decimal" step="0.1"></label>
+    <h3>Zielwerte je Tagesprofil</h3>
+    <div class="modal-scroll">
+      <div class="ptabs" id="ptabs"></div>
+      <label>Kalorien <input id="gKcal" type="number" inputmode="numeric"></label>
+      <label>Protein (g) <input id="gPro" type="number" inputmode="numeric"></label>
+      <label>Kohlenhydrate (g) <input id="gCarb" type="number" inputmode="numeric"></label>
+      <label>Fett (g) <input id="gFat" type="number" inputmode="numeric"></label>
+      <label>Wasser (L) <input id="gWat" type="number" inputmode="decimal" step="0.1"></label>
+      <p class="muted" id="gCheck" style="margin:9px 0 0"></p>
+
+      <div class="wdmap">
+        <h4>Vorbelegung nach Wochentag</h4>
+        <p class="muted" style="margin:0 0 6px">
+          Nur der Startwert für einen neuen Tag — im Tag selbst jederzeit überschreibbar.
+        </p>
+        <div id="wdRows"></div>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn ghost" id="gCancel">Abbrechen</button>
       <button class="btn" id="gSave">Speichern</button>
@@ -352,6 +408,50 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
 <script>
 /* ---------- Speicher-Schlüssel ---------- */
 const LS_GOALS = "lf_goals", LS_DATA = "lf_data", LS_PRESETS = "lf_presets";
+const LS_VERSION = "lf_version", LS_PROFILES = "lf_profiles", LS_WDMAP = "lf_weekdaymap",
+      LS_SETTINGS = "lf_settings", LS_BACKUP = "lf_backup_v3";
+const APP_VERSION = 5;
+
+/* ---------- Die vier Tagesprofile ----------
+   Quelle: „Tagesprofile & Zielwerte" (Vault, Stand 08/2026).
+   Bewusst VIER VOLLSTÄNDIGE Sets statt Basis + Aufschlag: Der Regenerations-/Ladetag
+   senkt das Fett auf 80 g (−10 g gegenüber dem Ruhetag), um die fehlende Trainings-
+   energie bei hohen Kohlenhydraten zu kompensieren. Ein reiner Additions-Toggle wie
+   in v3 kann einen negativen Aufschlag nicht abbilden.
+   Gegengerechnet (P·4 + KH·4 + F·9): 3.290 · 3.815 · 3.580 · 3.985 kcal ✓ */
+const PROFILE_DEF = {
+  ruhe:     { kcal:3300, pro:170, carb:450, fat:90, wat:3.0 },
+  training: { kcal:3800, pro:175, carb:565, fat:95, wat:3.5 },
+  regen:    { kcal:3600, pro:175, carb:540, fat:80, wat:3.0 },
+  spiel:    { kcal:4000, pro:175, carb:630, fat:85, wat:4.0 },
+};
+
+const PROFILE_META = {
+  ruhe:     { label:"Ruhetag",   ic:"🌿", lang:"Ruhetag" },
+  training: { label:"Training",  ic:"⚽", lang:"Trainingstag" },
+  regen:    { label:"Regen/Lade",ic:"🔋", lang:"Regenerations-/Ladetag" },
+  spiel:    { label:"Spieltag",  ic:"🏟️", lang:"Spieltag" },
+};
+const PROFILE_IDS = ["ruhe","training","regen","spiel"];
+
+/* Vorbelegung nach Wochentag — JS getDay(): 0 = Sonntag.
+   Entspricht dem Wochenplan (Mo Regen · Di/Do Training · Mi/Fr Ruhe · Sa Regen · So Spiel).
+   Ab September (Studium HSF Meißen) in den Einstellungen änderbar, ohne Code anzufassen. */
+const WDMAP_DEF = { 0:"spiel", 1:"regen", 2:"training", 3:"ruhe", 4:"training", 5:"ruhe", 6:"regen" };
+const WD_NAMEN  = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+
+const SETTINGS_DEF = {
+  koffein_deadline: "15:00",
+  koffein_max_tage: 2,
+  skincare_start:   "2026-05-31",
+  klingen_intervall: 6,
+  wochenstart:      "mo",
+};
+
+/* Hinweistexte je Profil (dezent, wegklickbar). Belege: „Post-Workout & Leber (2026-08)" §1.3 */
+const PROFIL_HINWEIS = {
+  regen: "Kein Ruhetag — Sprintfasern füllen bis 72 h nach dem Spiel auf. Kohlenhydrate bleiben hoch, Fett bewusst runter.",
+};
 
 /* ---------- Eingebaute Schnellwahlen (mit geschätzten KH/Fett) ---------- */
 const PRESETS = [
@@ -384,41 +484,111 @@ function keyOf(dt){
 const todayKey = () => keyOf(new Date());
 function dateFromKey(k){ return new Date(k+"T12:00:00"); }
 
-/* ---------- Zustand laden + Migration alter Daten ---------- */
-/* Basis-Ziele = RUHETAG (aus „Nährstoff-Zielwerte & Herz-Kreislauf-Prävention", Teil A).
-   170 g P (680) + 450 g KH (1800) + 90 g F (810) ≈ 3.300 kcal — stimmig.
-   Der Trainings-/Spieltag kommt über den Aufschlag TRAIN dazu. */
-let goals   = JSON.parse(localStorage.getItem(LS_GOALS)   || "null") || {kcal:3300, pro:170, carb:450, fat:90, wat:3.0};
-let store   = JSON.parse(localStorage.getItem(LS_DATA)    || "{}");
-let presets = JSON.parse(localStorage.getItem(LS_PRESETS) || "[]");
+/* ---------- Zustand laden ---------- */
+/* lf_goals wird seit v5 nur noch als FALLBACK gelesen (falls die Profile fehlen) —
+   die Wahrheit stehen in lf_profiles. */
+let goals    = JSON.parse(localStorage.getItem(LS_GOALS)    || "null") || {...PROFILE_DEF.ruhe};
+let store    = JSON.parse(localStorage.getItem(LS_DATA)     || "{}");
+let presets  = JSON.parse(localStorage.getItem(LS_PRESETS)  || "[]");
+let profiles = JSON.parse(localStorage.getItem(LS_PROFILES) || "null");
+let wdmap    = JSON.parse(localStorage.getItem(LS_WDMAP)    || "null");
+let settings = JSON.parse(localStorage.getItem(LS_SETTINGS) || "null");
 
-if (goals.carb == null) goals.carb = 450;
-if (goals.fat  == null) goals.fat  = 90;
-// Einmal-Migration (2026-07): früher stand 3.600 kcal als Basis — das ist aber schon
-// der Trainingswert. Basis gehört auf den Ruhetag (3.300 kcal), Fett auf 90 g.
-if (goals.kcal === 3600 && goals.pro === 170 && goals.carb === 450) {
-  goals.kcal = 3300;
-  goals.fat  = 90;
-}
-for (const k in store) {
-  const d = store[k];
-  if (!d.items) continue;
-  d.items.forEach(it => { if (it.c==null) it.c=0; if (it.f==null) it.f=0; if (!it.slot) it.slot="snack"; });
+/* ---------- Tagesobjekt: Defaults auffüllen, nie undefined lassen ---------- */
+function normalizeDay(d){
+  if (!d.items) d.items = [];
+  d.items.forEach(it => {
+    if (it.c == null) it.c = 0;
+    if (it.f == null) it.f = 0;
+    if (!it.slot)     it.slot = "snack";
+    if (it.zeit === undefined) it.zeit = null;      // Uhrzeit erst ab v5 erfasst
+  });
   if (d.supps == null) d.supps = {};
+  if (!d.flags) d.flags = { klausur:false, lernblock:false, ort:"heim", blockbeginn:null };
+  if (!d.skin)  d.skin  = {
+    am: { wasser:false, moist:false, spf:false },
+    pm: { cleanser:false, wirkstoff:false, moist:false },
+    rasur:false, spf_nachgelegt:false, zustand:null, notiz:""
+  };
+  /* Schlaf bewusst mit null statt Beispielzeiten: „nicht erfasst" muss von „erfasst"
+     unterscheidbar bleiben, sonst rechnet die Statistik in Etappe 6 mit Phantomdaten. */
+  if (!d.sleep) d.sleep = { bett:null, auf:null, subjektiv:null };
+  if (d.gewicht === undefined) d.gewicht = null;
+  return d;
 }
+
+/* ---------- Migration v3 → v5 (einmalig, verlustfrei) ---------- */
+const storedVersion = parseInt(localStorage.getItem(LS_VERSION) || "0", 10);
+let   zeigeMigNotice = false;
+
+if (storedVersion < APP_VERSION) {
+  const hatAltdaten = localStorage.getItem(LS_DATA) !== null || localStorage.getItem(LS_GOALS) !== null;
+
+  // 1. Sicherung des alten Stands, BEVOR irgendetwas umgeschrieben wird.
+  if (hatAltdaten && !localStorage.getItem(LS_BACKUP)) {
+    try {
+      localStorage.setItem(LS_BACKUP, JSON.stringify({
+        version: storedVersion || 3,
+        gesichert: new Date().toISOString(),
+        goals, presets, data: store
+      }));
+      zeigeMigNotice = true;
+    } catch(e) {
+      // Speicher voll o. Ä. — dann lieber gar nicht migrieren als ungesichert.
+      alert("Sicherung der alten Daten fehlgeschlagen — die Umstellung wurde abgebrochen.\n"
+          + "Bitte einmal exportieren und Bescheid geben.");
+      throw e;
+    }
+  }
+
+  // 2. Profile anlegen. Ein selbst gesetztes altes Ruhetags-Ziel bleibt erhalten.
+  if (!profiles) {
+    profiles = JSON.parse(JSON.stringify(PROFILE_DEF));
+    const abweichend = goals && (goals.kcal !== PROFILE_DEF.ruhe.kcal || goals.pro !== PROFILE_DEF.ruhe.pro
+                              || goals.carb !== PROFILE_DEF.ruhe.carb || goals.fat !== PROFILE_DEF.ruhe.fat);
+    if (abweichend) profiles.ruhe = { kcal:goals.kcal, pro:goals.pro, carb:goals.carb, fat:goals.fat, wat:goals.wat };
+  }
+  if (!wdmap)    wdmap    = {...WDMAP_DEF};
+  if (!settings) settings = {...SETTINGS_DEF};
+}
+
+/* Defaults auch bei frischer Installation sicherstellen */
+if (!profiles) profiles = JSON.parse(JSON.stringify(PROFILE_DEF));
+if (!wdmap)    wdmap    = {...WDMAP_DEF};
+if (!settings) settings = {...SETTINGS_DEF};
+PROFILE_IDS.forEach(p => { if (!profiles[p]) profiles[p] = {...PROFILE_DEF[p]}; });
+for (const s in SETTINGS_DEF) if (settings[s] === undefined) settings[s] = SETTINGS_DEF[s];
+
+/* 3. Tage migrieren: training:bool → profil:string, neue Felder auffüllen. */
+for (const k in store) {
+  const d = normalizeDay(store[k]);
+  if (!d.profil) {
+    // true → Trainingstag · false/fehlend → Profil des Wochentags (lf_weekdaymap)
+    d.profil = (d.training === true) ? "training" : (wdmap[String(dateFromKey(k).getDay())] || "ruhe");
+  }
+  delete d.training;   // überführt; der Rückweg liegt in lf_backup_v3
+}
+
+/* 4. Migrierten Stand sofort festschreiben — sonst läuft die Umstellung bei jedem
+   Start erneut und lf_version bliebe auf dem alten Wert stehen. */
+save();
 
 let viewKey     = todayKey();
 let activeSlot  = defaultSlot();
 let chartMetric = "k";
 
-function blankDay(){ return {items:[], water:0, supps:{}, training:false}; }
-function readDay(k){ return store[k] || blankDay(); }            // nur lesen, legt nichts an
-function day(){ if(!store[viewKey]) store[viewKey]=blankDay(); return store[viewKey]; } // zum Schreiben
+function blankDay(k){ return normalizeDay({ items:[], water:0, supps:{}, profil: wdProfil(k) }); }
+function readDay(k){ return store[k] || blankDay(k); }                                    // nur lesen, legt nichts an
+function day(){ if(!store[viewKey]) store[viewKey]=blankDay(viewKey); return store[viewKey]; } // zum Schreiben
 
 function save(){
-  localStorage.setItem(LS_DATA,    JSON.stringify(store));
-  localStorage.setItem(LS_GOALS,   JSON.stringify(goals));
-  localStorage.setItem(LS_PRESETS, JSON.stringify(presets));
+  localStorage.setItem(LS_DATA,     JSON.stringify(store));
+  localStorage.setItem(LS_GOALS,    JSON.stringify(goals));      // nur noch Fallback
+  localStorage.setItem(LS_PRESETS,  JSON.stringify(presets));
+  localStorage.setItem(LS_PROFILES, JSON.stringify(profiles));
+  localStorage.setItem(LS_WDMAP,    JSON.stringify(wdmap));
+  localStorage.setItem(LS_SETTINGS, JSON.stringify(settings));
+  localStorage.setItem(LS_VERSION,  String(APP_VERSION));
 }
 
 function defaultSlot(){
@@ -429,21 +599,13 @@ function defaultSlot(){
   return "snack";
 }
 
-/* Aufschlag Ruhetag → Trainings-/Spieltag (Teil A der Nährstoff-Zielwerte):
-   3.300 → 3.700 kcal · 170 → 175 g P · 450 → 535 g KH · 90 → 95 g F · 3,0 → 3,5 L */
-const TRAIN = { kcal:400, pro:5, carb:85, fat:5, wat:0.5 };
+/* Profil eines Tages: gesetzter Wert schlägt Wochentags-Vorbelegung */
+function wdProfil(k){ return wdmap[String(dateFromKey(k).getDay())] || "ruhe"; }
+function profilOf(k){ const d = store[k]; return (d && d.profil) || wdProfil(k); }
 
-/* Wirksame Ziele eines Tages */
-function eff(k){
-  const t = readDay(k).training ? 1 : 0;
-  return {
-    kcal: goals.kcal + t*TRAIN.kcal,
-    pro:  goals.pro  + t*TRAIN.pro,
-    carb: goals.carb + t*TRAIN.carb,
-    fat:  goals.fat  + t*TRAIN.fat,
-    wat:  goals.wat  + t*TRAIN.wat,
-  };
-}
+/* Wirksame Ziele eines Tages = das vollständige Set seines Profils.
+   Kopie zurückgeben, damit niemand versehentlich in die gespeicherten Profile schreibt. */
+function eff(k){ return { ...(profiles[profilOf(k)] || profiles.ruhe) }; }
 function sumDay(k, field){ return readDay(k).items.reduce((s,i)=> s + (i[field]||0), 0); }
 
 /* Wie weit darf man vorausplanen? (28 Tage) */
@@ -488,10 +650,8 @@ function render(){
   document.getElementById("nextDay").disabled = (viewKey >= maxAheadKey());
   document.getElementById("todayBtn").style.display = (viewKey===tk) ? "none" : "inline-block";
 
-  // Trainingstag
-  const tcb = document.getElementById("trainingDay");
-  tcb.checked = !!d.training;
-  document.getElementById("trainingBadge").classList.toggle("on", !!d.training);
+  // Tagesprofil
+  renderProfil();
 
   // Summen + wirksame Ziele
   const g = eff(viewKey);
@@ -549,6 +709,37 @@ function proteinStreak(){
   while (hit(keyOf(d))){ s++; d.setDate(d.getDate()-1); if(s>365) break; }
   if (hit(todayKey())) s++;                                       // heute mitzählen, wenn schon erreicht
   return s;
+}
+
+/* ---------- Tagesprofil-Selektor ---------- */
+const hinweiseZu = new Set();          // pro Sitzung weggeklickte Hinweise
+
+function renderProfil(){
+  const bar = document.getElementById("profilbar");
+  const aktiv = profilOf(viewKey);
+  bar.innerHTML = "";
+  PROFILE_IDS.forEach(p => {
+    const m = PROFILE_META[p], g = profiles[p];
+    const b = document.createElement("button");
+    b.className = "profil-pill" + (p === aktiv ? " active" : "");
+    b.dataset.p = p;
+    b.innerHTML = `<span class="ic">${m.ic}</span>${m.label}`;
+    b.title = `${m.lang}: ${g.kcal} kcal · ${g.pro} g P · ${g.carb} g KH · ${g.fat} g F · ${de1(g.wat)} L`;
+    b.setAttribute("aria-pressed", p === aktiv ? "true" : "false");
+    b.onclick = () => { day().profil = p; save(); render(); };
+    bar.appendChild(b);
+  });
+  renderProfilHinweis(aktiv);
+}
+
+function renderProfilHinweis(profil){
+  const box = document.getElementById("profilHint");
+  const txt = PROFIL_HINWEIS[profil];
+  const key = `${viewKey}:${profil}`;
+  if (!txt || hinweiseZu.has(key)) { box.classList.remove("on"); return; }
+  document.getElementById("profilHintText").textContent = txt;
+  box.dataset.key = key;
+  box.classList.add("on");
 }
 
 /* ---------- Slots (Auswahl für neue Einträge) ---------- */
@@ -646,8 +837,16 @@ function drawChart(){
 }
 
 /* ---------- Aktionen ---------- */
+function jetztZeit(){
+  const d=new Date();
+  return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+}
 function addItem(src){
-  day().items.push({ n:src.n, k:src.k||0, p:src.p||0, c:src.c||0, f:src.f||0, slot:activeSlot });
+  day().items.push({
+    n:src.n, k:src.k||0, p:src.p||0, c:src.c||0, f:src.f||0, slot:activeSlot,
+    // Uhrzeit nur beim Eintragen am selben Tag — beim Nachtragen wäre sie erfunden.
+    zeit: (viewKey===todayKey() ? jetztZeit() : null)
+  });
   save(); showFlash(); render();
 }
 function showFlash(){ const f=document.getElementById("flash"); f.classList.add("show"); setTimeout(()=>f.classList.remove("show"),900); }
@@ -697,8 +896,16 @@ document.getElementById("prevDay").onclick=()=>shiftDay(-1);
 document.getElementById("nextDay").onclick=()=>shiftDay(1);
 document.getElementById("todayBtn").onclick=()=>{ viewKey=todayKey(); render(); };
 
-/* Trainingstag */
-document.getElementById("trainingDay").addEventListener("change",e=>{ day().training=e.target.checked; save(); render(); });
+/* Profil-Hinweis wegklicken (gilt für diese Sitzung) */
+document.getElementById("profilHintClose").onclick=()=>{
+  const box=document.getElementById("profilHint");
+  if(box.dataset.key) hinweiseZu.add(box.dataset.key);
+  box.classList.remove("on");
+};
+
+/* Migrations-Bestätigung */
+if (zeigeMigNotice) document.getElementById("migNotice").classList.add("on");
+document.getElementById("migOk").onclick=()=>document.getElementById("migNotice").classList.remove("on");
 
 /* Chart-Umschalter */
 document.getElementById("seg").addEventListener("click",e=>{
@@ -715,29 +922,99 @@ document.getElementById("resetDay").onclick=()=>{
 
 /* Export */
 document.getElementById("exportBtn").onclick=()=>{
-  const blob=new Blob([JSON.stringify({goals,presets,data:store},null,2)],{type:"application/json"});
+  const blob=new Blob([JSON.stringify(
+    { version:APP_VERSION, profiles, weekdaymap:wdmap, settings, goals, presets, data:store },
+    null, 2)],{type:"application/json"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
   a.download=`tracker-export-${todayKey()}.json`; a.click();
 };
 
-/* Ziele-Modal */
-const modal=document.getElementById("goalModal");
+/* ---------- Ziele-Modal: vier Profile + Wochentags-Vorbelegung ----------
+   Gearbeitet wird auf einer Kopie (entwurf) — „Abbrechen" verwirft dann wirklich alles. */
+const modal = document.getElementById("goalModal");
+let editProfil = "ruhe";
+let entwurf = null;
+
 function openGoals(){
-  document.getElementById("gKcal").value=goals.kcal;
-  document.getElementById("gPro").value=goals.pro;
-  document.getElementById("gCarb").value=goals.carb;
-  document.getElementById("gFat").value=goals.fat;
-  document.getElementById("gWat").value=goals.wat;
+  entwurf = { profiles: JSON.parse(JSON.stringify(profiles)), wdmap: {...wdmap} };
+  editProfil = profilOf(viewKey);
+  renderPTabs(); renderWdRows(); fillProfilFelder();
   modal.classList.add("show");
 }
-document.getElementById("editGoals").onclick=openGoals;
-document.getElementById("gCancel").onclick=()=>modal.classList.remove("show");
-modal.addEventListener("click",e=>{ if(e.target===modal) modal.classList.remove("show"); });
-document.getElementById("gSave").onclick=()=>{
-  const num=(id,fb)=>parseFloat((document.getElementById(id).value+"").replace(",","."))||fb;
-  goals={ kcal:Math.round(num("gKcal",goals.kcal)), pro:Math.round(num("gPro",goals.pro)),
-          carb:Math.round(num("gCarb",goals.carb)), fat:Math.round(num("gFat",goals.fat)),
-          wat:num("gWat",goals.wat) };
+
+function renderPTabs(){
+  const el = document.getElementById("ptabs"); el.innerHTML = "";
+  PROFILE_IDS.forEach(p => {
+    const b = document.createElement("button");
+    b.className = "ptab" + (p === editProfil ? " active" : "");
+    b.innerHTML = `${PROFILE_META[p].ic}<br>${PROFILE_META[p].label}`;
+    b.onclick = () => { leseProfilFelder(); editProfil = p; renderPTabs(); fillProfilFelder(); };
+    el.appendChild(b);
+  });
+}
+
+function fillProfilFelder(){
+  const g = entwurf.profiles[editProfil];
+  document.getElementById("gKcal").value = g.kcal;
+  document.getElementById("gPro").value  = g.pro;
+  document.getElementById("gCarb").value = g.carb;
+  document.getElementById("gFat").value  = g.fat;
+  document.getElementById("gWat").value  = g.wat;
+  pruefeGegenrechnung();
+}
+
+function leseProfilFelder(){
+  const num = (id,fb) => parseFloat((document.getElementById(id).value+"").replace(",","."))||fb;
+  const g = entwurf.profiles[editProfil];
+  entwurf.profiles[editProfil] = {
+    kcal: Math.round(num("gKcal", g.kcal)), pro: Math.round(num("gPro", g.pro)),
+    carb: Math.round(num("gCarb", g.carb)), fat: Math.round(num("gFat", g.fat)),
+    wat:  num("gWat", g.wat)
+  };
+}
+
+/* Gegenrechnung P·4 + KH·4 + F·9 — wie in „Tagesprofile & Zielwerte" nachgerechnet.
+   Nur ein Hinweis, keine Sperre: die Zahlen sind Startpunkt, nicht Gesetz. */
+function pruefeGegenrechnung(){
+  const num = id => parseFloat((document.getElementById(id).value+"").replace(",","."))||0;
+  const k = num("gKcal"), aus = num("gPro")*4 + num("gCarb")*4 + num("gFat")*9;
+  const diff = Math.round(aus - k);
+  const el = document.getElementById("gCheck");
+  el.textContent = Math.abs(diff) <= 30
+    ? `Aus den Makros gerechnet: ${Math.round(aus)} kcal — deckt sich.`
+    : `Aus den Makros gerechnet: ${Math.round(aus)} kcal (${diff>0?"+":""}${diff} gegenüber dem Kalorienziel).`;
+  el.style.color = (k && Math.abs(diff)/k > 0.05) ? "var(--amber)" : "";
+}
+["gKcal","gPro","gCarb","gFat"].forEach(id =>
+  document.getElementById(id).addEventListener("input", pruefeGegenrechnung));
+
+function renderWdRows(){
+  const el = document.getElementById("wdRows"); el.innerHTML = "";
+  const reihenfolge = settings.wochenstart === "so" ? [0,1,2,3,4,5,6] : [1,2,3,4,5,6,0];
+  reihenfolge.forEach(d => {
+    const row = document.createElement("div"); row.className = "wdrow";
+    const name = document.createElement("span"); name.textContent = WD_NAMEN[d];
+    const sel = document.createElement("select");
+    sel.setAttribute("aria-label", `Profil für ${WD_NAMEN[d]}`);
+    PROFILE_IDS.forEach(p => {
+      const o = document.createElement("option");
+      o.value = p; o.textContent = PROFILE_META[p].lang;
+      if (entwurf.wdmap[String(d)] === p) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.onchange = () => { entwurf.wdmap[String(d)] = sel.value; };
+    row.append(name, sel); el.appendChild(row);
+  });
+}
+
+document.getElementById("editGoals").onclick = openGoals;
+document.getElementById("gCancel").onclick = () => modal.classList.remove("show");
+modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("show"); });
+document.getElementById("gSave").onclick = () => {
+  leseProfilFelder();
+  profiles = entwurf.profiles;
+  wdmap    = entwurf.wdmap;
+  goals    = { ...profiles.ruhe };        // Fallback mitziehen
   save(); modal.classList.remove("show"); render();
 };
 
@@ -759,7 +1036,7 @@ document.getElementById("copyDo").onclick=()=>{
   const items=readDay(src).items;
   if(!items.length){ alert("Dieser Tag hat keine Einträge zum Kopieren."); return; }
   const tgt=day();
-  items.forEach(it=> tgt.items.push({ n:it.n, k:it.k, p:it.p, c:it.c, f:it.f, slot:it.slot }));
+  items.forEach(it=> tgt.items.push({ n:it.n, k:it.k, p:it.p, c:it.c, f:it.f, slot:it.slot, zeit:it.zeit??null }));
   save(); copyModal.classList.remove("show"); showFlash(); render();
 };
 
