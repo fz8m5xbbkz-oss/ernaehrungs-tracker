@@ -43,16 +43,44 @@ body {
 .view.on { display: block; }
 .tabbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px;
   background: rgba(255,255,255,.97); border-top: 1px solid var(--line);
-  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  padding: 6px 5px calc(6px + env(safe-area-inset-bottom));
   backdrop-filter: saturate(180%) blur(12px);
 }
 .tabbtn {
   border: none; background: none; border-radius: 11px; cursor: pointer;
-  min-height: 52px; padding: 6px 2px; font-size: 10.5px; color: var(--grey); line-height: 1.2;
+  min-height: 52px; padding: 6px 1px; font-size: 9.5px; color: var(--grey); line-height: 1.2;
 }
-.tabbtn .ic { display: block; font-size: 19px; margin-bottom: 2px; }
+.tabbtn .ic { display: block; font-size: 18px; margin-bottom: 2px; }
+
+/* Warum-Ebene: ⓘ-Symbol und Bottom Sheet */
+/* Tap-Ziel 44 px, optisch aber klein: negative Margins halten die Zeilenhöhe stabil */
+.wi {
+  border: none; background: none; cursor: pointer; color: var(--blue);
+  font-size: 13px; line-height: 1; vertical-align: middle;
+  width: 44px; height: 44px; margin: -10px -8px; padding: 0;
+}
+.wi:active { transform: scale(.92); }
+.sheet-bg { display: none; position: fixed; inset: 0; background: rgba(16,22,34,.5); z-index: 60; align-items: flex-end; justify-content: center; }
+.sheet-bg.show { display: flex; }
+.sheet { background: #fff; width: 100%; max-width: 560px; border-radius: 20px 20px 0 0; padding: 18px 18px calc(18px + env(safe-area-inset-bottom)); max-height: 88vh; overflow-y: auto; }
+@media (min-width: 620px) { .sheet-bg { align-items: center; } .sheet { border-radius: 18px; } }
+.sheet h3 { margin: 0 0 4px; font-size: 16.5px; color: var(--navy); line-height: 1.3; }
+.sheet .ampelzeile { font-size: 11.5px; color: var(--grey); margin-bottom: 14px; }
+.sheet .antwort { font-size: 14.5px; line-height: 1.55; font-weight: 600; color: var(--ink); margin: 0 0 14px; }
+.sheet h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--grey); margin: 14px 0 4px; }
+.sheet p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--ink); }
+.sheet .grenze { background: #f6f8fc; border-left: 3px solid var(--line); border-radius: 0 8px 8px 0; padding: 10px 12px; }
+.sheet .quelle { margin-top: 16px; padding-top: 11px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--grey); }
+.sheet .zu { width: 100%; margin-top: 14px; }
+
+/* Wissens-Register */
+.regfilter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.regcard { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 8px; cursor: pointer; min-height: 56px; }
+.regcard .rt { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+.regcard .ra { font-size: 12px; color: var(--grey); margin-top: 3px; line-height: 1.45; }
+.regbereich { font-size: 11.5px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: .4px; margin: 16px 0 7px; }
 .tabbtn.active { color: var(--navy); font-weight: 800; background: #eef4fc; }
 @media (min-width: 760px) { .tabbar { max-width: 760px; margin: 0 auto; border-radius: 16px 16px 0 0; } }
 
@@ -61,12 +89,12 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand h1 { font-size: 19px; margin: 0; color: var(--navy); letter-spacing: -.2px; }
 .brand .sub { font-size: 11px; color: var(--grey); margin-top: 1px; }
-.gear { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 11px; cursor: pointer; color: var(--navy); font-size: 13px; font-weight: 600; box-shadow: 0 1px 2px rgba(20,30,50,.05); }
+.gear { background: #fff; border: 1px solid var(--line); border-radius: 11px; padding: 8px 13px; min-height: 44px; cursor: pointer; color: var(--navy); font-size: 13px; font-weight: 600; box-shadow: 0 1px 2px rgba(20,30,50,.05); }
 .gear:active { transform: scale(.97); }
 
 /* Datums-Navigation */
 .datebar { display: flex; align-items: center; gap: 8px; margin: 14px 0 6px; }
-.navbtn { width: 34px; height: 34px; border: 1px solid var(--line); background: #fff; border-radius: 10px; font-size: 18px; line-height: 1; color: var(--navy); cursor: pointer; box-shadow: 0 1px 2px rgba(20,30,50,.05); }
+.navbtn { width: 44px; height: 44px; border: 1px solid var(--line); background: #fff; border-radius: 11px; font-size: 18px; line-height: 1; color: var(--navy); cursor: pointer; box-shadow: 0 1px 2px rgba(20,30,50,.05); }
 .navbtn:disabled { opacity: .35; cursor: default; }
 .navbtn:active:not(:disabled) { transform: scale(.95); }
 .datelabel { flex: 1; text-align: center; font-size: 13.5px; font-weight: 600; color: var(--ink); }
@@ -96,7 +124,7 @@ header { display: flex; align-items: center; justify-content: space-between; gap
   padding: 10px 12px; margin: 10px 0 0; font-size: 12.5px; color: #7a5312; line-height: 1.45;
 }
 .hint.on { display: flex; }
-.hint .hx { background: none; border: none; color: #a4762c; font-size: 15px; cursor: pointer; padding: 0 2px; line-height: 1; }
+.hint .hx { background: none; border: none; color: #a4762c; font-size: 15px; cursor: pointer; padding: 0 2px; line-height: 1; min-width: 44px; min-height: 44px; flex: none; }
 
 /* Tagesflags */
 .flagbar { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin: 10px 0 0; }
@@ -175,13 +203,13 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 
 /* Chips */
 .row { display: flex; gap: 8px; flex-wrap: wrap; }
-.chip { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 12px; font-size: 12.5px; cursor: pointer; transition: .12s; color: var(--ink); }
+.chip { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 13px; font-size: 12.5px; cursor: pointer; transition: .12s; color: var(--ink); min-height: 44px; display: inline-flex; align-items: center; gap: 4px; }
 .chip:hover { border-color: var(--blue); background: #eef5fc; }
 .chip:active { transform: scale(.97); }
 .chip small { color: var(--grey); }
 .chip-wrap { display: inline-flex; align-items: stretch; }
 .chip-wrap .chip { border-top-right-radius: 0; border-bottom-right-radius: 0; }
-.chip-del { border: 1px solid var(--line); border-left: none; background: #fff; border-radius: 0 999px 999px 0; padding: 0 9px; font-size: 12px; color: #c0392b; cursor: pointer; }
+.chip-del { border: 1px solid var(--line); border-left: none; background: #fff; border-radius: 0 999px 999px 0; padding: 0 12px; font-size: 12px; color: #c0392b; cursor: pointer; min-height: 44px; }
 .chip-del:hover { background: #fef2f2; }
 .subhint { font-size: 11.5px; color: var(--grey); margin: 12px 0 6px; }
 
@@ -191,7 +219,7 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .addform input#fname { flex: 1 1 100%; }
 .addform input.n { flex: 1; min-width: 64px; width: 64px; text-align: center; }
 .formbtns { display: flex; gap: 7px; margin-top: 8px; }
-.btn { background: var(--navy); color: #fff; border: none; border-radius: 10px; padding: 11px 14px; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.btn { background: var(--navy); color: #fff; border: none; border-radius: 10px; padding: 12px 14px; min-height: 44px; font-size: 13.5px; font-weight: 700; cursor: pointer; }
 .btn:active { transform: scale(.98); }
 .btn.ghost { background: #fff; color: var(--navy); border: 1px solid var(--navy); }
 .btn.amber { background: #fff; color: var(--amber); border: 1px solid #eccf9e; }
@@ -206,7 +234,7 @@ ul.log { list-style: none; margin: 0; padding: 0; }
 ul.log li { display: flex; align-items: center; justify-content: space-between; padding: 9px 2px; border-bottom: 1px solid #f0f3f8; font-size: 13.5px; }
 ul.log li:last-child { border-bottom: none; }
 ul.log .meta { color: var(--grey); font-size: 11.5px; }
-.del { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 16px; padding: 2px 8px; }
+.del { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 16px; padding: 2px 8px; min-width: 44px; min-height: 44px; }
 .empty { color: var(--grey); font-size: 12.5px; padding: 10px 2px; }
 
 /* Wasser */
@@ -221,7 +249,7 @@ ul.log .meta { color: var(--grey); font-size: 11.5px; }
 
 /* Verlauf-Chart */
 .seg { display: flex; gap: 6px; }
-.seg button { border: 1px solid var(--line); background: #fff; border-radius: 9px; padding: 5px 10px; font-size: 12px; cursor: pointer; color: var(--grey); font-weight: 600; }
+.seg button { border: 1px solid var(--line); background: #fff; border-radius: 9px; padding: 5px 12px; font-size: 12px; cursor: pointer; color: var(--grey); font-weight: 600; min-height: 40px; }
 .seg button.active { color: #fff; border-color: transparent; }
 .seg button.active[data-m="k"] { background: var(--navy); }
 .seg button.active[data-m="p"] { background: var(--green); }
@@ -383,19 +411,19 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
     </div>
     <div class="card">
       <div class="ring" id="ringPro"></div>
-      <div class="label">Protein</div>
+      <div class="label">Protein <button class="wi" data-wissen="protein" aria-label="Warum?">ⓘ</button></div>
       <div class="goal"><span id="proNow">0</span> / <span id="proGoal">170</span> g</div>
       <div class="rest" id="proRest"></div>
     </div>
     <div class="card">
       <div class="ring" id="ringCarb"></div>
-      <div class="label">Kohlenhydrate</div>
+      <div class="label">Kohlenhydrate <button class="wi" data-wissen="kohlenhydrate" aria-label="Warum?">ⓘ</button></div>
       <div class="goal"><span id="carbNow">0</span> / <span id="carbGoal">450</span> g</div>
       <div class="rest" id="carbRest"></div>
     </div>
     <div class="card">
       <div class="ring" id="ringWat"></div>
-      <div class="label">Wasser</div>
+      <div class="label">Wasser <button class="wi" data-wissen="wasser" aria-label="Warum?">ⓘ</button></div>
       <div class="goal"><span id="watNow">0</span> / <span id="watGoal">3,0</span> L</div>
       <div class="rest" id="watRest"></div>
     </div>
@@ -519,6 +547,17 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
   <!-- ============ Ansicht: Schlaf ============ -->
   <div class="view" id="view-schlaf"></div>
 
+  <!-- ============ Ansicht: Wissen ============ -->
+  <div class="view" id="view-wissen">
+    <div class="section">
+      <h2>Warum diese Zahlen</h2>
+      <p class="muted" style="margin:0 0 12px">Jeder Zielwert, jedes Supplement und jede Uhrzeit
+        in dieser App hat eine Begründung. Hier stehen sie alle — sortierbar nach Belegstärke.</p>
+      <div class="regfilter" id="regFilter"></div>
+      <div id="regListe"></div>
+    </div>
+  </div>
+
   <footer>Lokal gespeichert · keine Daten verlassen dein Gerät</footer>
 </div>
 
@@ -527,7 +566,13 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
   <button class="tabbtn" data-v="rezepte"><span class="ic">🍳</span>Rezepte</button>
   <button class="tabbtn" data-v="haut"><span class="ic">🧴</span>Haut</button>
   <button class="tabbtn" data-v="schlaf"><span class="ic">😴</span>Schlaf</button>
+  <button class="tabbtn" data-v="wissen"><span class="ic">💡</span>Warum</button>
 </nav>
+
+<!-- Erklärkarte als Bottom Sheet -->
+<div class="sheet-bg" id="wissenSheet">
+  <div class="sheet" id="wissenInhalt"></div>
+</div>
 
 <!-- Ziele-Modal: vier Profile + Wochentags-Vorbelegung -->
 <div class="modal-bg" id="goalModal">
@@ -623,18 +668,18 @@ const SETTINGS_DEF = {
    Quelle: „Meine Basis-Routine" / „Skincare MOC". */
 const HAUT_AM = [
   { id:"wasser", label:"Gesicht mit lauwarmem Wasser abspülen" },
-  { id:"moist",  label:"Ceramid-Moisturizer" },
-  { id:"spf",    label:"SPF 50 — immer als letzter Schritt" },
+  { id:"moist",  label:"Ceramid-Moisturizer", wissen:"ceramide" },
+  { id:"spf",    label:"SPF 50 — immer als letzter Schritt", wissen:"spf_reihenfolge" },
 ];
 const HAUT_PM = [
-  { id:"cleanser",  label:"BHA-Reinigung (Salicylsäure 2 %)" },
-  { id:"wirkstoff", label:"Wirkstoff (Niacinamid 10 %, später Azelainsäure 10 %)" },
-  { id:"moist",     label:"Ceramid-Moisturizer" },
+  { id:"cleanser",  label:"BHA-Reinigung (Salicylsäure 2 %)", wissen:"salicylsaeure" },
+  { id:"wirkstoff", label:"Wirkstoff (Niacinamid 10 %, später Azelainsäure 10 %)", wissen:"niacinamid" },
+  { id:"moist",     label:"Ceramid-Moisturizer", wissen:"ceramide" },
 ];
 
 /* Hinweistexte je Profil (dezent, wegklickbar). Belege: „Post-Workout & Leber (2026-08)" §1.3 */
 const PROFIL_HINWEIS = {
-  regen: "Kein Ruhetag — Sprintfasern füllen bis 72 h nach dem Spiel auf. Kohlenhydrate bleiben hoch, Fett bewusst runter.",
+  regen: { text:"Kein Ruhetag — Sprintfasern füllen bis 72 h nach dem Spiel auf. Kohlenhydrate bleiben hoch, Fett bewusst runter.", wissen:"kh_regen" },
 };
 
 /* ---------- Eingebaute Schnellwahlen (mit geschätzten KH/Fett) ---------- */
@@ -654,12 +699,12 @@ const PRESETS = [
 /* Supplemente — Quelle: „Supplement-Einnahmeplan" (Vault).
    `monate`: nur in diesen Monaten einblenden (0 = Januar). */
 const SUPPS = [
-  { n:"B-Komplex",          hinweis:"Morgens zum Frühstück. Kaffee erst 1 h später — sonst sinkt die Eisenaufnahme um ~40 %." },
-  { n:"Jod/Kombitablette",  hinweis:"Morgens zum Frühstück, wegen des Eisenfumarats mit Essen. Hepcidin ist morgens am niedrigsten." },
-  { n:"Kreatin",            hinweis:"Timing ist nachweislich egal — Konstanz ist der Wirkfaktor. An eine feste Gewohnheit koppeln." },
-  { n:"Algenöl",            hinweis:"Zur größten Fettmahlzeit — die Aufnahme steigt deutlich mit Fett." },
-  { n:"Vitamin D",          hinweis:"Nur Oktober bis März, zur größten Fettmahlzeit. 800–1.000 IE.", monate:[9,10,11,0,1,2] },
-  { n:"Paranüsse",          hinweis:"1–2 Stück decken den Selenbedarf. Nicht mehr — der Sicherheitskorridor ist eng." },
+  { n:"B-Komplex",          wissen:"b12",       hinweis:"Morgens zum Frühstück. Kaffee erst 1 h später — sonst sinkt die Eisenaufnahme um ~40 %." },
+  { n:"Jod/Kombitablette",  wissen:"jod",       hinweis:"Morgens zum Frühstück, wegen des Eisenfumarats mit Essen. Hepcidin ist morgens am niedrigsten." },
+  { n:"Kreatin",            wissen:"kreatin",   hinweis:"Timing ist nachweislich egal — Konstanz ist der Wirkfaktor. An eine feste Gewohnheit koppeln." },
+  { n:"Algenöl",            wissen:"algenoel",  hinweis:"Zur größten Fettmahlzeit — die Aufnahme steigt deutlich mit Fett." },
+  { n:"Vitamin D",          wissen:"vitamin_d", hinweis:"Nur Oktober bis März, zur größten Fettmahlzeit. 800–1.000 IE.", monate:[9,10,11,0,1,2] },
+  { n:"Paranüsse",          wissen:"selen",     hinweis:"1–2 Stück decken den Selenbedarf. Nicht mehr — der Sicherheitskorridor ist eng." },
 ];
 
 const SLOTS = [
@@ -790,6 +835,339 @@ const RECIPES_DEF = [
     schritte:["Bohnen mit Haferflocken, Zwiebel und Gewürzen kneten.","Patties formen, je Seite 3–4 Min braten.",
               "Im Brötchen belegen."] },
 ];
+
+/* ================= Die Warum-Ebene =================
+   Keine Zahl ohne Begründung. Jede Karte: Ein-Satz-Antwort · Mechanismus ·
+   Studienlage mit Effektgröße · Ampel · Grenze (Pflichtzeile) · Quellnotiz.
+   Ampel: rot = belegt und handlungsrelevant · gelb = plausibel, Evidenz dünn ·
+   schwarz = Mythos, widerlegt oder überschätzt.
+   ALLE Inhalte stammen aus den Vault-Notizen. Wo dort nichts steht, sagt die
+   Karte das ausdrücklich — statt plausibel klingend zu improvisieren. */
+const WISSEN = {
+
+  /* ---- Makros und Zielwerte ---- */
+  protein: { titel:"Protein 170–175 g (1,9 g/kg)", bereich:"Ernährung", ampel:"rot",
+    antwort:"Diese Höhe deckt den Aufbaubedarf und gleicht aus, dass pflanzliches Protein pro Gramm etwas weniger Leucin liefert.",
+    mechanismus:"Leucin ist die Aminosäure, die den Muskelaufbau anstößt. Pro Mahlzeit braucht es davon etwa 2,5–3 g, damit der Reiz überhaupt auslöst. Sojaprotein enthält 7,5–8 g Leucin je 100 g Protein, Whey 11–13 g — deshalb liegt die Zielmenge bei pflanzenbetonter Kost etwas höher.",
+    studienlage:"Morton 2018 und Messina 2018/2021 stützen den Bereich um 1,9 g/kg. Areta 2013 liefert die Leucinschwelle von 2,5–3 g pro Mahlzeit. Deine 43,8 g je Mahlzeit ergeben bei Sojabasis ~3,4 g Leucin — über dem Korridor. Ein Vergleich von 2024 fand pflanzliches Protein nur 12 ± 16 % unter Whey.",
+    grenze:"Vier Mahlzeiten reichen, eine fünfte bringt nichts — sie wäre nur aus Kaloriengründen sinnvoll, nicht aus Timing-Gründen. Mehr Protein als 1,9 g/kg ist nicht belegt besser.",
+    quelle:"Profil & Bedarf · Post-Workout & Leber (2026-08)" },
+
+  kohlenhydrate: { titel:"Kohlenhydrate 450–630 g je Profil", bereich:"Ernährung", ampel:"rot",
+    antwort:"Glykogen ist dein Spielsprit — die Menge richtet sich danach, wie viel du an dem Tag davon verbrauchst.",
+    mechanismus:"Glykogen ist die Speicherform der Kohlenhydrate im Muskel. Ein Fußballspiel leert bis zu 80 % der Typ-I- und 70 % der Typ-II-Fasern nahezu vollständig. Ein Ruhetag verbraucht davon wenig, ein Spieltag sehr viel — deshalb die Spanne von 5,0 g/kg am Ruhetag bis 7,0 g/kg am Spieltag.",
+    studienlage:"7 g/kg am Spieltag ist das obere Ende der UEFA-Empfehlung (6–8 g/kg, Collins 2021, BJSM). Die Glykogenentleerung im Elitefußball ist mehrfach dokumentiert (Frontiers 2022; Gunnarsson 2011).",
+    grenze:"Die Zahlen sind Startpunkt, nicht Gesetz. Der Kalorien-Kompass ist der Gewichtsverlauf: Steigt er schneller als ~0,3 kg pro Woche, wird zuerst der Regenerations-/Ladetag zurückgenommen.",
+    quelle:"Tagesprofile & Zielwerte · Post-Workout & Leber (2026-08)" },
+
+  kh_regen: { titel:"Warum der Regen-/Ladetag das Fett SENKT", bereich:"Ernährung", ampel:"rot",
+    antwort:"Weil an diesem Tag die Trainingsenergie fehlt, die Kohlenhydrate aber hoch bleiben sollen — also muss das Fett Platz machen.",
+    mechanismus:"Am Montag füllen sich die Glykogenspeicher nach dem Spiel weiter auf, am Samstag wird für das Spiel vorgeladen. Beides braucht Kohlenhydrate. Weil aber kein Training stattfindet, ist der Gesamtbedarf niedriger als an einem Trainingstag. Das Fett auf 80 g zu senken schafft den Raum, ohne die Kohlenhydrate anzutasten.",
+    studienlage:"Gegengerechnet ergibt das Profil 3.580 kcal bei 175 g Protein, 540 g KH und 80 g Fett. Der Fettanteil liegt damit bei 20 % der Energie — deutlich unter dem WHO-Deckel von 30 %.",
+    grenze:"Ein reiner Additions-Toggle kann das nicht abbilden, weil das Fett-Delta negativ ist. Das ist der Grund, warum die App vier vollständige Zielwert-Sets speichert statt Basis plus Aufschlag.",
+    quelle:"Tagesprofile & Zielwerte" },
+
+  montag: { titel:"Warum der Montag kein Ruhetag ist", bereich:"Ernährung", ampel:"rot",
+    antwort:"Nach einem Sonntagsspiel füllen die Sprintfasern ihr Glykogen noch bis zu 72 Stunden lang auf.",
+    mechanismus:"Typ-II-Fasern sind die schnellen Fasern — sie liefern Antritt und Sprintkraft. Sie entleeren sich im Spiel besonders stark und füllen sich langsamer wieder auf als die ausdauernden Typ-I-Fasern. Wer am Montag die Kohlenhydrate senkt, unterbricht genau diesen Wiederaufbau.",
+    studienlage:"Gunnarsson 2011 (Scand J Med Sci Sports): Selbst bei kohlenhydrat- und proteinreicher Kost war der Glykogengehalt der Typ-II-Fasern 48 h nach dem Spiel noch reduziert. Vollständige Erholung dauert 48–72 h statt der 24–48 h nach Krafttraining.",
+    grenze:"Der Befund betrifft die Kohlenhydrate, nicht das Protein — das bleibt ohnehin konstant. Und er gilt nach einem Spiel, nicht nach jedem Training.",
+    quelle:"Post-Workout & Leber (2026-08) §1.3" },
+
+  fett: { titel:"Fett 0,9–1,1 g/kg", bereich:"Ernährung", ampel:"rot",
+    antwort:"80–95 g decken den Bedarf an fettlöslichen Vitaminen und Hormonbausteinen und bleiben klar unter dem WHO-Deckel.",
+    mechanismus:"Fett ist der dichteste Energieträger und transportiert die Vitamine A, D, E und K. Weil es pro Gramm mehr als doppelt so viel Energie liefert wie Kohlenhydrate, ist es der Stellhebel, über den sich Kohlenhydrate hoch halten lassen, ohne die Gesamtenergie zu sprengen.",
+    studienlage:"Die WHO empfiehlt höchstens 30 % der Energie aus Fett. Deine vier Profile liegen bei 19–25 % — durchgehend im Rahmen. Bevorzugt ungesättigt.",
+    grenze:"Fett vor Belastung oder vor einem langen Klausurblock zu senken ist sinnvoll, weil es die Magenentleerung am stärksten verzögert — das ist ein Komfort-, kein Nährstoffargument.",
+    quelle:"Tagesprofile & Zielwerte · Profil & Bedarf" },
+
+  wasser: { titel:"Wasser 3–4 L", bereich:"Ernährung", ampel:"rot",
+    antwort:"Flüssigkeitsmangel ist der einzige akute Ernährungsfaktor mit belastbarer Wirkung auf die Aufmerksamkeit.",
+    mechanismus:"Ab etwa 2 % Verlust des Körpergewichts — bei dir 1,8 kg — sinkt die Daueraufmerksamkeit messbar. Im Hörsaal ist das kaum erreichbar, bei Training oder Spiel dagegen schnell: Die Schweißrate liegt beim Training bei 0,8–1,5 L/h, im Spiel bei Hitze bis 2,0 L/h.",
+    studienlage:"Wittbrodt & Millard-Stafford 2018 (33 Studien, 413 Probanden): Aufmerksamkeit −0,52, Motorkoordination −0,40, Exekutivfunktion −0,24 bei über 2 % Verlust. Unter 2 % nur −0,14 und grenzwertig. Goodman 2019 fand mit strengerem Design keinen signifikanten Gesamteffekt.",
+    grenze:"Eine dreistündige Klausur erzeugt bei normaler Zimmertemperatur nur 0,4–0,8 kg Verlust — unter 1 % und damit ohne messbaren Effekt. Die Behauptung, eine Wasserflasche verbessere Klausurnoten, stammt aus einer Beobachtungsstudie ohne Kausalbeleg.",
+    quelle:"Ernährung & Kognition (2026-08) Teil 3" },
+
+  ballaststoffe: { titel:"Ballaststoffe ≥ 30 g", bereich:"Ernährung", ampel:"rot",
+    antwort:"Der Zielwert liegt bei mindestens 30 g täglich und wird durch deinen Warenkorb ohnehin deutlich übertroffen.",
+    mechanismus:"Ballaststoffe stammen aus Vollkorn, Hülsenfrüchten, Gemüse und Obst. Dein wöchentlicher Warenkorb liefert 5.980 g Obst und Gemüse, also 854 g pro Tag — real landest du eher bei 40–50 g Ballaststoffen.",
+    studienlage:"Das übertrifft nicht nur das WHO-Minimum von 400 g Obst und Gemüse täglich, sondern auch das in Aune 2017 beschriebene Optimum von rund 800 g.",
+    grenze:"Vor Klausuren und vor Belastung sind große Ballaststoffmengen ein Bauchgefühlrisiko — dann die faserreichen Anteile in die Nachmittags- und Abendmahlzeiten verschieben. Die Tagessumme bleibt gleich.",
+    quelle:"Einkaufsliste Woche · Ernährung & Kognition (2026-08) §8.1" },
+
+  /* ---- Supplemente ---- */
+  b12: { titel:"Vitamin B12 — 50–100 µg statt 4 µg", bereich:"Supplemente", ampel:"rot",
+    antwort:"Die 4 µg sind der Referenzwert für die Gesamtzufuhr aus Nahrung, keine Supplementdosis.",
+    mechanismus:"B12 wird über den Intrinsic-Faktor aktiv aufgenommen, und dieser Weg ist bei etwa 1,5–2 µg pro Gabe gesättigt. Alles darüber gelangt nur noch über passive Diffusion in den Körper, und zwar mit rund 1 %. Aus 4 µg in einer Tagesdosis kommen real also kaum mehr als 2 µg an.",
+    studienlage:"Hannibal 2024 (Food Nutr Bull). Cyanocobalamin schnitt beim Holo-Transcobalamin besser ab als Methylcobalamin (RCT 2021). Selbst 100 g Rinderleber liefern real nur ~2,6 µg — etwa 9 % des Wochenbedarfs.",
+    grenze:"Hannibal schreibt ausdrücklich, es gebe keinen internationalen Konsens zu Dosis und Frequenz, und nennt selbst 4–20 µg Gesamtzufuhr als ausreichend. Der Korridor 50–100 µg ist gängige Praxis und risikoarm, aber kein bewiesenes Optimum.",
+    quelle:"Supplement-Stack (2026-07) · Post-Workout & Leber (2026-08) Teil 4" },
+
+  jod: { titel:"Jod als Kaliumiodid — und warum kein Kelp", bereich:"Supplemente", ampel:"rot",
+    antwort:"Deutschland gilt nach WHO-Kriterien wieder als Jodmangelgebiet, und Jodsalz allein schließt die Lücke nicht.",
+    mechanismus:"Jodsalz wird industriell nur in etwa 30 % der salzhaltigen Produkte eingesetzt, bei Brot sogar nur in rund 10 %. Mehr Salz zu essen kollidiert außerdem mit dem Natriumdeckel. Ein Kaliumiodid-Präparat löst beide Ziele gleichzeitig, weil es die Dosis vom Salz entkoppelt.",
+    studienlage:"Die Urin-Jodausscheidung bei Jugendlichen fiel von 118 µg/L (2003–06) auf 89 µg/L (2014–17) — KiGGS/DEGS. Kelp und Seetang sind ungeeignet: Der Gehalt schwankt in US-Präparaten zwischen 33 und 610 µg pro Dosis, bei Seetang bis zum Hundertfachen der Referenzzufuhr.",
+    grenze:"Die EFSA-Obergrenze liegt bei 600 µg pro Tag. Wer zusätzlich viel Jodsalz oder Algen isst, muss zusammenzählen. Innereien enthalten übrigens praktisch kein Jod — Leber ersetzt das Präparat nicht.",
+    quelle:"Supplement-Stack (2026-07) Teil 2" },
+
+  kreatin: { titel:"Kreatin — Masse und Kraft, nicht Antritt", bereich:"Supplemente", ampel:"rot",
+    antwort:"Kreatin ist das bestbelegte Supplement für Kraft und Muskelmasse — der erhoffte Sprintvorteil wurde 2025 aber nicht bestätigt.",
+    mechanismus:"Kreatin füllt die Phosphokreatin-Speicher im Muskel, aus denen die ersten Sekunden einer maximalen Belastung gespeist werden. Bei pflanzenbetonter Kost sind diese Speicher niedriger, der Zuwachs durch Supplementierung also größer.",
+    studienlage:"ISSN Position Stand (Kreider 2017): wirksamstes ergogenes Supplement für Hochintensität und Magermasse, sicher bis 30 g/Tag über 5 Jahre. Bonne 2025 (Physiological Reports, n = 15 Veganer/Vegetarier): Muskelkreatin +18,8 mmol/kg und Magermasse +1,15 kg, Wiederholungssprint-Leistung aber unverändert. Auf Gedächtnis: SMD 0,31 (Xu 2024).",
+    grenze:"Der Nullbefund zum Sprint hat n = 15 und nutzte 15-Sekunden-Sprints mit 3 Minuten Pause — weder Fußball-Antritte von 2–6 s noch dichte Belastung. Der Sprinteffekt ist damit nicht belegt und nicht widerlegt.",
+    quelle:"Supplement-Stack (2026-07)" },
+
+  algenoel: { titel:"Algenöl — zwei verschiedene Dosisziele", bereich:"Supplemente", ampel:"rot",
+    antwort:"250–500 mg EPA und DHA dienen der Herzgesundheit, für einen Regenerationseffekt braucht es etwa das Vierfache.",
+    mechanismus:"EPA und DHA sind langkettige Omega-3-Fettsäuren und wirken entzündungsmodulierend. Die Menge, die für Herz-Kreislauf-Ziele ausreicht, liegt deutlich unter der, bei der ein Effekt auf Muskelkater messbar wird.",
+    studienlage:"RCT 2025 (n = 74): Bioverfügbarkeit von Mikroalgenöl gegenüber Fischöl non-inferior, GMR 111 % (94–132 %). Li 2026 (FASEB J, Metaanalyse aus 41 RCTs): Muskelkater SMD −0,4 bis −0,7, aber erst ab etwa 2 g pro Tag über mindestens 6 Wochen. Für Akne: 2.000 mg senkten entzündliche und nicht-entzündliche Läsionen.",
+    grenze:"Auf EPA plus DHA gesamt achten, nicht nur auf DHA — viele Algenöle sind reine DHA-Öle im Verhältnis 1:3. Für Kognition gibt es bei 18- bis 35-Jährigen mit 1 g pro Tag keinen Effekt.",
+    quelle:"Supplement-Stack (2026-07) · Ernährung & Kognition (2026-08) §5.4" },
+
+  vitamin_d: { titel:"Vitamin D — warum die Dosis heruntergesetzt wurde", bereich:"Supplemente", ampel:"rot",
+    antwort:"800–1.000 IE von Oktober bis März statt der früher angesetzten 2.000 IE.",
+    mechanismus:"In Deutschland reicht die Sonneneinstrahlung von Oktober bis März nicht für eine nennenswerte Eigensynthese in der Haut. Vitamin D ist fettlöslich, die Aufnahme steigt deutlich, wenn es zur größten Fettmahlzeit genommen wird.",
+    studienlage:"Die Endocrine Society rät 2024 (Demay et al., JCEM) bei Gesunden unter 75 Jahren ausdrücklich gegen Dosen oberhalb der IOM-Referenzzufuhr von 600 IE und gegen ein Routine-Screening des Blutspiegels. D-A-CH setzt den Schätzwert ohne Sonne bei 800 IE an. 800–1.000 IE ist der Korridor, den beide tragen.",
+    grenze:"Das Panel konnte keine Blutspiegel-Schwelle für „ausreichend\" festlegen — selbst wer misst, hat keinen leitliniengedeckten Zielwert. 2.000 IE bleiben unbedenklich (Obergrenze 4.000), sind aber nicht mehr begründet.",
+    quelle:"Supplement-Stack (2026-07)" },
+
+  selen: { titel:"Selen — enger Sicherheitskorridor", bereich:"Supplemente", ampel:"rot",
+    antwort:"Ein bis zwei Paranüsse täglich decken den Bedarf, mehr sollten es ausdrücklich nicht sein.",
+    mechanismus:"Selen gelangt über den Boden in die Pflanze. Paranüsse aus selenreichen Böden enthalten ein Vielfaches dessen aus armen Böden — der Gehalt schwankt um mehr als den Faktor 10. Das macht die Nuss zu einer wirksamen, aber unpräzisen Quelle.",
+    studienlage:"Die vegane Ist-Zufuhr liegt in Studien bei etwa 25 µg gegenüber einem D-A-CH-Zielwert von 70 µg. Ein Multinutrient-RCT 2025 verbesserte bei Veganern den Selen- und Jodstatus messbar, den Eisen- und Zinkstatus dagegen nicht.",
+    grenze:"Wer die Paranüsse nicht wirklich täglich isst, fährt mit 50–70 µg Natriumselenit zuverlässiger. Beides zusammen ist wegen des engen Korridors keine gute Idee.",
+    quelle:"Supplement-Stack (2026-07) · Supplement-Einnahmeplan" },
+
+  koffein: { titel:"Koffein 3 mg/kg am Spieltag", bereich:"Supplemente", ampel:"rot",
+    antwort:"Rund 270 mg 45–60 Minuten vor Anpfiff sind am Spieltag die wirksamste Einzelmaßnahme — mehr bringt nichts.",
+    mechanismus:"Koffein blockiert Adenosinrezeptoren und senkt damit das wahrgenommene Anstrengungsempfinden. Die Kurve flacht früh ab: Höhere Dosen verlängern die Wirkdauer, steigern die Spitzenleistung aber kaum, und kosten Schlaf.",
+    studienlage:"Network-Metaanalyse 2025 (Nutrients): etwa 3 mg/kg als Kapsel war die effektivste Strategie. Für kognitive Aufgaben ist die Kurve noch flacher — der Großteil des Effekts auf Vigilanz ist bereits bei 1–2 mg/kg erreicht.",
+    grenze:"Für komplexes, mehrschrittiges Denken ist kein Nutzen belegt, teils sogar das Gegenteil: Akute Gabe verschlechterte das räumliche Arbeitsgedächtnis bei Gewohnheitstrinkern (RCT 2024). Nicht zur eisenreichen Mahlzeit — Kaffee senkt die Eisenaufnahme um rund 40 %.",
+    quelle:"Supplement-Stack (2026-07) · Ernährung & Kognition (2026-08) Teil 4" },
+
+  /* ---- Gestrichene Supplemente: zu wissen, warum etwas NICHT im Stack ist, zählt genauso ---- */
+  beta_alanin: { titel:"Beta-Alanin — gestrichen", bereich:"Gestrichen", ampel:"schwarz",
+    antwort:"Der Effekt liegt bei Belastungen von einer bis zehn Minuten — Fußball-Antritte dauern zwei bis sechs Sekunden.",
+    mechanismus:"Beta-Alanin erhöht den Carnosingehalt im Muskel, der Säure abpuffert. Diese Pufferung zahlt sich erst aus, wenn eine Belastung lange genug dauert, um den Muskel deutlich zu übersäuern. Kurze Antritte mit Erholungspausen dazwischen erreichen diesen Zustand nicht.",
+    studienlage:"Metaanalyse 2024 (IJSNEM, 18 Studien, 331 trainierte Männer): g = 0,39, mit dem Effekt konzentriert auf Belastungen von 1–10 Minuten.",
+    grenze:"Der Befund sagt nicht, dass Beta-Alanin unwirksam ist — nur, dass die Wirkung in einem Belastungsbereich liegt, der im Fußball kaum vorkommt. Dazu kämen 4–12 Wochen Ladephase und Kribbeln auf der Haut.",
+    quelle:"Supplement-Stack (2026-07)" },
+
+  natriumbicarbonat: { titel:"Natriumbicarbonat — geprüft und verworfen", bereich:"Gestrichen", ampel:"schwarz",
+    antwort:"Vom IOC gelistet, für Teamsport aber uneinheitlich — und das Magen-Darm-Risiko am Spieltag ist der Deal-Breaker.",
+    mechanismus:"Natriumbicarbonat puffert Säure im Blut und soll dadurch die Ermüdung bei hochintensiver Belastung verzögern. Die typische Nebenwirkung sind Magen-Darm-Beschwerden — ausgerechnet in der Situation, in der man sie am wenigsten gebrauchen kann.",
+    studienlage:"Uneinheitliche Teamsport-Daten: In einer Studie Yo-Yo IR2 um 21 % verbessert, bei Hockey-Skills und Schwimm-Sprints kein Effekt. Eine Metaanalyse 2025 spricht beim Laufen von vernachlässigbarem Nutzen.",
+    grenze:"Die Substanz wirkt in bestimmten Settings durchaus — die Entscheidung dagegen ist eine Risikoabwägung für den Spieltag, kein Wirksamkeitsurteil.",
+    quelle:"Supplement-Stack (2026-07)" },
+
+  magnesium: { titel:"Magnesium — überschätzt", bereich:"Gestrichen", ampel:"schwarz",
+    antwort:"Bei 3.300–4.000 kcal pflanzenbetont liegst du ohnehin weit über dem Bedarf.",
+    mechanismus:"Magnesium steckt reichlich in Vollkorn, Hülsenfrüchten, Nüssen und grünem Gemüse — genau den Gruppen, die deinen Warenkorb dominieren. Ein Mangel entsteht bei dieser Kostform praktisch nicht.",
+    studienlage:"Heffernan 2019 (22 Studien, davon nur 2 hochwertig): kein konsistenter Leistungseffekt. Eine Metaanalyse 2023 fand bei Athleten niedrigere Serum-Magnesiumwerte trotz höherer Zufuhr — interessant, aber ohne Leistungsbeleg.",
+    grenze:"Der Serumwert bildet den Magnesiumstatus ohnehin schlecht ab, weil der Körper ihn eng reguliert. Das schwächt beide Richtungen der Aussage.",
+    quelle:"Supplement-Stack (2026-07) · Supplement-Einnahmeplan" },
+
+  bcaa: { titel:"BCAA und EAA — unbegründet", bereich:"Gestrichen", ampel:"schwarz",
+    antwort:"Bei 170–175 g Protein täglich mit Soja als Anker sind isolierte Aminosäuren überflüssig.",
+    mechanismus:"BCAA enthalten nur drei der neun essenziellen Aminosäuren. Für den Muskelaufbau werden aber alle neun als Baustoff gebraucht. Isolierte BCAA können die Proteinsynthese sogar senken, weil sie den Prozess anstoßen, ohne dass das Material zum Weiterbauen da ist.",
+    studienlage:"Die ISSN formuliert es direkt: Die Behauptung, BCAA stimulierten die Muskelproteinsynthese, ist unbegründet.",
+    grenze:"Bei sehr niedriger Gesamtproteinzufuhr sähe die Rechnung anders aus — dieser Fall trifft hier aber nicht zu.",
+    quelle:"Supplement-Stack (2026-07)" },
+
+  zink_kapseln: { titel:"Zink als Kapsel — löst das Problem nicht", bereich:"Gestrichen", ampel:"schwarz",
+    antwort:"Der Hebel liegt in der Zubereitung, nicht in der Kapsel.",
+    mechanismus:"Phytat aus Vollkorn und Hülsenfrüchten bindet Zink im Darm und macht es unverfügbar. Einweichen, Keimen und Sauerteigführung bauen Phytat ab — das verbessert die Aufnahme aus dem, was ohnehin auf dem Teller liegt.",
+    studienlage:"Ein Multinutrient-RCT 2025 verbesserte bei Veganern den Zinkstatus nicht klar, während Selen und Jod messbar stiegen. D-A-CH staffelt den Bedarf nach Phytatzufuhr: 11 mg bei niedriger, 16 mg bei hoher.",
+    grenze:"Zink im Serum ist ein schwacher Marker — er spiegelt den Status schlecht und sinkt bei Entzündung. Eine belastbare Erfolgskontrolle gibt es damit kaum.",
+    quelle:"Supplement-Stack (2026-07) Teil 2" },
+
+  /* ---- Interaktionen ---- */
+  eisen_kaffee: { titel:"Eisen, Kaffee und Calcium", bereich:"Ernährung", ampel:"rot",
+    antwort:"Kaffee oder Tee zur eisenreichen Mahlzeit senken die Aufnahme deutlich, Calcium ebenfalls.",
+    mechanismus:"Polyphenole aus Kaffee und Tee binden Nicht-Häm-Eisen im Darm zu schwer löslichen Komplexen. Calcium konkurriert um denselben Aufnahmeweg. Vitamin C wirkt in die Gegenrichtung, indem es Eisen in die besser aufnehmbare Form überführt.",
+    studienlage:"Kaffee und Tee senken die Aufnahme um rund 40 %, Tee je nach Sorte um 41–95 %. Calcium bis zu 50 %, Phytat bis 82 %. Ab mehr als 100 mg Tanninsäure braucht es mindestens 50 mg Ascorbinsäure zum Ausgleich (Siegenberg 1991).",
+    grenze:"Die Daten stammen überwiegend aus Studien mit Nicht-Häm-Eisen. Hämeisen aus Fleisch, Fisch und Leber nutzt einen eigenen Weg und ist robuster — dort ist der Effekt vermutlich kleiner.",
+    quelle:"Post-Workout & Leber (2026-08) §3.5 · Supplement-Einnahmeplan" },
+
+  hepcidin: { titel:"Warum der Organfleisch-Slot vormittags liegt", bereich:"Ernährung", ampel:"gelb",
+    antwort:"Hepcidin — der Türsteher der Eisenaufnahme — ist morgens am niedrigsten und steigt nach Belastung deutlich an.",
+    mechanismus:"Belastung erhöht den Botenstoff Interleukin-6, dieser treibt Hepcidin hoch, und Hepcidin blockiert den Eisenkanal in der Darmwand. Der Effekt erreicht sein Maximum 3–6 Stunden nach der Belastung. Ein Ruhetag-Vormittag umgeht beides: den Tagesrhythmus und den Belastungseffekt.",
+    studienlage:"Barney 2022 (J Nutr): Nach einem längeren Lauf stieg Hepcidin um 51 %, die fraktionelle Eisenabsorption sank um 36 %. Krafttraining erzeugte sogar einen stärkeren Anstieg als Radfahren.",
+    grenze:"Auch hier stammen die Daten überwiegend aus Nicht-Häm-Studien — für Leber ist der Effekt vermutlich kleiner als 36 %. Die Richtung stimmt, und die Umsetzung kostet nichts.",
+    quelle:"Post-Workout & Leber (2026-08) §3.5" },
+
+  vitamin_a_leber: { titel:"Bei Leber entscheidet die Tierart", bereich:"Ernährung", ampel:"rot",
+    antwort:"Hühner- und Rinderleber sind unproblematisch, Schweine- und Kalbsleber reißen die Vitamin-A-Obergrenze schon bei einer Wochenportion.",
+    mechanismus:"Leber speichert Vitamin A in der Form, die direkt auf die Obergrenze angerechnet wird. Wie viel davon drinsteckt, hängt vom Futter ab — nicht von Tierart oder Alter allein. Man sieht es der Ware nicht an. Beta-Carotin aus Pflanzen zählt nicht mit.",
+    studienlage:"EFSA 2024 hat die Obergrenze bei 3.000 µg pro Tag belassen. Im Wochenschnitt ergibt eine 100-g-Portion: Hühnerleber 16 %, Rinderleber 24 %, Kalbsleber 145 %, Schweineleber 186 % der Obergrenze. Deutsche HPLC-Messungen fanden in Schweineleber eine Spanne von 3–160 mg/100 g — Faktor 53.",
+    grenze:"Die Werte sind Datenbankwerte, keine Messungen an dem Stück, das du kaufst. Die Toxizitätsliteratur setzt chronische Schäden erst deutlich höher an — die Obergrenze enthält Puffer. Ein Grund für Zurückhaltung, kein Grund zur Panik.",
+    quelle:"Post-Workout & Leber (2026-08) §3.2" },
+
+  /* ---- Training und Timing ---- */
+  pre_workout: { titel:"Die Prä-Trainings-Mahlzeit ist der Hebel", bereich:"Training", ampel:"rot",
+    antwort:"Eine volle Mahlzeit 2–3 Stunden vor der Belastung deckt Training und Nachher-Phase zugleich ab — das Fenster danach ist widerlegt.",
+    mechanismus:"Eine gemischte Mahlzeit hält den Aminosäurespiegel im Blut 3–6 Stunden erhöht. Wer um 16:30 isst und um 19:00 trainiert, hat während des gesamten Trainings und danach ausreichend Baustoff im System. Die Frage ist damit nicht, wie schnell man nach dem Training isst, sondern wie lange man vorher ohne Protein war.",
+    studienlage:"Schoenfeld & Aragon 2013 (Metaanalyse, 23 Studien): Der rohe Timing-Vorteil verschwand vollständig, nachdem für die Gesamtproteinmenge kontrolliert wurde. Eine Metaanalyse 2025 fand für fettfreie Masse SMD −0,08 (KI −0,398 bis 0,244) — kein Effekt bei hoher Konsistenz. Die ISSN wertet 20–40 g alle 3–4 Stunden höher als Post-Workout-Timing.",
+    grenze:"Timing zählt doch, wenn du nüchtern trainierst oder länger als 5–6 Stunden ohne Protein warst — dann innerhalb von 1–2 Stunden essen.",
+    quelle:"Post-Workout & Leber (2026-08) Teil 1" },
+
+  intra_kh: { titel:"Kohlenhydrate während des Trainings ab 75 Minuten", bereich:"Training", ampel:"rot",
+    antwort:"Dein Training dauert 105 Minuten und liegt damit über der Schwelle, ab der Kohlenhydrate während der Belastung nötig werden.",
+    mechanismus:"Bis etwa 75 Minuten reichen die gefüllten Glykogenspeicher aus. Darüber hinaus sinkt die verfügbare Energie so weit, dass Intensität und Konzentration nachlassen — 30–60 g pro Stunde halten den Blutzucker stabil und schonen das Muskelglykogen.",
+    studienlage:"Die 75-Minuten-Schwelle und der Korridor von 30–60 g pro Stunde stehen als Standardempfehlung im Bedarfsprofil; für den Spieltag empfiehlt die UEFA-Gruppe zur Halbzeit 20–30 g flüssig.",
+    grenze:"Bei kürzeren Einheiten bringt das nichts. Und es ersetzt nicht die Prä-Mahlzeit — es ergänzt sie für die zweite Hälfte einer langen Belastung.",
+    quelle:"Profil & Bedarf · Wochenplan" },
+
+  nach_spiel: { titel:"Warum es nach dem Spiel flüssig sein soll", bereich:"Training", ampel:"rot",
+    antwort:"Weil Belastung den Appetit unterdrückt — nicht weil ein Zeitfenster zuginge.",
+    mechanismus:"Nach einem Spiel ist der Hunger oft weg, obwohl der Bedarf hoch ist. Ein flüssiger Kohlenhydrat-Protein-Drink ist dann schlicht die einzige Möglichkeit, überhaupt 60–90 g Kohlenhydrate und 25–30 g Protein unterzubringen. Das ist ein Praktikabilitätsargument, kein physiologisches.",
+    studienlage:"Der Zeitdruck nach dem Spiel betrifft die Kohlenhydrate, nicht das Protein: Typ-II-Fasern brauchen bis zu 72 Stunden zur vollständigen Glykogenrestitution. Isokalorisch verglichen bringt Protein zusätzlich zu Kohlenhydraten für die Glykogensynthese nichts (Margolis 2021).",
+    grenze:"Das gilt für den Spieltag mit weniger als 24 Stunden bis zur nächsten Belastung. Bei deinem üblichen Abstand von über 24 Stunden zählt nur die Tagesbilanz — dann ist schneller Zucker ohne Nutzen.",
+    quelle:"Post-Workout & Leber (2026-08) §2.3 · Wochenplan" },
+
+  /* ---- Klausur und Lernen ---- */
+  mahlzeitengroesse: { titel:"Warum die Mahlzeit vor einem Block kleiner sein soll", bereich:"Klausur", ampel:"rot",
+    antwort:"Die Größe der Mahlzeit ist wichtiger als ihre Zusammensetzung — und deine Standardportion liegt genau im kritischen Bereich.",
+    mechanismus:"Ein großes Mittagessen erzeugt etwa eine Stunde später einen deutlichen Leistungsabfall. Deine Mahlzeiten liegen bei rund 1.000 kcal — genau dort, wo der Effekt stark ausfällt. Die Lösung ist Verteilung, nicht Verzicht: 650 kcal um 12:00 und 350 kcal um 14:30 statt 1.000 kcal am Stück. Tages- und Wochensumme bleiben identisch.",
+    studienlage:"Mahlzeiten mit 922–1.380 kcal erzeugten deutlich stärkere Leistungseinbrüche als solche mit 260–305 kcal, mit dem Maximum etwa eine Stunde danach. Vor einem 180-Minuten-Block sind daher 750–850 kcal statt 1.000 sinnvoll, fettarm unter 20 g, mindestens 2 Stunden vorher.",
+    grenze:"Diese Literatur ist überwiegend älter, arbeitet mit kleinen Stichproben und misst Vigilanz, nicht dreistündiges Schreiben. Die Richtung ist konsistent, die Größenordnung unsicher. Nur eine Mahlzeit am Tag splitten — die 14-g-Proteinportion liegt sonst unter der Leucinschwelle.",
+    quelle:"Ernährung & Kognition (2026-08) §2.2 und §8.1" },
+
+  nachmittagstief: { titel:"Ein Teil des Nachmittagstiefs ist zirkadian", bereich:"Klausur", ampel:"rot",
+    antwort:"Der Leistungsabfall am frühen Nachmittag tritt auch ohne Mittagessen auf.",
+    mechanismus:"Zwischen 13 und 16 Uhr steigt der Schlafdruck unabhängig davon, ob und was gegessen wurde. Das Mittagessen verstärkt diesen Verlauf, verursacht ihn aber nicht. Wer das weiß, erwartet von einer optimierten Mahlzeit weniger — und plant den Nachmittag realistischer.",
+    studienlage:"Der zirkadiane Anteil ist in der Literatur zum Post-Lunch-Dip dokumentiert und wird dort als wahrscheinlich größerer Anteil eingeschätzt als der Mahlzeiteneffekt.",
+    grenze:"Wie groß der zirkadiane Anteil gegenüber dem Mahlzeitenanteil genau ist, sagt die Quellenlage nicht — sie hält nur fest, dass er existiert und vermutlich überwiegt.",
+    quelle:"Ernährung & Kognition (2026-08) §2.2" },
+
+  fruehstueck_mythos: { titel:"„Frühstück ist die wichtigste Mahlzeit fürs Gehirn\"", bereich:"Klausur", ampel:"schwarz",
+    antwort:"Bei gut ernährten jungen Erwachsenen zeigt sich in Studien kein robuster Effekt.",
+    mechanismus:"Die belastbare Evidenz stammt aus Kinder- und Mangelpopulationen — dort wirkt Frühstück, weil es einen Mangel behebt. Diese Steigung wird in Ratgebern fälschlich in den Normalbereich verlängert, wo die Kurve flach ist.",
+    studienlage:"Ein systematischer Review (BMC Psychology 2024/25) über fünf RCTs mit 70 gesunden Erwachsenen fand keinen Hinweis auf eine systematische Veränderung der Vormittagsleistung. Bei 11- bis 13-Jährigen wirkte Frühstück dagegen, und zwar stärker bei schlechterer Ausgangsleistung.",
+    grenze:"Fünf Studien mit 70 Personen sind eine dünne Basis — der Befund heißt „nicht belegt\", nicht „widerlegt\". Für dich stellt sich die Frage ohnehin nicht: Bei 3.300–4.000 kcal Bedarf brauchst du die Mahlzeit. Relevant sind Größe und Timing.",
+    quelle:"Ernährung & Kognition (2026-08) §2.1" },
+
+  blutzucker_mythos: { titel:"„Blutzuckerschwankungen kosten Konzentration\"", bereich:"Klausur", ampel:"schwarz",
+    antwort:"Bei Stoffwechselgesunden ist das nicht belegt.",
+    mechanismus:"Die Mechanismen, die bei Diabetes greifen — Unterzuckerung und chronisch erhöhter Blutzucker —, existieren bei einem gesunden Pankreas nicht. Er hält den Blutzucker in einem Korridor, in dem das Gehirn nie Substratknappheit erlebt.",
+    studienlage:"Die gesamte Literatur mit kontinuierlicher Glukosemessung, die überhaupt kognitive Effekte findet, stammt aus Typ-1- und Typ-2-Diabetes. Bei Gesunden zeigen dieselben Messungen vor allem, dass die Ausschläge individuell stark variieren — nicht, dass diese Variation etwas kostet.",
+    grenze:"Das gilt für Stoffwechselgesunde. Bei einer diagnostizierten Störung des Glukosestoffwechsels ist die Bewertung eine andere — das gehört dann zum Arzt.",
+    quelle:"Ernährung & Kognition (2026-08) §2.4" },
+
+  traubenzucker_mythos: { titel:"Traubenzucker vor der Klausur", bereich:"Klausur", ampel:"schwarz",
+    antwort:"Bei 450–630 g Kohlenhydraten täglich ist nichts zu beschleunigen.",
+    mechanismus:"Der sogenannte Glukose-Facilitations-Effekt tritt vor allem nüchtern und bei erschöpften Reserven auf. Das Gehirn verbraucht etwa 120 g Glukose pro Tag, also rund 5 g pro Stunde. Nach einer Mahlzeit mit 110–150 g Kohlenhydraten ist über drei Stunden keine Verarmung möglich, zumal die Leber puffert.",
+    studienlage:"Der Effekt ist zeitlich instabil: In mehreren Studien war die Gedächtnisleistung 60 Minuten nach dem Glukosedrink schlechter als in der Kontrollgruppe. Er ist außerdem stark individuell.",
+    grenze:"Bei einer vier- bis sechsstündigen Belastung ändert sich die Bewertung — dann ist Nachlegen sinnvoll, aber als reguläre kleine Mahlzeit, nicht als Zuckerstoß.",
+    quelle:"Ernährung & Kognition (2026-08) §2.6" },
+
+  /* ---- Schlaf: die Recherche ist noch offen, deshalb bewusst zurückhaltend ---- */
+  schlaf_hebel: { titel:"Schlaf ist der größere Hebel als Ernährung", bereich:"Schlaf", ampel:"rot",
+    antwort:"Eine Nacht mit zu wenig Schlaf kostet mehr, als die beste Klausurmahlzeit einbringen kann.",
+    mechanismus:"Ernährung wirkt bei einem gut versorgten Menschen als Hygienefaktor: Sie kann Leistung kosten, wenn sie schlecht ist, sie aber kaum über das Normalmaß heben. Schlaf greift direkt in Aufmerksamkeit und Gedächtniskonsolidierung ein — und was in der Nacht nicht konsolidiert wurde, ist am Morgen nicht da.",
+    studienlage:"Lowe 2017 (Metaanalyse, 61 Studien): Eine Nacht Schlafrestriktion ergibt g = −0,38 über alle Domänen, Daueraufmerksamkeit −0,41, Exekutivfunktion −0,32. Der beste ernährungsseitige Hebel liegt dagegen bei 0,2–0,3. Zum Vergleich: akute Bewegung g = 0,13.",
+    grenze:"Interessanterweise ist komplexes Denken robuster als die einfachen Maße: Selbst bei Schlafdeprivation lag die Genauigkeit beim Schlussfolgern bei g = 0,125 und war nicht signifikant. Der Effekt trifft vor allem Vigilanz und Reaktionszeit.",
+    quelle:"Ernährung & Kognition (2026-08) Teil 1 und §7.5" },
+
+  regelmaessigkeit: { titel:"Warum die App Regelmäßigkeit misst", bereich:"Schlaf", ampel:"gelb",
+    antwort:"Weil die Streuung der Zubettgehzeit etwas ist, das sich verlässlich erfassen und beeinflussen lässt.",
+    mechanismus:"Die App kennt nur drei Angaben: wann du ins Bett gegangen bist, wann du aufgestanden bist und wie du geschlafen hast. Daraus lässt sich die Dauer berechnen — und wie stark die Zubettgehzeit über die Woche schwankt. Beides sind Größen, die tatsächlich in deiner Hand liegen.",
+    studienlage:"Belegt ist der Effekt der Schlafdauer (Lowe 2017, g = −0,38 pro Nacht Restriktion). Für die Regelmäßigkeit als eigenständigen Faktor liegt im Vault derzeit keine ausgewertete Evidenz vor.",
+    grenze:"Diese Karte ist ausdrücklich vorläufig. Die Recherche „Schlaf, Sport & Lernen\" ist noch nicht eingelöst — bis dahin behauptet die App keinen belegten Effekt der Regelmäßigkeit, sondern misst sie, weil sie messbar ist.",
+    quelle:"Ernährung & Kognition (2026-08) · Schlaf, Sport & Lernen — Prompt (offen)" },
+
+  abendmahlzeit: { titel:"Abendmahlzeit mindestens 2 h vor dem Schlafen", bereich:"Schlaf", ampel:"gelb",
+    antwort:"Deine 21:15-Mahlzeit liegt bei Schlaf um 23:00 Uhr mit 1 Stunde 45 Minuten genau an der Grenze — ohne Puffer.",
+    mechanismus:"Essen kurz vor dem Schlafen verschlechtert die gemessene Schlafqualität. Bei etwa zwei Stunden Abstand verschwindet der Effekt weitgehend. Fett verzögert die Magenentleerung am stärksten — deshalb ist es der erste Stellhebel, wenn es später wird.",
+    studienlage:"Nahrungsaufnahme 30–60 Minuten vor dem Schlafen ist polysomnographisch mit schlechterer Schlafqualität assoziiert; bei etwa 2 Stunden Abstand ist der Effekt weitgehend weg. Große, fettreiche Mahlzeiten spät verlängern die Einschlaflatenz — konsistent, aber überwiegend Beobachtungsdaten.",
+    grenze:"Hier stehen zwei Ziele gegeneinander: Pre-Sleep-Protein will nah am Schlaf sein, die Schlafqualität will Abstand. Beide Effekte sind klein, der Pre-Sleep-Effekt ist chronisch methodisch angreifbar. In der Abwägung gewinnt der Schlaf. 21:15 ist ein guter Kompromiss, 22:15 wäre keiner.",
+    quelle:"Ernährung & Kognition (2026-08) §7.2" },
+
+  koffein_deadline: { titel:"Koffein-Deadline 15:00 und maximal zwei Tage", bereich:"Schlaf", ampel:"rot",
+    antwort:"Die Begrenzung schützt zweierlei: den Schlaf und die Wirkung am Spieltag.",
+    mechanismus:"Koffein hat eine Halbwertszeit von 1,5 bis 10 Stunden — die Streuung zwischen Menschen ist groß. Wer es täglich nimmt, baut Toleranz auf, und dann wirken die 270 mg am Sonntag nicht mehr wie gedacht. Zwei koffeinfreie Tage dazwischen halten die Toleranz niedrig.",
+    studienlage:"Halson 2025 (SLEEP, PSG, Crossover): 400 mg verändern die Schlafarchitektur noch bei 12 Stunden Abstand, 100 mg zeigten selbst 4 Stunden vorher keinen signifikanten Effekt. Eine 20-Tage-Studie (PLOS One 2019) fand bei 3 mg/kg täglich einen fortschreitenden Verlust des ergogenen Effekts über zwei bis drei Wochen.",
+    grenze:"Der wichtigste Nebenbefund: Bei 8 und 12 Stunden Abstand fand die Messung Störungen, die die Probanden selbst nicht bemerkten. „Ich schlafe trotzdem gut\" ist also kein verlässlicher Indikator.",
+    quelle:"Ernährung & Kognition (2026-08) §4.3 und §4.5" },
+
+  keine_schlafphasen: { titel:"Warum die App keine Schlafphasen anzeigt", bereich:"Schlaf", ampel:"rot",
+    antwort:"Weil drei manuell eingetragene Angaben Tiefschlaf oder REM-Anteile nicht hergeben.",
+    mechanismus:"Schlafphasen werden per Polysomnographie über Hirnströme bestimmt. Aus Zubettgehzeit, Aufstehzeit und einer subjektiven Note lässt sich das nicht rekonstruieren — jede Zahl, die eine App daraus ableitet, ist ein Modell, kein Messwert.",
+    studienlage:"Die Studien, auf die sich diese App stützt, arbeiten selbst mit Polysomnographie oder Aktigraphie und weisen den Unterschied ausdrücklich aus. Aktigraphie-Befunde werden dort als schwächer gekennzeichnet als PSG-Befunde.",
+    grenze:"Das ist keine Aussage über Wearables mit Sensorik, sondern über diese App: Sie misst nichts, was sie nicht messen kann, und zeigt deshalb Dauer und Regelmäßigkeit statt eines Scores.",
+    quelle:"Ernährung & Kognition (2026-08) §4.1" },
+
+  /* ---- Haut ---- */
+  spf_reihenfolge: { titel:"Warum SPF immer der letzte Schritt ist", bereich:"Haut", ampel:"rot",
+    antwort:"Sonnenschutz bildet einen dünnen Film — Moisturizer danach bricht ihn mechanisch auf.",
+    mechanismus:"Der UV-Filter wirkt als zusammenhängende Schicht auf der Hautoberfläche. Wird darüber noch eine Creme verteilt, verschiebt und verdünnt das Auftragen den Film. Die Schutzwirkung sinkt dadurch nachweislich, obwohl dieselbe Menge Sonnenschutz aufgetragen wurde.",
+    studienlage:"Die Reihenfolge Moisturizer, dann SPF ist in der Routine als Korrektur vom 24.07.2026 festgehalten. Zur Wirksamkeit täglicher Anwendung: Hughes 2013 (Ann Int Med), Evidenzgrad A.",
+    grenze:"Die Reihenfolge betrifft die Anwendung, nicht die Produktwahl. Sie ersetzt weder ausreichende Menge — zwei Fingerbreit fürs Gesicht — noch das Nachlegen.",
+    quelle:"Meine Basis-Routine · Skincare MOC" },
+
+  spf_nachlegen: { titel:"Nachlegen schlägt Lichtschutzfaktor", bereich:"Haut", ampel:"rot",
+    antwort:"Schweiß reißt fleckige Lücken in den Film — Nachlegen zur Halbzeit ist wirksamer als ein höherer Faktor.",
+    mechanismus:"Der angegebene Lichtschutzfaktor gilt für einen gleichmäßigen, vollständigen Film. Beim Sport verteilt sich der Schutz ungleichmäßig und wird stellenweise abgetragen. „80 Minuten wasserfest\" ist ein Laborwert unter kontrollierten Bedingungen, kein Versprechen für ein Spiel an einem Sommernachmittag.",
+    studienlage:"Der Nambour-RCT ergab für tägliche gegenüber anlassbezogener Anwendung eine Hazard Ratio von 0,50 für Melanom. Bei Wochenendspielen zur UV-Spitzenzeit gilt das Halbzeit-Nachlegen als wirksamster Einzelpunkt.",
+    grenze:"Die Hazard Ratio bezieht sich auf tägliche Anwendung insgesamt, nicht speziell auf das Nachlegen — dieses ist als praktische Ableitung eingeordnet, nicht als eigener Studienendpunkt.",
+    quelle:"Skincare MOC" },
+
+  salicylsaeure: { titel:"Salicylsäure 2 % (BHA)", bereich:"Haut", ampel:"rot",
+    antwort:"Sie ist fettlöslich und kommt deshalb dorthin, wo der Mitesser entsteht — in die Pore hinein.",
+    mechanismus:"Ein normaler Reiniger arbeitet auf der Oberfläche. Salicylsäure ist lipophil, also fettliebend, und wandert in den mit Talg gefüllten Follikel. Dort löst sie die Verhornung, die den Ausgang verstopft, von innen auf. Nebenbei wirkt sie leicht entzündungshemmend.",
+    studienlage:"Zaenglein 2016 (JAAD), Evidenzgrad A. In der Rangfolge der komedolytischen Wirksamkeit (AkdÄ 2024) liegt Salicylsäure bei + für das Auflösen bestehender und (+) für das Verhindern neuer Komedonen.",
+    grenze:"Das ist die zweitschwächste Stufe der verfügbaren Wirkstoffe — Adapalen liegt bei ++/++. Salicylsäure trocknet außerdem aus, weshalb der Ceramid-Moisturizer im selben Ablauf steht.",
+    quelle:"Meine Basis-Routine · Skincare MOC" },
+
+  niacinamid: { titel:"Niacinamid 10 % (Vitamin B3)", bereich:"Haut", ampel:"rot",
+    antwort:"Es drosselt die Talgproduktion, dämpft Entzündung und stärkt gleichzeitig die Hautbarriere.",
+    mechanismus:"Niacinamid wirkt sebostatisch, senkt also die Talgmenge direkt in der Drüse. Die entzündungshemmende Wirkung läuft über die Hemmung von Leukotrien B4, einem Botenstoff, der Entzündungszellen anlockt. Zusätzlich regt es die körpereigene Ceramidbildung an — deshalb stärkt es die Barriere, statt sie wie viele Aknewirkstoffe zu schwächen.",
+    studienlage:"Draelos 2006 (JAAD), Evidenzgrad B. Ein Vorteil in der Praxis: kein Purging, also keine anfängliche Verschlechterung wie bei Retinoiden.",
+    grenze:"Evidenzgrad B heißt: brauchbar belegt, aber schwächer als die Grad-A-Befunde zu Salicylsäure und Sonnenschutz. Bei Empfindlichkeit gegenüber der 10-Prozent-Konzentration wäre 5 % die Alternative.",
+    quelle:"Meine Basis-Routine" },
+
+  zink_pca: { titel:"Zink PCA 1 %", bereich:"Haut", ampel:"gelb",
+    antwort:"Es ergänzt das Niacinamid-Serum um eine zusätzliche talgregulierende Komponente.",
+    mechanismus:"Zink PCA wirkt antiseborrhoisch, dämpft also ebenfalls die Talgproduktion. Es sitzt im selben Serum wie das Niacinamid und ist als unterstützender Bestandteil gedacht, nicht als eigenständiger Wirkstoff mit eigener Anwendung.",
+    studienlage:"Im Vault ist Zink PCA als antiseborrhoische, sebumregulierende Komponente beschrieben — eine eigene Studienlage mit Effektgrößen ist dort nicht hinterlegt. Die Bewertung des Produkts insgesamt stützt sich auf die Niacinamid-Evidenz (Draelos 2006, Grad B).",
+    grenze:"Für diesen Einzelbestandteil liegt keine ausgewertete Evidenz vor — er ist deshalb ausdrücklich als plausibel, nicht als belegt eingestuft. Wirkung und Auswahl des Serums hängen am Niacinamid.",
+    quelle:"Meine Basis-Routine" },
+
+  azelainsaeure: { titel:"Azelainsäure 10 %", bereich:"Haut", ampel:"rot",
+    antwort:"Sie ist die Karte gegen Rötung — nicht die gegen Mitesser.",
+    mechanismus:"Azelainsäure wirkt entzündungshemmend und gegen die Gefäßerweiterung, die eine Rötung sichtbar macht. Auf die Verhornung im Follikel, also die eigentliche Ursache von Komedonen, wirkt sie dagegen nur schwach. Vorgesehen ist sie als Nachfolger des Niacinamids, wenn dieses aufgebraucht ist.",
+    studienlage:"Etwa 51 % Besserung des Erythems gegenüber rund 36 % unter Vehikel. In der komedolytischen Rangfolge (AkdÄ 2024) liegt sie bei (+) für bestehende und + für neue Komedonen — also am unteren Ende.",
+    grenze:"Bleibt die Wirkung auf Mitesser aus, hilft keine höhere Konzentration, sondern ein anderer Wirkstoff. Azelainsäure in 15–20 % ist in Deutschland ohnehin verschreibungspflichtig.",
+    quelle:"Skincare MOC · Meine Basis-Routine" },
+
+  ceramide: { titel:"Ceramide im Moisturizer", bereich:"Haut", ampel:"rot",
+    antwort:"Sie ersetzen die hauteigenen Lipide und halten die Barriere dicht, die die Säure angreift.",
+    mechanismus:"Die äußerste Hautschicht funktioniert wie eine Mauer aus Zellen und Lipidmörtel. Ceramide sind ein Hauptbestandteil dieses Mörtels. Ein Ceramid-Moisturizer bildet sie synthetisch nach und senkt dadurch den Wasserverlust über die Haut. Das gleicht genau das aus, was die BHA-Reinigung an Barriere kostet. Die enthaltene Hyaluronsäure bindet zusätzlich Wasser.",
+    studienlage:"Fluhr 2008 (Skin Pharmacol Physiol), Evidenzgrad B: gesenkter transepidermaler Wasserverlust, gestärkte Barriere gegen äußere Reizstoffe.",
+    grenze:"Der Moisturizer behandelt keine Akne — er macht die Routine verträglich, die sie behandelt. Und er gehört vor den Sonnenschutz, nie danach.",
+    quelle:"Meine Basis-Routine" },
+
+  zwoelf_wochen: { titel:"Warum 12 Wochen der Bewertungshorizont sind", bereich:"Haut", ampel:"rot",
+    antwort:"Zwölf Wochen sind der Standard-Endpunkt aller Akne-Studien — vorher ist eine Beurteilung aussagelos.",
+    mechanismus:"Ein Komedo braucht Wochen, um zu entstehen und abzuheilen. Wirkstoffe greifen in diesen Zyklus ein, aber der Effekt wird erst sichtbar, wenn mehrere Zyklen durchlaufen sind. Wer nach vier Wochen bewertet, misst Rauschen.",
+    studienlage:"Zwölf Wochen sind der übliche Endpunkt der randomisierten Akne-Studien. Ebenso festgehalten: Nach Ablauf dieser Frist ist Weiterwarten nicht mehr evidenzgestützt — dann steht eine Entscheidung an.",
+    grenze:"Ohne Baseline-Fotos ist die Auswertung Erinnerung statt Messung. Deshalb hängt an dieser Frist die Fotofunktion — gleiche Beleuchtung, gleicher Abstand, gleicher Winkel.",
+    quelle:"Skincare MOC" },
+
+  komedo_luecke: { titel:"Die komedolytische Lücke der Routine", bereich:"Haut", ampel:"rot",
+    antwort:"Die aktuelle Routine setzt bei den Mitessern auf die beiden schwächsten verfügbaren Wirkstoffe.",
+    mechanismus:"Wirkstoffe unterscheiden sich darin, wie gut sie bestehende Verstopfungen lösen und wie gut sie neue verhindern. Bei einem Befund, der von Mitessern dominiert wird, entscheidet genau diese Eigenschaft — nicht, wie gut ein Produkt sonst ist.",
+    studienlage:"Rangfolge nach AkdÄ 2024 (nach Karoglan & Gollnick), jeweils komedolytisch/antikomedogen: Adapalen ++/++, Benzoylperoxid +/?, Salicylsäure +/(+), Azelainsäure (+)/+. Rezeptfrei mit starker AAD-Empfehlung ist nur Benzoylperoxid; Adapalen und Azelainsäure 15–20 % sind in Deutschland verschreibungspflichtig.",
+    grenze:"Das ist eine Aussage über die Wirkstoffklasse, keine Diagnose und keine Therapieempfehlung. Die Eskalation gehört mit dem Hautarzt besprochen — die App bewertet den Befund nicht.",
+    quelle:"Skincare MOC" },
+
+  naevi: { titel:"Warum die App Muttermale nicht bewertet", bereich:"Haut", ampel:"schwarz",
+    antwort:"Apps können Naevi nicht beurteilen — das gehört zum Hautarzt.",
+    mechanismus:"Die Beurteilung eines Muttermals erfordert Dermatoskopie und den Vergleich über die Zeit durch jemanden, der weiß, worauf zu achten ist. Ein Handyfoto liefert weder die nötige Auflösung noch die Tiefeninformation. Eine App, die hier ein Urteil ausspricht, erzeugt entweder falsche Sicherheit oder falschen Alarm.",
+    studienlage:"Die Anzahl der Nävi ist der stärkste bekannte Einzelrisikomarker: relatives Risiko 1,47 bei 16–40 Nävi bis 6,89 bei 101–120. Genau deshalb entscheidet die gezählte Anzahl über die sinnvolle Screening-Frequenz.",
+    grenze:"Die App macht hier bewusst nichts — auch nicht „zur Orientierung\". Ein verändertes Muttermal, starke oder plötzliche Symptome gehören ärztlich abgeklärt, nicht getrackt.",
+    quelle:"Skincare MOC" },
+};
 
 /* KH-Bausteine — „Rezepte", Tabelle „Die eine Stellschraube" (jeweils ~130 g KH) */
 const KH_BAUSTEINE = [
@@ -1078,6 +1456,8 @@ function render(){
     renderHaut();
   } else if (aktiveView === "schlaf"){
     renderSchlaf();
+  } else if (aktiveView === "wissen"){
+    renderRegister();
   }
 }
 
@@ -1303,7 +1683,7 @@ function renderHaut(){
       <h2>Heute außerdem</h2>
       ${istSpieltag ? `<label class="schritt${sk.spf_nachgelegt ? " fertig" : ""}">
         <input type="checkbox" id="skSpfNach" ${sk.spf_nachgelegt ? "checked" : ""}>
-        <span>SPF zur Halbzeit nachgelegt</span></label>
+        <span>SPF zur Halbzeit nachgelegt ${iBtn("spf_nachlegen")}</span></label>
         <p class="muted" style="margin:6px 0 12px">Nachlegen schlägt Lichtschutzfaktor: Schweiß reißt
         fleckige Lücken in den Film. Bei Wochenendspielen der wirksamste Einzelpunkt.</p>` : ""}
 
@@ -1350,7 +1730,7 @@ function renderHaut(){
       const an = !!(sk[gruppe] && sk[gruppe][s.id]);
       const lab = document.createElement("label");
       lab.className = "schritt" + (an ? " fertig" : "");
-      lab.innerHTML = `<input type="checkbox" ${an ? "checked" : ""}><span class="nr">${i+1}</span><span>${s.label}</span>`;
+      lab.innerHTML = `<input type="checkbox" ${an ? "checked" : ""}><span class="nr">${i+1}</span><span>${s.label} ${iBtn(s.wissen)}</span>`;
       lab.querySelector("input").onchange = e => {
         const dd = day(); if (!dd.skin[gruppe]) dd.skin[gruppe] = {};
         dd.skin[gruppe][s.id] = e.target.checked; save(); render();
@@ -1473,7 +1853,7 @@ function renderSchlaf(){
       <h2>Sieben Tage</h2>
       ${dauern.length
         ? `<div class="statzeile"><span>Mittlere Dauer</span><b>${alsStunden(Math.round(mittel))}</b></div>
-           <div class="statzeile"><span>Regelmäßigkeit <span class="muted">(Streuung der Zubettgehzeit)</span></span>
+           <div class="statzeile"><span>Regelmäßigkeit <span class="muted">(Streuung der Zubettgehzeit)</span> ${iBtn("regelmaessigkeit")}</span>
              <b>${sd != null ? "± " + Math.round(sd) + " min" : "—"}</b></div>
            <p class="muted" style="margin:10px 0 0">Erfasst an ${dauern.length} von 7 Tagen.
              Die App zeigt bewusst Regelmäßigkeit statt eines Scores — sie ist die Größe, die sich beeinflussen lässt.</p>`
@@ -1669,6 +2049,84 @@ function mengeText(m){
   return nah ? brueche[nah] : de1(m);
 }
 
+/* ---------- Warum-Ebene: Anzeige ---------- */
+const AMPEL = {
+  rot:     { ic:"🔴", text:"belegt und handlungsrelevant" },
+  gelb:    { ic:"🟡", text:"plausibel, Evidenz dünn" },
+  schwarz: { ic:"⚫", text:"Mythos, widerlegt oder überschätzt" },
+};
+/* ⓘ-Symbol, das die passende Karte öffnet */
+const iBtn = key => WISSEN[key] ? `<button class="wi" data-wissen="${key}" aria-label="Warum?" title="Warum?">ⓘ</button>` : "";
+
+function zeigWissen(key){
+  const k = WISSEN[key]; if (!k) return;
+  const a = AMPEL[k.ampel];
+  document.getElementById("wissenInhalt").innerHTML = `
+    <h3>${k.titel}</h3>
+    <div class="ampelzeile">${a.ic} ${a.text} · ${k.bereich}</div>
+    <p class="antwort">${k.antwort}</p>
+    <h4>Mechanismus</h4><p>${k.mechanismus}</p>
+    <h4>Studienlage</h4><p>${k.studienlage}</p>
+    <h4>Grenze</h4><p class="grenze">${k.grenze}</p>
+    <div class="quelle">Quelle: ${k.quelle}</div>
+    <button class="btn ghost zu" id="wissenZu">Schließen</button>`;
+  document.getElementById("wissenSheet").classList.add("show");
+  document.getElementById("wissenZu").onclick = () => document.getElementById("wissenSheet").classList.remove("show");
+}
+document.getElementById("wissenSheet").addEventListener("click", e => {
+  if (e.target.id === "wissenSheet") e.currentTarget.classList.remove("show");
+});
+/* Ein Handler für alle ⓘ-Symbole, egal wo sie stehen */
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-wissen]");
+  if (b){ e.preventDefault(); e.stopPropagation(); zeigWissen(b.dataset.wissen); }
+});
+
+/* ---------- Wissens-Register ---------- */
+let regSortierung = "bereich";        // "bereich" | "rot" | "gelb" | "schwarz"
+
+function renderRegister(){
+  const filter = document.getElementById("regFilter");
+  filter.innerHTML = "";
+  [["bereich","Nach Bereich"],["rot","🔴 belegt"],["gelb","🟡 dünn"],["schwarz","⚫ Mythen"]].forEach(([wert,label]) => {
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.textContent = label;
+    if (wert === regSortierung){ b.style.borderColor = "var(--navy)"; b.style.background = "#eef4fc"; b.style.fontWeight = "700"; }
+    b.onclick = () => { regSortierung = wert; renderRegister(); };
+    filter.appendChild(b);
+  });
+
+  const liste = document.getElementById("regListe");
+  liste.innerHTML = "";
+  const eintraege = Object.entries(WISSEN);
+
+  const karte = ([key, k]) => {
+    const el = document.createElement("div");
+    el.className = "regcard";
+    el.innerHTML = `<div class="rt">${AMPEL[k.ampel].ic} ${k.titel}</div><div class="ra">${k.antwort}</div>`;
+    el.onclick = () => zeigWissen(key);
+    return el;
+  };
+
+  if (regSortierung === "bereich"){
+    const bereiche = [...new Set(eintraege.map(([, k]) => k.bereich))];
+    bereiche.forEach(b => {
+      const h = document.createElement("div");
+      h.className = "regbereich"; h.textContent = b;
+      liste.appendChild(h);
+      eintraege.filter(([, k]) => k.bereich === b).forEach(e => liste.appendChild(karte(e)));
+    });
+  } else {
+    const treffer = eintraege.filter(([, k]) => k.ampel === regSortierung);
+    const h = document.createElement("div");
+    h.className = "regbereich";
+    h.textContent = `${AMPEL[regSortierung].ic} ${AMPEL[regSortierung].text} — ${treffer.length} Karten`;
+    liste.appendChild(h);
+    treffer.forEach(e => liste.appendChild(karte(e)));
+  }
+}
+
 /* ---------- Tagesflags ----------
    Zwei orthogonale Schalter statt weiterer Profile: Sie ändern die Makros NICHT,
    sondern nur Verteilung und Hinweise. */
@@ -1712,15 +2170,15 @@ function timingHinweise(){
   const d = readDay(viewKey), f = d.flags;
 
   if (p === "training"){
-    liste.push({ id:"pre", text:"Die Prä-Mahlzeit gegen 16:30 ist der eigentliche Hebel — nicht die Mahlzeit danach. Sie hält die Aminosäuren 3–6 h hoch und deckt Training und Nachher-Phase ab." });
-    liste.push({ id:"intra", text:"105 min Belastung liegen über der 75-Minuten-Schwelle: 30–60 g Kohlenhydrate während des Trainings sind Pflicht, nicht Kür." });
+    liste.push({ id:"pre", wissen:"pre_workout", text:"Die Prä-Mahlzeit gegen 16:30 ist der eigentliche Hebel — nicht die Mahlzeit danach. Sie hält die Aminosäuren 3–6 h hoch und deckt Training und Nachher-Phase ab." });
+    liste.push({ id:"intra", wissen:"intra_kh", text:"105 min Belastung liegen über der 75-Minuten-Schwelle: 30–60 g Kohlenhydrate während des Trainings sind Pflicht, nicht Kür." });
   }
   if (p === "spiel"){
-    liste.push({ id:"spieltag", text:"Koffein ~270 mg (3 mg/kg) 45–60 min vor Anpfiff · zur Halbzeit 20–30 g Kohlenhydrate flüssig · direkt nach dem Spiel flüssig 60–90 g KH + 25–30 g Protein." });
+    liste.push({ id:"spieltag", wissen:"nach_spiel", text:"Koffein ~270 mg (3 mg/kg) 45–60 min vor Anpfiff · zur Halbzeit 20–30 g Kohlenhydrate flüssig · direkt nach dem Spiel flüssig 60–90 g KH + 25–30 g Protein." });
   }
   const vortag = keyOf(new Date(dateFromKey(viewKey).getTime() - 86400000));
   if (profilOf(vortag) === "spiel" && p !== "spiel"){
-    liste.push({ id:"nachspiel", text:"Tag nach dem Spiel: Kohlenhydrate nicht senken — die Typ-II-Sprintfasern füllen bis zu 72 h auf." });
+    liste.push({ id:"nachspiel", wissen:"montag", text:"Tag nach dem Spiel: Kohlenhydrate nicht senken — die Typ-II-Sprintfasern füllen bis zu 72 h auf." });
   }
 
   // Klausur-/Lernblock: zu große Mahlzeit zu kurz vor dem Block
@@ -1730,14 +2188,14 @@ function timingHinweise(){
       if (!it.zeit || it.k <= 850) return;
       const abstand = blockMin - zeitInMin(it.zeit);
       if (abstand > 0 && abstand < 120){
-        liste.push({ id:"klausur-" + it.zeit, text:`„${it.n}" liegt mit ${nf(it.k)} kcal weniger als 2 h vor dem Block. Besser aufteilen: ~650 kcal und ~350 kcal fettarm (unter 20 g). Die Tagessumme bleibt gleich, das Volumen wandert nach hinten.` });
+        liste.push({ id:"klausur-" + it.zeit, wissen:"mahlzeitengroesse", text:`„${it.n}" liegt mit ${nf(it.k)} kcal weniger als 2 h vor dem Block. Besser aufteilen: ~650 kcal und ~350 kcal fettarm (unter 20 g). Die Tagessumme bleibt gleich, das Volumen wandert nach hinten.` });
       }
     });
   }
 
   // Organfleisch-Slot: einmal pro Woche, Ruhetag-Vormittag
   if (p === "ruhe" && !organSlotDieseWoche()){
-    liste.push({ id:"organ", text:"Ruhetag-Vormittag ist der Slot für Hühner- oder Rinderleber — nie Schwein oder Kalb (Vitamin-A-Obergrenze). Kein Kaffee oder Tee ±1 h, eine Vitamin-C-Quelle dazu ist Pflicht." });
+    liste.push({ id:"organ", wissen:"hepcidin", text:"Ruhetag-Vormittag ist der Slot für Hühner- oder Rinderleber — nie Schwein oder Kalb (Vitamin-A-Obergrenze). Kein Kaffee oder Tee ±1 h, eine Vitamin-C-Quelle dazu ist Pflicht." });
   }
   return liste;
 }
@@ -1762,7 +2220,7 @@ function renderTiming(){
   offen.forEach(h => {
     const box = document.createElement("div");
     box.className = "hint on";
-    box.innerHTML = `<span>${h.text}</span>`;
+    box.innerHTML = `<span>${h.text} ${iBtn(h.wissen)}</span>`;
     const x = document.createElement("button");
     x.className = "hx"; x.textContent = "✕"; x.setAttribute("aria-label","Hinweis schließen");
     x.onclick = () => { hinweiseZu.add(viewKey + ":" + h.id); renderTiming(); };
@@ -1777,7 +2235,7 @@ function renderKoffein(){
   const tage = koffeinTageDieseWoche();
   const max  = settings.koffein_max_tage;
   el.innerHTML = `<div class="statzeile" style="margin-top:12px" title="Schützt den Schlaf UND die Wirkung am Spieltag vor Toleranz">
-      <span>Koffein diese Woche</span><b>${tage} von ${max} Tagen · Deadline ${settings.koffein_deadline}</b></div>
+      <span>Koffein diese Woche ${iBtn("koffein_deadline")}</span><b>${tage} von ${max} Tagen · Deadline ${settings.koffein_deadline}</b></div>
     ${tage > max ? `<p class="muted" style="margin:6px 0 0">Über dem Richtwert. Zwei Tage pro Woche halten die
       Wirkung am Spieltag hoch — Toleranz kostet mehr als sie bringt.</p>` : ""}`;
 }
@@ -1846,10 +2304,10 @@ function renderProfil(){
 
 function renderProfilHinweis(profil){
   const box = document.getElementById("profilHint");
-  const txt = PROFIL_HINWEIS[profil];
+  const h = PROFIL_HINWEIS[profil];
   const key = `${viewKey}:${profil}`;
-  if (!txt || hinweiseZu.has(key)) { box.classList.remove("on"); return; }
-  document.getElementById("profilHintText").textContent = txt;
+  if (!h || hinweiseZu.has(key)) { box.classList.remove("on"); return; }
+  document.getElementById("profilHintText").innerHTML = `${h.text} ${iBtn(h.wissen)}`;
   box.dataset.key = key;
   box.classList.add("on");
 }
@@ -1920,7 +2378,7 @@ function renderSupps(d){
   // Timing-Begründungen darunter, damit sie nicht nur im Tooltip hängen
   const info = document.getElementById("suppInfo");
   if (info) info.innerHTML = SUPPS.filter(s => !s.monate || s.monate.includes(monat))
-    .map(s => `<div class="suppzeile"><b>${s.n}</b> ${s.hinweis}</div>`).join("");
+    .map(s => `<div class="suppzeile"><b>${s.n}</b> ${s.hinweis} ${iBtn(s.wissen)}</div>`).join("");
 }
 
 /* ---------- Chart ---------- */
