@@ -328,6 +328,21 @@ ul.log .meta { color: var(--grey); font-size: 11.5px; }
 .fotokachel .weg { position: absolute; top: 3px; right: 3px; background: rgba(255,255,255,.92); border: none; border-radius: 6px; font-size: 11px; padding: 3px 6px; cursor: pointer; color: #c0392b; }
 .notizfeld { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px; font-size: 13.5px; font-family: inherit; resize: vertical; min-height: 62px; }
 
+/* Tagesplan */
+.planwahl { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.planrow { display: flex; gap: 10px; padding: 11px 2px; border-bottom: 1px solid #f0f3f8; font-size: 13px; }
+.planrow:last-child { border-bottom: none; }
+.planrow .zeit { flex: none; width: 46px; font-weight: 700; color: var(--navy); font-variant-numeric: tabular-nums; }
+.planrow .inhalt { flex: 1; min-width: 0; }
+.planrow .lbl { font-weight: 600; }
+.planrow .makros { font-size: 11.5px; color: var(--grey); margin-top: 2px; }
+.planrow .note { font-size: 11.5px; color: var(--grey); margin-top: 4px; line-height: 1.5; }
+.planrow.getraenk { background: #f3f8fd; border-radius: 9px; padding: 11px 8px; }
+.planrow.ereignis .lbl { color: var(--grey); font-weight: 700; }
+.planquelle { font-size: 11px; color: var(--grey); margin-top: 11px; padding-top: 9px; border-top: 1px solid var(--line); }
+.slotsoll { font-size: 11px; color: var(--grey); font-weight: 600; }
+.slotsoll.voll { color: var(--green); }
+
 .muted { color: var(--grey); font-size: 11.5px; }
 footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22px; }
 
@@ -448,6 +463,12 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
     </div>
   </div>
 
+  <div class="section">
+    <h2>Tagesplan <span class="muted" id="planSumme"></span></h2>
+    <div class="planwahl" id="planWahl"></div>
+    <div id="planAblauf"></div>
+  </div>
+
   <div class="streak" id="streak">
     <span class="fire">🔥</span>
     <span id="streakText"></span>
@@ -538,6 +559,18 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
       <div class="row" id="prepSpanne" style="margin-bottom:10px"></div>
       <div id="prepTage"></div>
       <div id="prepPlan"></div>
+      <div id="spieltagEinkauf"></div>
+    </div>
+
+    <div class="section">
+      <h2>Wochenkorridor Fleisch</h2>
+      <div class="statzeile"><span>Rotes Fleisch inkl. Leber</span><b>≤ 150 g</b></div>
+      <div class="statzeile"><span>Geflügel</span><b>300–500 g</b></div>
+      <div class="statzeile"><span>Seefisch</span><b>1–2 × 120–150 g</b></div>
+      <p class="muted" style="margin:10px 0 0">Roh gewogen. Die App zählt das nicht mit —
+        sie kennt die Kategorie eines Eintrags nicht. Kaufregel für Naturware: eine Zutat,
+        Protein ≥ 21 g/100 g, Salz ≤ 0,2 g/100 g, tiefgekühlt statt frisch.
+        </p><p class="muted" style="margin:6px 0 0" id="fleischWissen"></p>
     </div>
 
     <div class="section">
@@ -906,6 +939,114 @@ const RECIPES_DEF = [
               "Im Brötchen belegen."] },
 ];
 
+/* ================= Tagespläne =================
+   Wie viel gehört in welche Mahlzeit — und wann. Quellen je Plan ausgewiesen.
+   `soll` je Slot ist der Zielwert, gegen den die Tagesliste rechnet.
+   Ein Tag kann einen Plan wählen; ohne Auswahl greift der Standardplan des Profils. */
+const TAGESPLAENE = {
+  training_sport: {
+    name: "Trainingstag — Sport-Standard", profil: "training", quelle: "Wochenplan",
+    summe: "3.819 kcal · 176 g P · 565 g KH · 95 g F",
+    punkte: [
+      { zeit:"07:30", slot:"frueh",  label:"M1 — Tagesbasis",            k:950,  p:44, c:140, f:24 },
+      { zeit:"12:00", slot:"mittag", label:"M2 — Hauptenergie",          k:1000, p:44, c:150, f:25 },
+      { zeit:"16:30", slot:"prae",   label:"M3 — Prä-Training ⭐",        k:850,  p:44, c:130, f:18,
+        note:"Der eigentliche Hebel. 2,5 h vor Trainingsbeginn, max. 18 g Fett." },
+      { zeit:"19:00", label:"Training 19:00–20:45",
+        note:"105 min — 30–60 g Kohlenhydrate während der Einheit (Banane, Getränk zur Pause)." },
+      { zeit:"21:15", slot:"abend",  label:"M4 — Post + Pre-Sleep",      k:1000, p:44, c:145, f:28,
+        note:"Langsam verdaulich bauen. Bei Schlaf gegen 23:00 sind das 1 h 45 min Abstand." },
+    ] },
+
+  training_vorlesung: {
+    name: "Vorlesung + Training", profil: "training", quelle: "Ernährung & Kognition (2026-08) §8.1",
+    summe: "3.819 kcal · 176 g P · 565 g KH · 95 g F — identisch zum Sport-Standard",
+    punkte: [
+      { zeit:"07:30", slot:"frueh",  label:"M1",                    k:952, p:44, c:140, f:24 },
+      { zeit:"12:00", slot:"mittag", label:"M2a — geteilt ⭐",       k:644, p:30, c:95,  f:16,
+        note:"Statt 1.000 kcal am Stück — schützt den Nachmittagsblock." },
+      { zeit:"14:30", slot:"snack",  label:"M2b — Rest",            k:357, p:14, c:55,  f:9 },
+      { zeit:"15:00", label:"Koffein-Deadline", note:"Danach nichts mehr, bei Schlaf um 23:00." },
+      { zeit:"16:30", slot:"prae",   label:"M3 — Prä-Training ⭐",   k:930, p:44, c:130, f:26,
+        note:"Hier 26 g Fett — die 8 g kommen aus M4, damit die Abendmahlzeit den Schlaf nicht belastet." },
+      { zeit:"19:00", label:"Training 19:00–20:45", note:"30–60 g Kohlenhydrate während der Einheit." },
+      { zeit:"21:15", slot:"abend",  label:"M4 — Post + Pre-Sleep", k:936, p:44, c:145, f:20,
+        note:"Fett auf 20 g gesenkt — beschleunigt die Magenentleerung vor dem Schlafen." },
+    ] },
+
+  klausur: {
+    name: "Klausurtag — Block 09:00–12:00", profil: "ruhe", quelle: "Ernährung & Kognition (2026-08), Tabelle 3A",
+    summe: "3.318 kcal · 172 g P · 455 g KH · 90 g F",
+    punkte: [
+      { zeit:"06:15", label:"Aufstehen · 0,5 L", note:"Über Nacht gehen 0,3–0,5 kg verloren." },
+      { zeit:"06:45", slot:"frueh",  label:"M1 — Prä-Klausur ⭐",  k:780,  p:40, c:110, f:20,
+        note:"2,25 h vor Beginn, kleiner als sonst und fettarm. Hafer und Vollkorn statt Weißmehl." },
+      { zeit:"08:00", label:"Letzte größere Trinkmenge", note:"Danach ist der Harndrang-Peak vor dem Start durch." },
+      { zeit:"08:50", label:"Blase leeren", note:"Der wirksamste Einzelschritt." },
+      { zeit:"09:00", label:"Klausur 09:00–12:00",
+        note:"100–150 ml alle 30–45 min, wenn erlaubt. Kein Traubenzucker, kein Snack nötig." },
+      { zeit:"12:45", slot:"mittag", label:"M2 — die große Mahlzeit", k:1005, p:45, c:150, f:25,
+        note:"Jetzt darf sie groß sein — der Block ist vorbei." },
+      { zeit:"16:30", slot:"prae",   label:"M3",                  k:838,  p:45, c:115, f:22 },
+      { zeit:"20:00", slot:"abend",  label:"M4",                  k:695,  p:42, c:80,  f:23,
+        note:"Mindestens 2,5 h vor dem Schlafen." },
+    ] },
+
+  lernen: {
+    name: "Lern- und Schreibtag", profil: "ruhe", quelle: "Ernährung & Kognition (2026-08), Tabelle 3C",
+    summe: "3.318 kcal · 172 g P · 455 g KH · 90 g F",
+    punkte: [
+      { zeit:"07:15", slot:"frueh",  label:"M1",                k:826, p:42, c:115, f:22, note:"Moderat und fettarm." },
+      { zeit:"08:15", label:"Block 1 — schwer",
+        note:"Falllösung und Neulernen gehören hierhin: höchste Wachheit, größter Abstand zum Nachmittagstief." },
+      { zeit:"12:00", slot:"mittag", label:"M2 — größte Mahlzeit", k:921, p:44, c:130, f:25,
+        note:"Bewusst VOR die Dip-Phase, nicht in einen Block hinein." },
+      { zeit:"12:45", label:"Tief aussitzen",
+        note:"Spaziergang, Sonnenlicht. Der zirkadiane Anteil lässt sich nicht wegessen." },
+      { zeit:"14:00", label:"Block 3 — Schreiben" },
+      { zeit:"16:45", slot:"prae",   label:"M3",                k:854, p:44, c:120, f:22 },
+      { zeit:"20:15", slot:"abend",  label:"M4",                k:717, p:42, c:90,  f:21 },
+    ] },
+
+  spiel: {
+    name: "Spieltag — Anpfiff 15:00", profil: "spiel", quelle: "Wochenplan · Supplement-Stack (2026-07)",
+    summe: "~4.000 kcal · 175 g P · 630 g KH · 85 g F",
+    hinweis: "Bei Anpfiff 14:00 alles um eine Stunde nach vorn.",
+    punkte: [
+      { zeit:"08:00", slot:"frueh",  label:"Frühstück",          k:null, p:44, c:160, f:null,
+        note:"Fett- und ballaststoffarm." },
+      { zeit:"11:00", slot:"mittag", label:"Vor-Spiel-Mahlzeit ⭐", k:null, p:40, c:225, f:null,
+        note:"180–270 g Kohlenhydrate, 3–4 h vor Anpfiff (UEFA: 1–3 g/kg). Rezept M3-B oder M3-C passt hier." },
+      { zeit:"12:00", label:"🥤 Rote-Bete-Saft", getraenk:true,
+        note:"2–3 h vor Anpfiff, 400–800 mg Nitrat. An diesem Tag KEIN antibakterielles Mundwasser — orale Bakterien wandeln das Nitrat um, Mundspülung hebt den Effekt komplett auf." },
+      { zeit:"13:30", slot:"snack",  label:"Letzte Kohlenhydrate", k:null, p:null, c:50, f:null,
+        note:"40–60 g leicht verdaulich." },
+      { zeit:"14:00", label:"☕ Koffein ~270 mg", getraenk:true,
+        note:"3 mg/kg, 45–60 min vor Anpfiff. Nicht zur eisenreichen Mahlzeit." },
+      { zeit:"15:00", label:"Anpfiff" },
+      { zeit:"15:45", label:"Halbzeit", note:"20–30 g Kohlenhydrate flüssig plus Elektrolyte." },
+      { zeit:"17:00", slot:"snack",  label:"Direkt nach dem Spiel ⭐", k:790, p:28, c:75, f:null,
+        note:"Flüssig: 60–90 g KH + 25–30 g Protein (Rezept B). Weil der Appetit fehlt — nicht wegen eines Fensters. 🍇 Wenn Saft, dann Traubensaft: überwiegend Glukose. Apfelsaft ist überwiegend Fruktose und für das Muskelglykogen schlechter." },
+      { zeit:"19:30", slot:"abend",  label:"Abendmahlzeit",      k:null, p:44, c:150, f:null },
+      { zeit:"22:00", slot:"snack",  label:"Langsames Protein",  k:null, p:35, c:50, f:null,
+        note:"Typ-II-Fasern füllen bis 72 h — der Montag bleibt deshalb hoch." },
+    ] },
+
+  regen: {
+    name: "Regenerations-/Ladetag", profil: "regen", quelle: "abgeleitet",
+    summe: "~3.600 kcal · 175 g P · 540 g KH · 80 g F",
+    abgeleitet: true,
+    punkte: [
+      { zeit:"07:30", slot:"frueh",  label:"M1", k:900, p:44, c:135, f:20 },
+      { zeit:"12:00", slot:"mittag", label:"M2", k:950, p:44, c:145, f:21 },
+      { zeit:"16:30", slot:"prae",   label:"M3", k:800, p:44, c:125, f:15 },
+      { zeit:"21:00", slot:"abend",  label:"M4", k:950, p:43, c:135, f:24 },
+    ] },
+};
+
+/* Welcher Plan greift, wenn der Tag keinen eigenen gewählt hat */
+const STANDARDPLAN = { ruhe:"lernen", training:"training_sport", regen:"regen", spiel:"spiel" };
+
 /* ================= Die Warum-Ebene =================
    Keine Zahl ohne Begründung. Jede Karte: Ein-Satz-Antwort · Mechanismus ·
    Studienlage mit Effektgröße · Ampel · Grenze (Pflichtzeile) · Quellnotiz.
@@ -1021,6 +1162,20 @@ const WISSEN = {
     studienlage:"Network-Metaanalyse 2025 (Nutrients): etwa 3 mg/kg als Kapsel war die effektivste Strategie. Für kognitive Aufgaben ist die Kurve noch flacher — der Großteil des Effekts auf Vigilanz ist bereits bei 1–2 mg/kg erreicht.",
     grenze:"Für komplexes, mehrschrittiges Denken ist kein Nutzen belegt, teils sogar das Gegenteil: Akute Gabe verschlechterte das räumliche Arbeitsgedächtnis bei Gewohnheitstrinkern (RCT 2024). Nicht zur eisenreichen Mahlzeit — Kaffee senkt die Eisenaufnahme um rund 40 %.",
     quelle:"Supplement-Stack (2026-07) · Ernährung & Kognition (2026-08) Teil 4" },
+
+  rote_bete: { titel:"Rote Bete — eng, aber real", bereich:"Supplemente", ampel:"gelb",
+    antwort:"Wirkt bei vielen kurzen Sprints, nicht bei langen Intervallen — und ein antibakterielles Mundwasser hebt den Effekt komplett auf.",
+    mechanismus:"Das Nitrat aus dem Saft wird erst durch Bakterien auf der Zunge zu Nitrit umgewandelt, aus dem der Körper dann Stickstoffmonoxid bildet. Das verbessert die Sauerstoffnutzung im Muskel. Genau deshalb ist Mundspülung an dem Tag der häufigste Anwendungsfehler: Sie tötet die Bakterien, die den ersten Schritt machen.",
+    studienlage:"Das IOC führt Nitrat als belegt für intermittierende Teamsportbelastung. Umbrella Review 2025 und Metaanalyse 2026: robust für kurze, dichte Sprints (24 × 6 s), nicht für 7 × 30 s oder 6 × 60 s. Dosis 400–800 mg Nitrat, 2–3 h vor Anpfiff.",
+    grenze:"Der Effekt ist klein, rund 2–3 %, und verschwindet bei Sprintintervallen mit langen Pausen. Kein Muss — eher etwas, das man vor wichtigen Spielen einmal im Training testet. Der Nitratgehalt wird auf Shots selten deklariert; 500 ml roter Rübensaft tun es auch.",
+    quelle:"Supplement-Stack (2026-07)" },
+
+  traubensaft: { titel:"Traubensaft statt Apfelsaft — wenn überhaupt Saft", bereich:"Ernährung", ampel:"rot",
+    antwort:"Traubensaft ist überwiegend Glukose, Apfelsaft überwiegend Fruktose — und Fruktose füllt den Muskel schlecht.",
+    mechanismus:"Fruktose nimmt den Umweg über die Leber und landet dort im Leberglykogen statt im Muskel. Glukose geht direkt in den Muskel. Nach einem Spiel, in dem die Sprintfasern geleert wurden, ist genau das der Unterschied. Haushaltszucker ist dabei übrigens Traubenzucker ebenbürtig, entgegen der verbreiteten Annahme.",
+    studienlage:"Glukose gilt als Referenzstandard für die Muskelglykogen-Resynthese, Saccharose liegt gleichauf, Fruktose allein deutlich darunter. Ein Vorteil der 2:1-Mischung entsteht erst oberhalb von etwa 90 g Kohlenhydraten pro Stunde — für dich fast durchweg akademisch.",
+    grenze:"Fruchtsaft zählt WHO-seitig als freier Zucker, ganze Früchte und Trockenobst nicht. Die bessere Lösung ist deshalb, die Kohlenhydrate nach dem Spiel über Banane, Datteln, Reis und Kartoffeln zu holen — dann stellt sich die Saftfrage gar nicht.",
+    quelle:"Post-Workout & Leber (2026-08) §2.2 und Teil 7" },
 
   /* ---- Gestrichene Supplemente: zu wissen, warum etwas NICHT im Stack ist, zählt genauso ---- */
   beta_alanin: { titel:"Beta-Alanin — gestrichen", bereich:"Gestrichen", ampel:"schwarz",
@@ -1554,11 +1709,13 @@ function render(){
 
   // Nur die sichtbare Ansicht neu zeichnen
   if (aktiveView === "heute"){
-    renderFlags(); renderTiming();
+    renderFlags(); renderTiming(); renderPlan();
     renderSlots(); renderMyPresets(); renderLog(d); renderSupps(d);
     renderKoffein(); renderRueckblick(); drawChart();
   } else if (aktiveView === "rezepte"){
     renderKhRechner(); renderPrep(); renderRezepte();
+    const fw = document.getElementById("fleischWissen");
+    if (fw) fw.innerHTML = iBtn("huehnerbrust") + iBtn("gefluegel_hygiene") + iBtn("gefluegelaufschnitt");
   } else if (aktiveView === "haut"){
     renderHaut();
   } else if (aktiveView === "schlaf"){
@@ -2060,6 +2217,24 @@ function renderPrep(){
   });
 
   renderPrepPlan(tage);
+  renderSpieltagEinkauf(tage);
+}
+
+/* Rote Bete und Traubensaft wirken nur, wenn sie am Spieltag da sind —
+   deshalb tauchen sie im Prep-Zeitraum auf, nicht erst am Spieltag selbst. */
+function renderSpieltagEinkauf(tage){
+  const ziel = document.getElementById("spieltagEinkauf");
+  if (!ziel) return;
+  const spieltage = tage.filter(k => profilOf(k) === "spiel");
+  if (!spieltage.length){ ziel.innerHTML = ""; return; }
+  const namen = spieltage.map(k => dateFromKey(k).toLocaleDateString("de-DE",{weekday:"long"})).join(" und ");
+  ziel.innerHTML = `<div class="hint on" style="margin-top:12px">
+    <span><b>Spieltag am ${namen} — vorher besorgen:</b><br>
+    🥤 <b>Rote-Bete-Saft</b> (400–800 mg Nitrat) für 2–3 h vor Anpfiff. An dem Tag kein
+    antibakterielles Mundwasser, sonst wirkt er nicht. Vorher einmal im Training testen. ${iBtn("rote_bete")}<br>
+    🍇 <b>Traubensaft</b> für direkt nach dem Spiel — überwiegend Glukose, Apfelsaft ist
+    überwiegend Fruktose und fürs Muskelglykogen schlechter. ${iBtn("traubensaft")}<br>
+    ☕ <b>Koffein</b> ~270 mg, 45–60 min vor Anpfiff.</span></div>`;
 }
 
 function renderPrepPlan(tage){
@@ -2232,6 +2407,73 @@ function renderRegister(){
     liste.appendChild(h);
     treffer.forEach(e => liste.appendChild(karte(e)));
   }
+}
+
+/* ---------- Tagesplan ----------
+   Beantwortet die Frage „wie viel gehört in welche Mahlzeit" und wann Koffein,
+   Rote Bete und Traubensaft ihre Wirkung entfalten. */
+function aktiverPlan(){
+  const d = readDay(viewKey);
+  const gewaehlt = d.flags && d.flags.plan;
+  if (gewaehlt && TAGESPLAENE[gewaehlt]) return gewaehlt;
+  return STANDARDPLAN[profilOf(viewKey)] || "lernen";
+}
+
+/* Sollwerte eines Mahlzeiten-Slots aus dem aktiven Plan (mehrere Punkte je Slot addiert) */
+function slotSoll(slotId){
+  const plan = TAGESPLAENE[aktiverPlan()];
+  if (!plan) return null;
+  const treffer = plan.punkte.filter(x => x.slot === slotId && x.k != null);
+  if (!treffer.length) return null;
+  return treffer.reduce((s,x) => ({ k:s.k+(x.k||0), p:s.p+(x.p||0), c:s.c+(x.c||0), f:s.f+(x.f||0) }),
+                        {k:0,p:0,c:0,f:0});
+}
+
+function renderPlan(){
+  const wahl = document.getElementById("planWahl");
+  if (!wahl) return;
+  const aktiv = aktiverPlan();
+  const profil = profilOf(viewKey);
+
+  // Pläne des aktuellen Profils zuerst, danach die übrigen als Alternative
+  const ids = Object.keys(TAGESPLAENE).sort((a,b) => {
+    const ap = TAGESPLAENE[a].profil === profil ? 0 : 1, bp = TAGESPLAENE[b].profil === profil ? 0 : 1;
+    return ap - bp;
+  });
+  wahl.innerHTML = "";
+  ids.forEach(id => {
+    const pl = TAGESPLAENE[id];
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.textContent = pl.name;
+    if (id === aktiv){ b.style.borderColor = "var(--navy)"; b.style.background = "#eef4fc"; b.style.fontWeight = "700"; }
+    b.onclick = () => { day().flags.plan = (id === aktiv ? null : id); save(); render(); };
+    wahl.appendChild(b);
+  });
+
+  const plan = TAGESPLAENE[aktiv];
+  document.getElementById("planSumme").textContent = plan.summe || "";
+
+  const el = document.getElementById("planAblauf");
+  el.innerHTML = plan.punkte.map(x => {
+    const makros = x.k != null
+      ? `${nf(x.k)} kcal · ${x.p != null ? nf(x.p)+" g P" : "—"} · ${x.c != null ? nf(x.c)+" g KH" : "—"}${x.f != null ? " · "+nf(x.f)+" g F" : ""}`
+      : (x.p != null || x.c != null
+          ? `${x.p != null ? nf(x.p)+" g Protein" : ""}${x.p != null && x.c != null ? " · " : ""}${x.c != null ? nf(x.c)+" g KH" : ""}`
+          : "");
+    const klasse = x.getraenk ? " getraenk" : (x.slot ? "" : " ereignis");
+    return `<div class="planrow${klasse}">
+      <span class="zeit">${x.zeit}</span>
+      <span class="inhalt">
+        <span class="lbl">${x.label}</span>
+        ${makros ? `<div class="makros">${makros}</div>` : ""}
+        ${x.note ? `<div class="note">${x.note}</div>` : ""}
+      </span></div>`;
+  }).join("")
+  + `<div class="planquelle">${plan.hinweis ? plan.hinweis + " · " : ""}${
+      plan.abgeleitet
+        ? "⚠️ Dieser Ablauf ist <b>abgeleitet</b>: Die Tagessumme steht in „Tagesprofile &amp; Zielwerte\", die Verteilung auf die vier Mahlzeiten ist proportional aus dem Trainingstag gerechnet und im Vault nicht eigens durchgerechnet."
+        : "Quelle: " + plan.quelle}</div>`;
 }
 
 /* ---------- Tagesflags ----------
@@ -2469,7 +2711,12 @@ function renderLog(d){
           ? `— ${fett - slot.fettdeckel} g über der Grenze. Fett verzögert die Magenentleerung; diese Mahlzeit muss 2,5 h und ein volles Training tragen.`
           : ""} ${iBtn("m3_fett")}</div>`;
     }
-    grp.innerHTML=`<div class="slothead"><span>${slot.ic} ${slot.label}</span><span class="sum">${sum} kcal</span></div>${fettzeile}`;
+    // Sollwert aus dem Tagesplan, damit sichtbar ist, wie viel in diesen Slot gehört
+    const soll = slotSoll(slot.id);
+    const sollText = soll
+      ? `<div class="slotsoll${sum >= soll.k*0.9 ? " voll" : ""}">${nf(sum)} von ~${nf(soll.k)} kcal · ${nf(soll.p)} g Protein · ${nf(soll.c)} g KH geplant</div>`
+      : "";
+    grp.innerHTML=`<div class="slothead"><span>${slot.ic} ${slot.label}</span><span class="sum">${sum} kcal</span></div>${sollText}${fettzeile}`;
     const ul=document.createElement("ul"); ul.className="log";
     entries.forEach(({it,i})=>{
       const li=document.createElement("li");
