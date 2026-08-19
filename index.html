@@ -1486,12 +1486,12 @@ const WISSEN = {
     grenze:"Die Reihenfolge betrifft die Anwendung, nicht die Produktwahl. Sie ersetzt weder ausreichende Menge — zwei Fingerbreit fürs Gesicht — noch das Nachlegen.",
     quelle:"Meine Basis-Routine · Skincare MOC" },
 
-  spf_nachlegen: { titel:"Nachlegen schlägt Lichtschutzfaktor", bereich:"Haut", ampel:"rot",
-    antwort:"Schweiß reißt fleckige Lücken in den Film — Nachlegen zur Halbzeit ist wirksamer als ein höherer Faktor.",
+  spf_nachlegen: { titel:"Nachlegen schlägt Lichtschutzfaktor", bereich:"Haut", ampel:"gelb",
+    antwort:"Schweiß reißt fleckige Lücken in den Film — Nachlegen zur Halbzeit ist plausibler als ein höherer Faktor, aber nicht am Endpunkt belegt.",
     mechanismus:"Der angegebene Lichtschutzfaktor gilt für einen gleichmäßigen, vollständigen Film. Beim Sport verteilt sich der Schutz ungleichmäßig und wird stellenweise abgetragen. „80 Minuten wasserfest\" ist ein Laborwert unter kontrollierten Bedingungen, kein Versprechen für ein Spiel an einem Sommernachmittag.",
-    studienlage:"Der Nambour-RCT ergab für tägliche gegenüber anlassbezogener Anwendung eine Hazard Ratio von 0,50 für Melanom. Bei Wochenendspielen zur UV-Spitzenzeit gilt das Halbzeit-Nachlegen als wirksamster Einzelpunkt.",
-    grenze:"Die Hazard Ratio bezieht sich auf tägliche Anwendung insgesamt, nicht speziell auf das Nachlegen — dieses ist als praktische Ableitung eingeordnet, nicht als eigener Studienendpunkt.",
-    quelle:"Skincare MOC" },
+    studienlage:"Der Nambour-RCT ergab für tägliche gegenüber anlassbezogener Anwendung eine Hazard Ratio von 0,50 für Melanom — mit einem Konfidenzintervall von 0,24 bis 1,02 (p = 0,051). Dagegen fand eine Metaanalyse über 23 Studien (Brunner 2025) für „je benutzt“ gegenüber „nie“ keinen Zusammenhang mit dem Melanomrisiko: OR 0,98 (0,79–1,21). Dieser Nullbefund hat selbst einen asymmetrischen Funnel Plot und einen signifikanten Egger-Test.",
+    grenze:"Beide Befunde messen nicht dasselbe: Die Metaanalyse erfasst „je benutzt“ und definiert damit genau die Variablen weg, um die es geht — Menge, Häufigkeit, Nachlegen. Es existiert keine Studie, die Nachcremen gegen Nicht-Nachcremen mit klinischem Endpunkt randomisiert. Das Argument ruht auf Photoprotektions-Physik, nicht auf einem Endpunkt. Die Maßnahme bleibt trotzdem: Kosten null, Risiko null. Aber nicht auf verschwitzter Haut stehen lassen — danach zeitnah abduschen.",
+    quelle:"Skincare-Bestandsrevision (2026-08) §1 These 6" },
 
   salicylsaeure: { titel:"Salicylsäure 2 % (BHA)", bereich:"Haut", ampel:"rot",
     antwort:"Sie ist fettlöslich und kommt deshalb dorthin, wo der Mitesser entsteht — in die Pore hinein.",
@@ -1532,7 +1532,7 @@ const WISSEN = {
     antwort:"Zwölf Wochen sind der Standard-Endpunkt aller Akne-Studien — vorher ist eine Beurteilung aussagelos.",
     mechanismus:"Ein Komedo braucht Wochen, um zu entstehen und abzuheilen. Wirkstoffe greifen in diesen Zyklus ein, aber der Effekt wird erst sichtbar, wenn mehrere Zyklen durchlaufen sind. Wer nach vier Wochen bewertet, misst Rauschen.",
     studienlage:"Zwölf Wochen sind der übliche Endpunkt der randomisierten Akne-Studien. Ebenso festgehalten: Nach Ablauf dieser Frist ist Weiterwarten nicht mehr evidenzgestützt — dann steht eine Entscheidung an.",
-    grenze:"Ohne Baseline-Fotos ist die Auswertung Erinnerung statt Messung. Deshalb hängt an dieser Frist die Fotofunktion — gleiche Beleuchtung, gleicher Abstand, gleicher Winkel.",
+    grenze:"Zwei Einschränkungen. Erstens: Ohne Baseline-Fotos ist die Auswertung Erinnerung statt Messung — deshalb hängt an dieser Frist die Fotofunktion. Zweitens, und im Vault lange nicht zusammengerechnet: Ein neuer Wirkstoff braucht 6–8 Wochen Einschleichen, die Bewertung danach 12 Wochen. Das ergibt ein Fenster von 18–20 Wochen, nicht von zwölf. Deshalb rückwärts rechnen: erst den Bewertungszeitpunkt in ein ruhiges Fenster legen, dann den Start daraus ableiten.",
     quelle:"Skincare MOC" },
 
   komedo_luecke: { titel:"Die komedolytische Lücke der Routine", bereich:"Haut", ampel:"rot",
@@ -2033,6 +2033,106 @@ async function fotoLoeschen(id){
 /* ---------- Haut ----------
    Rein deskriptiv und kosmetisch. Keine Diagnose, kein Score, keine Muttermal-Bewertung —
    Naevi gehören zum Hautarzt („Skincare MOC", Sicherheits-Leitplanken). */
+/* ---------- Haut: Inhalte aus den drei Recherchen ----------
+   „Hautpflege-Report — Akne, Wirkstoffe, Ernährung, Naevi 2026-08-08" (60 Quellen),
+   „Skincare-Bestandsrevision (2026-08)" (14 neue Quellen) und
+   „Hautpflege-Report — Rötung, UV, Rasur 2026-07-07".
+   Die Bestandsrevision korrigiert den August-Report an zwei Stellen — beide sind
+   hier in der revidierten Fassung übernommen, nicht in der ursprünglichen. */
+
+const HAUT_SPF = [
+  { lage:"Spieltag", regel:"Nachlegen in der Halbzeit, Stick — danach zeitnah abduschen",
+    grund:"Anpfiff 14–15 Uhr ist das UV-Maximum. Das Melanomrisiko wiegt schwerer als das Komedonenrisiko. Das Duschen danach ist der Preis, nicht ein Zusatz: Nachcremen auf verschwitzte Haut ist mechanisch genau die Okklusionssituation, die Acne mechanica treibt." },
+  { lage:"Trainingsabend Di/Do", regel:"Morgens SPF, nicht nachlegen",
+    grund:"Die UV-Last ist um 19:00 niedrig. Nachlegen addiert hier nur Reizung." },
+  { lage:"Pendeln / Vorlesungstag", regel:"Morgens SPF, mittags nur bei realer Außenzeit über ~30 min",
+    grund:"Die vierte Situation, die das alte Protokoll nicht kannte. Der Fix ist kein Produkt, sondern ein Ort: Stick in den Rucksack, nicht nur in die Sporttasche." },
+  { lage:"Winterhalbjahr", regel:"Morgens SPF, kein Nachlegen",
+    grund:"UVA durchdringt Bewölkung zu etwa 80 %, aber ohne Schweiß gibt es keinen Filmabtrag." }
+];
+
+const HAUT_RASUR = [
+  { t:"Nach der Dusche", b:"Das Haar ist aufgeweicht. Machst du bereits so." },
+  { t:"In Wuchsrichtung, kurze Züge", b:"Der Konsens ist eindeutig. „Gegen den Strich\" wirkt glatter — und genau dieser glatte Effekt ist die Ursache eingewachsener Haare." },
+  { t:"Haut nicht spannen", b:"Kein „extra-close shave\". Trick aus der Leitlinie: die freie Hand hinter den Rücken nehmen — das entzieht die Versuchung, straffzuziehen." },
+  { t:"Dieselbe Stelle nicht zweimal", b:"Etwa 1 mm Stoppel stehen lassen." },
+  { t:"Klinge alle 5–7 Rasuren", b:"Dein Protokoll passt bereits." },
+  { t:"Elektrorasierer oder Trimmer testen", b:"Der ~1 mm lässt und bei eingewachsenen Haaren oft hautfreundlicher ist als die Klinge. Mehrklingen schneiden zu tief — das Haar retrahiert unter die Oberfläche. Ab September dringlich, nicht optional: weniger Zeit heißt mehr Spannen." },
+  { t:"Kein Alkohol-Aftershave", b:"Brennt und trocknet aus. Direkt Feuchtigkeitspflege." }
+];
+
+const HAUT_TERMIN = [
+  { a:"🔴", f:"Sind atypische oder dysplastische Nävi dabei?",
+    b:"Diese Frage kommt VOR der Zählung. In deiner Altersgruppe ist Atypie der dominante Marker: mindestens ein atypischer Nävus OR 4,84 bei Jüngeren gegen 1,71 bei Älteren. Die reine Anzahl gewöhnlicher Nävi wirkt dagegen altersunabhängig (OR 2,56 gegen 2,06)." },
+  { a:"🔴", f:"Nävi zählen und dermatoskopieren lassen",
+    b:"Die Zahl bleibt für die Wahl des Intervalls nötig. Zusätzlicher Grund, es jetzt zu tun: Die Finanzkommission Gesundheit empfiehlt seit 03/2026, das anlasslose Screening ab 35 zu streichen und durch ein risikobasiertes Modell zu ersetzen — dessen Risikogruppen ausdrücklich „über 50 Muttermale\" enthalten. Ein dokumentierter Befund wäre dann die Eintrittskarte statt einer Privatentscheidung." },
+  { a:"🔴", f:"Akne-Eskalation: ein Termin, zwei Anliegen",
+    b:"Ein Behandlungsanlass umgeht die 35-Jahre-Grenze des gesetzlichen Screenings. Rx-Optionen: Adapalen 0,1 %, Azelainsäure 15–20 % — und seit 01.06.2026 Clascoteron (Winlevi® 10 mg/g), das erste topische Anti-Androgen. Gesprächspunkt, nicht Erstlinie: Die Leitlinie hat es bewusst noch nicht aufgenommen." },
+  { a:"🟡", f:"Dürfen Wirkstoffe auf oder um den Stirn-Nävus?",
+    b:"Der Nävus liegt in der Papel-Zone. Kein Dokument klärt, ob Reizung dort die Beurteilbarkeit von „Evolution\" stört. Das ist eine Protokollfrage, keine Diagnosefrage — und sie fehlt bisher." },
+  { a:"🟡", f:"Satzungsleistung der Kasse für Screening unter 35?",
+    b:"Kassenabhängig, Altersgrenzen zwischen 14 und 20 Jahren. Ein Anruf." }
+];
+
+const HAUT_ABCDE = [
+  { k:"A", w:"Asymmetrie", b:"Die Hälften sehen unterschiedlich aus." },
+  { k:"B", w:"Begrenzung", b:"Unscharfe, unregelmäßige, ausgefranste Ränder." },
+  { k:"C", w:"Colorit",    b:"Mehrere Farben in einer Läsion, ungleich verteilt." },
+  { k:"D", w:"Durchmesser",b:"Über 5 mm oder Größenzunahme." },
+  { k:"E", w:"Evolution",  b:"Jede Veränderung in Größe, Form, Farbe, Oberfläche oder Empfindung." }
+];
+
+const HAUT_WARN = [
+  "Ein Nävus, der blutet, juckt, nässt, krustet oder schmerzt",
+  "Eine Läsion, die anders aussieht als alle anderen — das „hässliche Entlein\". Bei vielen Nävi das treffsicherste Einzelkriterium",
+  "Eine neu aufgetretene pigmentierte Läsion nach dem 30. Lebensjahr",
+  "Ein dunkler Streifen unter Finger- oder Fußnagel",
+  "Tiefe, schmerzhafte Knoten oder Zysten — nicht selbst behandeln, nicht ausdrücken",
+  "Beginnende Narbenbildung — die Eskalationsschwelle ist erreicht",
+  "Starke, anhaltende Reizung nach Wirkstoffeinführung: absetzen, nicht durchhalten",
+  "Psychosoziale Belastung durch das Hautbild — laut AAD ein eigenständiges Kriterium für intensivere Behandlung, unabhängig von der Läsionszahl"
+];
+
+const HAUT_HEBEL = [
+  { a:"🔴", t:"Hautarzttermin — ein Termin, zwei Anliegen", b:"Löst den Rezept-Engpass und die offene Nävus-Terminierung gleichzeitig. Die einzige Terminregel mit hartem Verfallsdatum: Ab September machen Vorlesungszeiten und Pendeln Werktagstermine deutlich teurer." },
+  { a:"🔴", t:"Einen komedolytisch wirksamen Wirkstoff ergänzen", b:"Deine Routine setzt auf die zwei schwächsten Optionen am Komedo. OTC-Weg jetzt: Benzoylperoxid 2,5–5 %, etwa 5–7 €. Wichtig aus der Revision: Die Leitlinien-Effizienztabelle führt BPO gleichauf mit Adapalen auf Evidenzlevel 1 — der OTC-Weg ist kein Kompromiss zweiter Klasse. 2,5 % wirkt wie 5 % wie 10 %, bei deutlich weniger Reizung." },
+  { a:"🔴", t:"Baseline-Läsionszählung und Fotos vor jeder Änderung", b:"Ohne Baseline ist die Auswertung Erinnerung statt Messung. Fester Ort und feste Tageszeit festlegen, bevor sich der Alltag im September ändert." },
+  { a:"🔴", t:"Eine Variable zur Zeit", b:"Neuer Wirkstoff, neues Produkt und Ernährungsumstellung gleichzeitig machen jede Zuordnung unmöglich." },
+  { a:"🟡", t:"Handykontakt an Wange und Schläfe reduzieren", b:"Deine Komedonenzonen sind exakt die Kontaktzonen. Kostenlos und mechanistisch plausibel, aber ohne Studienbeleg." },
+  { a:"🟡", t:"Saisonmodi einführen", b:"Winter: BHA-Frequenz runter, Moisturizer zweimal täglich. Sommer: volle Frequenz. Talgproduktion steigt um etwa 10 % je Grad Celsius." },
+  { a:"🟡", t:"Zeitnah nach dem Training duschen", b:"Mechanistisch plausibel, kostenlos. Die kursierende 40-%-Zahl ist nicht verifizierbar." },
+  { a:"🟡", t:"BPO kühl lagern", b:"Nicht im Auto, nicht neben der Dusche — Hitze fördert die Zersetzung zu Benzol." }
+];
+
+const HAUT_NICHT = [
+  { t:"Skyr streichen", b:"Odds Ratio 1,36 aus Beobachtungsdaten gegen eine belegte Säule deiner Proteinversorgung. Schlechter Tausch. Und: Der höchste Wert steht bei Joghurt, nicht bei Magermilch — die Assoziation gilt für jede Milchart." },
+  { t:"Whey absetzen", b:"Der einzige Sechs-Monats-RCT (30 g/Tag, n = 49) fand keinen Effekt. Wichtige Einschränkung aus der Revision: Das Konfidenzintervall schließt die Null ein und reicht bis −13. Das ist nicht belegt und nicht widerlegt, sondern unentschieden — die schärfere Formulierung „Mythos\" ist zu stark." },
+  { t:"Vitamin A supplementieren", b:"Unwirksam in üblichen Dosen, toxisch in wirksamen. Serum-Retinol ist kein valider Sicherheitsmarker." },
+  { t:"Azelainsäure 10 % auf Rx-15 % hochstufen", b:"Nicht die Konzentration ist das Problem, sondern der Wirkstoff für dieses Ziel. Für Rötung bleibt sie richtig — und bei Sensitivität hat sie das bessere Verträglichkeitsprofil als BPO." },
+  { t:"Mole-Mapping-Apps", b:"Kommerzielle Apps im Mittel 59 % Treffgenauigkeit, eine getestete App 0 % Sensitivität. Das CE-Zeichen garantiert das nicht. Eigenes Fotoprotokoll ja, App-Bewertung nein." },
+  { t:"Skin Cycling und geplante Wirkstoffpausen", b:"Kein Leitlinienkonzept. Rezidivraten mit Erhaltung 2,9–9,4 % gegen 32,7–37 % ohne. Frequenz senken ist nicht dasselbe wie pausieren." },
+  { t:"Voller Sandwich als Retinoid-Einstieg", b:"Senkt die Bioaktivität etwa dreifach. Der offene Sandwich erhält sie. Einschränkung aus der Revision: Die Studie ist ex vivo, ein Konferenzposter mit Herstellerbeteiligung — Richtung plausibel, Quelle schwach." },
+  { t:"BPO 10 % statt 2,5–5 %", b:"Gleiche Wirksamkeit, mehr Reizung. Bei deiner Sensitivität die falsche Richtung." },
+  { t:"Extra BHA-Waschen an Trainingstagen", b:"Addiert Reizung ohne belegten Zusatznutzen." },
+  { t:"Kohlenhydrate an Trainingstagen senken", b:"Die Verteilung der glykämischen Last zählt, nicht die absolute Menge. Dein Zuckerziel unter 10 % ist die relevante Stellschraube — bereits gezogen." },
+  { t:"Rezeptpflichtige Wirkstoffe über Umwege beschaffen", b:"Adapalen und Azelainsäure 15–20 % sind rezeptpflichtig. Das ist eine Sicherheitsentscheidung, keine Bürokratie. Keine Auslandsbestellungen, keine Weitergabe aus dem Bekanntenkreis." }
+];
+
+const HAUT_GRENZEN = [
+  { a:"🔴", t:"Der wichtigste Faktor im ganzen Zweig ist nicht ein Wirkstoff",
+    b:"Schlechte Adhärenz bei Aknetherapie liegt bei etwa 50 %, in Europa bei 58 %, bei rein topischer Therapie bei 40 %. Nur 48 % wenden konsistent an, signifikant schlechter bei Männern. Unabhängige Prädiktoren: junges Alter zwischen 15 und 25, Nebenwirkungen, ausbleibende Besserung. Du liegst in drei dieser Kategorien — männlich, 20 Jahre, Langzeittherapie ohne schnelles Feedback. Das ist keine Charakterfrage, sondern eine Designfrage." },
+  { a:"🔴", t:"Die Begründung fürs Nachcremen hat sich geändert, die Maßnahme nicht",
+    b:"Eine Metaanalyse über 23 Studien fand keinen Zusammenhang zwischen Sonnencremenutzung und Melanomrisiko (OR 0,98; 0,79–1,21). Der Befund hat selbst einen asymmetrischen Funnel Plot und einen signifikanten Egger-Test, ist also kein starker Nullbefund — und er misst „je benutzt\", also genau nicht Menge, Häufigkeit und Nachlegen. Es gibt keine Studie, die Nachcremen gegen Nicht-Nachcremen mit klinischem Endpunkt randomisiert. Das Argument ruht auf Physik, nicht auf einem Endpunkt. Die Maßnahme bleibt: Kosten null, Risiko null." },
+  { a:"🔴", t:"12 Wochen plus Einschleichen sind 18–20 Wochen",
+    b:"Der Vault verlangt beides: einen neuen Wirkstoff über 6–8 Wochen einschleichen und nach 12 Wochen bewerten. Zusammengerechnet ist das kein 12-Wochen-Fenster. Bei Start Anfang September fiele die Bewertung in die zweite Klausurphase. Konsequenz: rückwärts rechnen — erst den Bewertungszeitpunkt in ein ruhiges Fenster legen, dann den Start daraus ableiten." },
+  { a:"🟡", t:"Nur eine einzige Studie untersucht gezielt Komedonenakne",
+    b:"Deshalb wurden in der Leitlinie 2025 alle Empfehlungsstärken herabgestuft; die Abstimmung erreichte nur 60 % Zustimmung. Die Rangfolge der Wirkstoffe trägt sich über Pathophysiologie und Patientenpräferenz, nicht über einen direkten Wirksamkeitsvergleich." },
+  { a:"🟡", t:"Die Zahlen zur Azelainsäure stammen aus einer anderen Indikation",
+    b:"Die oft zitierten 51 % gegen 36 % kommen aus Rosazea-Zulassungsstudien mit 15-prozentigem Gel — nicht aus Akne und nicht mit 10 %. Der harte Punkt bleibt: 10 % ist nicht die untersuchte Konzentration." },
+  { a:"🔴", t:"Kein Befund, keine Diagnose",
+    b:"Alle Aussagen zum Hautbild stammen aus deinen eigenen Notizen, nicht aus einer Untersuchung. Nävi-Beurteilung ist Sache des Hautarztes. Die ABCDE-Liste oben ist eine Anlassliste für den Arztbesuch, kein Bewertungsinstrument." }
+];
+
 function renderHaut(){
   const d = readDay(viewKey);
   const sk = d.skin;
@@ -2068,6 +2168,7 @@ function renderHaut(){
         <li>Ist die Rötung besser geworden?</li>
         <li>Eskalation mit dem Hautarzt besprechen?</li>
       </ul>
+      <p style="margin:10px 0 0;font-size:12.5px;line-height:1.5">Kommt dabei ein <b>neuer Wirkstoff</b> dazu: Einschleichen dauert 6–8 Wochen, die Bewertung danach 12 — zusammen 18–20 Wochen. Den Bewertungszeitpunkt zuerst in ein ruhiges Fenster legen, dann den Start daraus ableiten.</p>
       <button id="fensterWeiter">Fenster auf die nächsten 12 Wochen stellen</button>
     </div>` : ""}
 
@@ -2089,7 +2190,11 @@ function renderHaut(){
         <input type="checkbox" id="skSpfNach" ${sk.spf_nachgelegt ? "checked" : ""}>
         <span>SPF zur Halbzeit nachgelegt ${iBtn("spf_nachlegen")}</span></label>
         <p class="muted" style="margin:6px 0 12px">Nachlegen schlägt Lichtschutzfaktor: Schweiß reißt
-        fleckige Lücken in den Film. Bei Wochenendspielen der wirksamste Einzelpunkt.</p>` : ""}
+        fleckige Lücken in den Film. <b>Danach zeitnah abduschen</b> — Nachcremen auf verschwitzte
+        Haut ist genau die Okklusion, die Acne mechanica treibt.<br>
+        🟡 <i>Seit 08/2026 herabgestuft:</i> Eine Metaanalyse über 23 Studien fand keinen Zusammenhang
+        zwischen Sonnencremenutzung und Melanomrisiko. Die Maßnahme bleibt — Kosten null, Risiko null —
+        aber sie ruht auf Photoprotektions-Physik, nicht auf einem klinischen Endpunkt.</p>` : ""}
 
       <label class="schritt${sk.rasur ? " fertig" : ""}">
         <input type="checkbox" id="skRasur" ${sk.rasur ? "checked" : ""}>
@@ -2124,8 +2229,82 @@ function renderHaut(){
       <div class="statzeile"><span>Abendroutine vollständig</span><b>${pmVoll} von 28 Tagen (${Math.round(pmVoll/28*100)} %)</b></div>
       <div class="statzeile"><span>Routine läuft seit</span><b>Woche ${woche}</b></div>
       ${!faellig ? `<div class="statzeile"><span>Bis zur Auswertung</span><b>noch ${restTage} Tage</b></div>` : ""}
-      <p class="muted" style="margin:10px 0 0">Das ist die einzige Zahl, die die App zur Haut ausrechnet.</p>
+      <p class="muted" style="margin:10px 0 0">Diese Zahl ist mehr als Statistik: Adhärenz ist
+        der größte Effektmodifikator im ganzen Hautzweig. Nur 48 % wenden konsistent an,
+        signifikant schlechter bei Männern. Eine reduzierte Routine, die zu 95 % läuft, schlägt
+        eine vollständige, die zu 60 % läuft.</p>
+    </div>
+
+    <div class="section">
+      <h2>SPF — vier Situationen</h2>
+      <p class="muted" style="margin:0 0 12px">Ein Pauschalgebot löst den Konflikt nicht:
+        Nachcremen auf verschwitzte Haut ist genau die Okklusion, die Acne mechanica treibt.
+        Deshalb je Lage eine eigene Regel.</p>
+      ${HAUT_SPF.map(x => `<div class="regcard" style="cursor:default">
+        <div class="rt">${x.lage}</div>
+        <div class="ra"><b>${x.regel}</b></div>
+        <div class="ra" style="margin-top:4px">${x.grund}</div></div>`).join("")}
+      <div class="planquelle">Quelle: Skincare-Bestandsrevision (2026-08) §3 W4</div>
+    </div>
+
+    <div class="section">
+      <h2>Rasur — Technik zuerst</h2>
+      <p class="muted" style="margin:0 0 12px">Die Technik ist der eigentliche Hebel, die Produkte
+        kommen danach. Ab September wird das dringlicher: weniger Zeit heißt schnellere Rasur
+        heißt mehr Spannen — und genau das treibt eingewachsene Haare.</p>
+      ${HAUT_RASUR.map(x => `<div class="regcard" style="cursor:default">
+        <div class="rt">${x.t}</div><div class="ra">${x.b}</div></div>`).join("")}
+      <div class="hint on" style="margin-top:12px"><span>Glykolsäure-Toner und Azelainsäure sind
+        beide aktiv: <b>nie am selben Abend</b> und nie direkt nach der Rasur. Chemische Exfoliation
+        höchstens zweimal pro Woche und an rasurfreien Tagen — sonst kollidiert sie mit der
+        Rötungsthematik.</span></div>
+      <div class="planquelle">Quelle: Hautpflege-Report — Rötung, UV, Rasur (2026-07) Teil 3</div>
+    </div>
+
+    <div class="section">
+      <h2>Für den Hautarzttermin</h2>
+      <p class="muted" style="margin:0 0 12px">Die Reihenfolge hat sich umgedreht: Atypie kommt
+        vor Anzahl.</p>
+      ${HAUT_TERMIN.map(x => `<div class="regcard" style="cursor:default">
+        <div class="rt">${x.a} ${x.f}</div><div class="ra">${x.b}</div></div>`).join("")}
+      <div class="planquelle">Quelle: Hautpflege-Report (2026-08) · Skincare-Bestandsrevision (2026-08)</div>
+    </div>
+
+    <div class="section">
+      <h2>Wann zum Arzt</h2>
+      <p class="muted" style="margin:0 0 10px"><b>Anlassliste, kein Bewertungsinstrument.</b>
+        Die App beurteilt keine Muttermale und stellt keine Diagnose.</p>
+      ${HAUT_ABCDE.map(x => `<div class="statzeile"><span><b>${x.k}</b> — ${x.w}</span>
+        <span class="muted" style="text-align:right;max-width:62%">${x.b}</span></div>`).join("")}
+      <p class="muted" style="margin:12px 0 6px">Zusätzlich immer abklären lassen:</p>
+      <ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.65;color:var(--ink)">
+        ${HAUT_WARN.map(x => `<li>${x}</li>`).join("")}
+      </ul>
+      <div class="planquelle">Dein Stirn-Nävus gilt derzeit als stabil. „Stabil" ist ein
+        Beobachtungsergebnis, kein Freibrief — jede Veränderung ist ein Anlass.</div>
+    </div>
+
+    <div class="section">
+      <h2>Hoher Hebel</h2>
+      ${HAUT_HEBEL.map(x => `<div class="regcard" style="cursor:default">
+        <div class="rt">${x.a} ${x.t}</div><div class="ra">${x.b}</div></div>`).join("")}
+    </div>
+
+    <div class="section">
+      <h2>Bewusst nicht verfolgt</h2>
+      ${HAUT_NICHT.map(x => `<div class="regcard" style="cursor:default">
+        <div class="rt">⚫ ${x.t}</div><div class="ra">${x.b}</div></div>`).join("")}
+    </div>
+
+    <div class="section">
+      <h2>Was die Recherchen nicht hergeben</h2>
+      ${HAUT_GRENZEN.map(x => `<div class="regcard" style="cursor:default">
+        <div class="rt">${x.a} ${x.t}</div><div class="ra">${x.b}</div></div>`).join("")}
+      <div class="planquelle">Hautpflege-Report (2026-08): 60 Quellen, 42 Tier 1 ·
+        Skincare-Bestandsrevision (2026-08): 14 neue Quellen ·
+        Hautpflege-Report Rötung/UV/Rasur (2026-07)</div>
     </div>`;
+
 
   // Routineschritte
   const bauen = (ziel, liste, gruppe) => {
