@@ -3,11 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Ernährungs-Tracker</title>
+<title>Gesundheits-Cockpit</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="icon-192.png">
-<meta name="theme-color" content="#1F3864">
+<meta name="theme-color" content="#1F3864" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12161d" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -15,24 +16,84 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
 <style>
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
+
+  /* Kanalfarben — je Nährstoff eine, durchgehend gleich belegt */
   --navy:   #1F3864;   /* Kalorien */
   --green:  #2E7D32;   /* Protein  */
   --amber:  #E08A1E;   /* Kohlenhydrate */
   --aqua:   #2196c4;   /* Wasser   */
   --violet: #8E6FCB;   /* Fett     */
   --blue:   #2E75B6;
-  --bg:     #eef2f8;
-  --card:   #ffffff;
-  --line:   #e3e8ef;
-  --grey:   #5b6573;
-  --ink:    #19212e;
+  --k-hell: #b9c6dd; --p-hell: #a9d3ab; --c-hell: #f0cd97;   /* Chart: Ziel nicht erreicht */
+
+  /* Flächen und Text */
+  --bg:      #eef2f8;
+  --bg-oben: #e7edf6;
+  --card:    #ffffff;
+  --line:    #e3e8ef;
+  --grey:    #5b6573;
+  --ink:     #19212e;
+  --schiene: var(--schiene);              /* Ringgrund, Balkenschiene, Chart-Gitter */
+  --tabbar:  rgba(255,255,255,.97);
+
+  /* Gefüllte Flächen — eigener Ton, damit Text darauf in beiden Modi trägt */
+  --fuell: #1F3864;  --fuell-ink: #ffffff;
+
+  /* Zustände */
+  --akzent-flaeche:var(--akzent-flaeche); --akzent-linie:var(--akzent-linie);
+  --warn-flaeche:  var(--warn-flaeche); --warn-linie:  var(--warn-linie); --warn-text:var(--warn-text);
+  --ok-flaeche:    var(--ok-flaeche); --ok-linie:    var(--ok-linie);
+  --rot:var(--rot); --rot-flaeche:var(--rot-flaeche); --rot-linie:var(--rot-linie);
+
+  /* Profil- und Segmentfüllungen — bewusst dunkler als die Kanalfarben.
+     Weiß auf --amber erreicht nur 2,2:1, auf --violet 3,9:1. Beides unter 4,5:1. */
+  --f-ruhe:#2E75B6; --f-training:#2E7D32; --f-regen:#9E5E0A; --f-spiel:#6F52A8;
+
+  /* Eine Radienskala statt gewachsener Einzelwerte */
+  --r-s:9px; --r-m:12px; --r-l:16px; --r-xl:20px;
+  --sch-1:0 1px 2px rgba(20,30,50,.05);
+  --sch-2:0 2px 8px rgba(20,30,50,.05);
+}
+
+/* Dunkler Modus — folgt der Systemeinstellung. Es werden ausschließlich Token
+   getauscht; keine Regel wird doppelt gepflegt. Wichtig für eine App, die
+   abends vor dem Schlafen benutzt wird (Schlaf-Tab). */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --navy:#8fb3e8; --green:#6dc36f; --amber:#e2a94f; --aqua:#4fc0e8;
+    --violet:#b09ce0; --blue:#7aa9e6;
+    --k-hell:#33445e; --p-hell:#2c4a2e; --c-hell:#5a4322;
+
+    --bg:#12161d; --bg-oben:#171d26; --card:#1b212b; --line:#2b3340;
+    --grey:#9aa5b5; --ink:#e8edf5; --schiene:#262e3a;
+    --tabbar: rgba(23,29,38,.97);
+
+    --fuell:#3a5f9e; --fuell-ink:#f4f8ff;
+
+    --akzent-flaeche:#1e2c40; --akzent-linie:#33496b;
+    --warn-flaeche:#2b2418; --warn-linie:#4a3d24; --warn-text:#e3c288;
+    --ok-flaeche:#1a2a1c; --ok-linie:#2e4a31;
+    --rot:#f08b80; --rot-flaeche:#2c1c1a; --rot-linie:#5a2f2a;
+
+    --sch-1:0 1px 2px rgba(0,0,0,.4);
+    --sch-2:0 2px 8px rgba(0,0,0,.35);
+  }
+}
+
+/* Sichtbarer Fokus für Tastatur- und Schalterbedienung.
+   Ohne das ist die App mit -webkit-tap-highlight-color:transparent
+   ohne jede Rückmeldung bedienbar. */
+:where(button, input, select, textarea, a, [tabindex]):focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  border-radius: var(--r-s);
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-  background: linear-gradient(180deg, #e7edf6 0%, var(--bg) 220px);
+  background: linear-gradient(180deg, var(--bg-oben) 0%, var(--bg) 220px);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
 }
@@ -43,14 +104,14 @@ body {
 .view.on { display: block; }
 .tabbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px;
-  background: rgba(255,255,255,.97); border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 2px;
+  background: var(--tabbar); border-top: 1px solid var(--line);
   padding: 6px 5px calc(6px + env(safe-area-inset-bottom));
   backdrop-filter: saturate(180%) blur(12px);
 }
 .tabbtn {
   border: none; background: none; border-radius: 11px; cursor: pointer;
-  min-height: 52px; padding: 6px 1px; font-size: 9.5px; color: var(--grey); line-height: 1.2;
+  min-height: 52px; padding: 6px 1px; font-size: 10.5px; color: var(--grey); line-height: 1.2;
 }
 .tabbtn .ic { display: block; font-size: 18px; margin-bottom: 2px; }
 
@@ -64,16 +125,19 @@ body {
 .wi:active { transform: scale(.92); }
 .sheet-bg { display: none; position: fixed; inset: 0; background: rgba(16,22,34,.5); z-index: 60; align-items: flex-end; justify-content: center; }
 .sheet-bg.show { display: flex; }
-.sheet { background: #fff; width: 100%; max-width: 560px; border-radius: 20px 20px 0 0; padding: 18px 18px calc(18px + env(safe-area-inset-bottom)); max-height: 88vh; overflow-y: auto; }
+.sheet { background: var(--card); width: 100%; max-width: 560px; border-radius: 20px 20px 0 0; padding: 18px 18px calc(18px + env(safe-area-inset-bottom)); max-height: 88vh; overflow-y: auto; }
 @media (min-width: 620px) { .sheet-bg { align-items: center; } .sheet { border-radius: 18px; } }
 .sheet h3 { margin: 0 0 4px; font-size: 16.5px; color: var(--navy); line-height: 1.3; }
 .sheet .ampelzeile { font-size: 11.5px; color: var(--grey); margin-bottom: 14px; }
 .sheet .antwort { font-size: 14.5px; line-height: 1.55; font-weight: 600; color: var(--ink); margin: 0 0 14px; }
 .sheet h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--grey); margin: 14px 0 4px; }
 .sheet p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--ink); }
-.sheet .grenze { background: #f6f8fc; border-left: 3px solid var(--line); border-radius: 0 8px 8px 0; padding: 10px 12px; }
+.sheet .grenze { background: var(--schiene); border-left: 3px solid var(--line); border-radius: 0 8px 8px 0; padding: 10px 12px; }
 .sheet .quelle { margin-top: 16px; padding-top: 11px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--grey); }
 .sheet .zu { width: 100%; margin-top: 14px; }
+
+/* Quellenangabe unter Sport-Befunden — jede Zeile bleibt im Vault nachschlagbar */
+.quellzeile { font-size: 11px; color: var(--grey); margin-top: 7px; padding-top: 6px; border-top: 1px solid var(--line); }
 
 /* Wissens-Register */
 .regfilter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -81,7 +145,7 @@ body {
 .regcard .rt { font-size: 13.5px; font-weight: 700; color: var(--ink); }
 .regcard .ra { font-size: 12px; color: var(--grey); margin-top: 3px; line-height: 1.45; }
 .regbereich { font-size: 11.5px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: .4px; margin: 16px 0 7px; }
-.tabbtn.active { color: var(--navy); font-weight: 800; background: #eef4fc; }
+.tabbtn.active { color: var(--navy); font-weight: 800; background: var(--akzent-flaeche); }
 @media (min-width: 760px) { .tabbar { max-width: 760px; margin: 0 auto; border-radius: 16px 16px 0 0; } }
 
 /* Kopf */
@@ -89,86 +153,86 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand h1 { font-size: 19px; margin: 0; color: var(--navy); letter-spacing: -.2px; }
 .brand .sub { font-size: 11px; color: var(--grey); margin-top: 1px; }
-.gear { background: #fff; border: 1px solid var(--line); border-radius: 11px; padding: 8px 13px; min-height: 44px; cursor: pointer; color: var(--navy); font-size: 13px; font-weight: 600; box-shadow: 0 1px 2px rgba(20,30,50,.05); }
+.gear { background: var(--card); border: 1px solid var(--line); border-radius: 11px; padding: 8px 13px; min-height: 44px; cursor: pointer; color: var(--navy); font-size: 13px; font-weight: 600; box-shadow: var(--sch-1); }
 .gear:active { transform: scale(.97); }
 
 /* Datums-Navigation */
 .datebar { display: flex; align-items: center; gap: 8px; margin: 14px 0 6px; }
-.navbtn { width: 44px; height: 44px; border: 1px solid var(--line); background: #fff; border-radius: 11px; font-size: 18px; line-height: 1; color: var(--navy); cursor: pointer; box-shadow: 0 1px 2px rgba(20,30,50,.05); }
+.navbtn { width: 44px; height: 44px; border: 1px solid var(--line); background: var(--card); border-radius: 11px; font-size: 18px; line-height: 1; color: var(--navy); cursor: pointer; box-shadow: var(--sch-1); }
 .navbtn:disabled { opacity: .35; cursor: default; }
 .navbtn:active:not(:disabled) { transform: scale(.95); }
 .datelabel { flex: 1; text-align: center; font-size: 13.5px; font-weight: 600; color: var(--ink); }
-.todaychip { border: 1px solid var(--navy); background: var(--navy); color: #fff; border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.todaychip { border: 1px solid var(--fuell); background: var(--fuell); color: var(--fuell-ink); border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
 
 /* Tagesprofil-Selektor (v5 — ersetzt den binären Trainingstag-Toggle) */
 .profilbar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0 2px; }
 .profil-pill {
   min-height: 48px;                       /* Tap-Ziel ≥ 44 px (Einhandbedienung) */
-  border: 1px solid var(--line); background: #fff; border-radius: 12px;
+  border: 1px solid var(--line); background: var(--card); border-radius: 12px;
   padding: 6px 3px; cursor: pointer; text-align: center; color: var(--grey);
   font-size: 11.5px; line-height: 1.25; transition: .12s;
-  box-shadow: 0 1px 2px rgba(20,30,50,.05);
+  box-shadow: var(--sch-1);
 }
 .profil-pill .ic { display: block; font-size: 15px; margin-bottom: 1px; }
 .profil-pill:active { transform: scale(.97); }
-.profil-pill.active { font-weight: 700; color: #fff; border-color: transparent; }
-.profil-pill.active[data-p="ruhe"]     { background: var(--blue); }
-.profil-pill.active[data-p="training"] { background: var(--green); }
-.profil-pill.active[data-p="regen"]    { background: var(--amber); }
-.profil-pill.active[data-p="spiel"]    { background: var(--violet); }
+.profil-pill.active { font-weight: 700; color: var(--fuell-ink); border-color: transparent; }
+.profil-pill.active[data-p="ruhe"]     { background: var(--f-ruhe); }
+.profil-pill.active[data-p="training"] { background: var(--f-training); }
+.profil-pill.active[data-p="regen"]    { background: var(--f-regen); }
+.profil-pill.active[data-p="spiel"]    { background: var(--f-spiel); }
 
 /* Hinweiskarte (dezent, wegklickbar — nie ein Modal) */
 .hint {
   display: none; align-items: flex-start; gap: 9px;
-  background: #fff8ec; border: 1px solid #f0dcb8; border-radius: 12px;
-  padding: 10px 12px; margin: 10px 0 0; font-size: 12.5px; color: #7a5312; line-height: 1.45;
+  background: var(--warn-flaeche); border: 1px solid var(--warn-linie); border-radius: 12px;
+  padding: 10px 12px; margin: 10px 0 0; font-size: 12.5px; color: var(--warn-text); line-height: 1.45;
 }
 .hint.on { display: flex; }
-.hint .hx { background: none; border: none; color: #a4762c; font-size: 15px; cursor: pointer; padding: 0 2px; line-height: 1; min-width: 44px; min-height: 44px; flex: none; }
+.hint .hx { background: none; border: none; color: var(--warn-text); font-size: 15px; cursor: pointer; padding: 0 2px; line-height: 1; min-width: 44px; min-height: 44px; flex: none; }
 
 /* Tagesflags */
 .flagbar { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin: 10px 0 0; }
-.flagchip { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 9px 13px; font-size: 12.5px; cursor: pointer; color: var(--grey); min-height: 40px; }
-.flagchip.on { border-color: var(--navy); background: #eef4fc; color: var(--navy); font-weight: 700; }
+.flagchip { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 9px 13px; font-size: 12.5px; cursor: pointer; color: var(--grey); min-height: 40px; }
+.flagchip.on { border-color: var(--navy); background: var(--akzent-flaeche); color: var(--navy); font-weight: 700; }
 .flagzeit { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--grey); }
 .flagzeit input { border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; font-size: 14px; min-height: 40px; }
 
 /* Supplement-Begründungen */
-.suppzeile { font-size: 11.5px; color: var(--grey); line-height: 1.5; padding: 6px 0; border-bottom: 1px solid #f4f6fa; }
+.suppzeile { font-size: 11.5px; color: var(--grey); line-height: 1.5; padding: 6px 0; border-bottom: 1px solid var(--line); }
 .suppzeile:last-child { border-bottom: none; }
 .suppzeile b { color: var(--ink); }
 
 /* Migrations-Bestätigung (einmalig) */
-.notice { display: none; background: #eef4fc; border: 1px solid #cfe0f5; border-radius: 12px; padding: 11px 13px; margin-bottom: 12px; font-size: 12.5px; color: var(--navy); line-height: 1.45; }
+.notice { display: none; background: var(--akzent-flaeche); border: 1px solid var(--akzent-linie); border-radius: 12px; padding: 11px 13px; margin-bottom: 12px; font-size: 12.5px; color: var(--navy); line-height: 1.45; }
 .notice.on { display: block; }
-.notice button { display: block; background: var(--navy); color: #fff; border: none; border-radius: 8px; padding: 9px 14px; font-size: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; min-height: 40px; }
+.notice button { display: block; background: var(--fuell); color: var(--fuell-ink); border: none; border-radius: 8px; padding: 9px 14px; font-size: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; min-height: 40px; }
 
 /* Profil-Editor im Ziele-Modal */
 .ptabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 12px; }
-.ptab { min-height: 40px; border: 1px solid var(--line); background: #fff; border-radius: 10px; font-size: 11.5px; cursor: pointer; color: var(--grey); padding: 4px 2px; }
-.ptab.active { background: var(--navy); color: #fff; border-color: transparent; font-weight: 700; }
+.ptab { min-height: 40px; border: 1px solid var(--line); background: var(--card); border-radius: 10px; font-size: 11.5px; cursor: pointer; color: var(--grey); padding: 4px 2px; }
+.ptab.active { background: var(--fuell); color: var(--fuell-ink); border-color: transparent; font-weight: 700; }
 .wdmap { margin-top: 14px; }
 .wdmap h4 { font-size: 12.5px; color: var(--navy); margin: 0 0 4px; }
 .wdrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
-.wdrow select { border: 1px solid var(--line); border-radius: 9px; padding: 8px; font-size: 13px; background: #fff; min-height: 40px; }
+.wdrow select { border: 1px solid var(--line); border-radius: 9px; padding: 8px; font-size: 13px; background: var(--card); min-height: 40px; }
 .modal-scroll { max-height: 68vh; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 4px; }
 
 /* Umschalter Tag / Woche */
 .modeseg { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 14px 0 0; flex-wrap: wrap; }
-.seg2 { display: inline-flex; background: #e4ebf6; border-radius: 11px; padding: 3px; }
+.seg2 { display: inline-flex; background: var(--schiene); border-radius: 11px; padding: 3px; }
 .seg2 button { border: none; background: none; border-radius: 9px; padding: 8px 18px; font-size: 12.5px; font-weight: 700; color: var(--grey); cursor: pointer; min-height: 40px; }
-.seg2 button.active { background: #fff; color: var(--navy); box-shadow: 0 1px 3px rgba(20,30,50,.13); }
+.seg2 button.active { background: var(--card); color: var(--navy); box-shadow: 0 1px 3px rgba(20,30,50,.13); }
 .modeseg .info { font-size: 11.5px; color: var(--grey); flex: 1; text-align: right; min-width: 120px; }
 .wochennote { font-size: 11.5px; color: var(--grey); margin: 8px 2px 0; line-height: 1.45; }
 
 /* Ringe */
 .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 14px 0; }
 @media (min-width: 620px) { .cards { grid-template-columns: repeat(4, 1fr); } }
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 10px; text-align: center; box-shadow: 0 2px 8px rgba(20,30,50,.05); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 10px; text-align: center; box-shadow: var(--sch-2); }
 .ring { position: relative; width: 92px; height: 92px; margin: 0 auto 8px; }
-.ring svg { transform: rotate(-90deg); display: block; }
+.ring svg { transform: rotate(-90deg); display: block; width: 100%; height: 100%; }
 .ring circle.fg { transition: stroke-dashoffset .5s cubic-bezier(.4,0,.2,1); }
-.ring .val { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; color: var(--ink); }
+.ring .val { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
 .card .label { font-size: 13px; font-weight: 700; }
 .card .goal { font-size: 11px; color: var(--grey); margin-top: 1px; }
 .card .rest { font-size: 10.5px; color: var(--grey); margin-top: 3px; font-weight: 600; }
@@ -177,53 +241,53 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .card .rest.over { color: var(--grey); }
 
 /* Makro-Verteilungsbalken */
-.macrobar-wrap { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(20,30,50,.05); }
-.macrobar { display: flex; height: 14px; border-radius: 8px; overflow: hidden; background: #eef1f6; }
+.macrobar-wrap { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; margin-bottom: 14px; box-shadow: var(--sch-2); }
+.macrobar { display: flex; height: 14px; border-radius: 8px; overflow: hidden; background: var(--schiene); }
 .macrobar span { display: block; height: 100%; transition: width .4s ease; }
 .mb-leg { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 9px; font-size: 11.5px; color: var(--grey); }
 .mb-leg b { color: var(--ink); }
 .dot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; vertical-align: middle; }
 
 /* Streak */
-.streak { display: none; align-items: center; gap: 9px; background: linear-gradient(90deg, #fff6e9, #fffdf8); border: 1px solid #f0dcb8; border-radius: 14px; padding: 11px 14px; margin-bottom: 14px; font-size: 13.5px; color: #8a5a12; font-weight: 600; }
+.streak { display: none; align-items: center; gap: 9px; background: linear-gradient(90deg, var(--warn-flaeche), var(--card)); border: 1px solid var(--warn-linie); border-radius: 14px; padding: 11px 14px; margin-bottom: 14px; font-size: 13.5px; color: var(--warn-text); font-weight: 600; }
 .streak.on { display: flex; }
 .streak .fire { font-size: 20px; }
 
 /* Abschnitte */
-.section { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(20,30,50,.05); }
+.section { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-bottom: 14px; box-shadow: var(--sch-2); }
 .section h2 { font-size: 13.5px; margin: 0 0 11px; color: var(--navy); display: flex; align-items: center; justify-content: space-between; }
 .flash { color: var(--green); font-size: 12px; opacity: 0; transition: .2s; font-weight: 600; }
 .flash.show { opacity: 1; }
 
 /* Slots */
 .slots { display: flex; gap: 7px; margin-bottom: 11px; }
-.slot-pill { flex: 1; border: 1px solid var(--line); background: #fff; border-radius: 11px; padding: 8px 4px; font-size: 12px; cursor: pointer; text-align: center; color: var(--grey); transition: .12s; }
+.slot-pill { flex: 1; border: 1px solid var(--line); background: var(--card); border-radius: 11px; padding: 8px 4px; font-size: 12px; cursor: pointer; text-align: center; color: var(--grey); transition: .12s; }
 .slot-pill .ic { display: block; font-size: 16px; margin-bottom: 2px; }
-.slot-pill.active { border-color: var(--navy); background: #eef4fc; color: var(--navy); font-weight: 700; }
+.slot-pill.active { border-color: var(--navy); background: var(--akzent-flaeche); color: var(--navy); font-weight: 700; }
 
 /* Chips */
 .row { display: flex; gap: 8px; flex-wrap: wrap; }
-.chip { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 13px; font-size: 12.5px; cursor: pointer; transition: .12s; color: var(--ink); min-height: 44px; display: inline-flex; align-items: center; gap: 4px; }
-.chip:hover { border-color: var(--blue); background: #eef5fc; }
+.chip { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 7px 13px; font-size: 12.5px; cursor: pointer; transition: .12s; color: var(--ink); min-height: 44px; display: inline-flex; align-items: center; gap: 4px; }
+.chip:hover { border-color: var(--blue); background: var(--akzent-flaeche); }
 .chip:active { transform: scale(.97); }
 .chip small { color: var(--grey); }
 .chip-wrap { display: inline-flex; align-items: stretch; }
 .chip-wrap .chip { border-top-right-radius: 0; border-bottom-right-radius: 0; }
-.chip-del { border: 1px solid var(--line); border-left: none; background: #fff; border-radius: 0 999px 999px 0; padding: 0 12px; font-size: 12px; color: #c0392b; cursor: pointer; min-height: 44px; }
-.chip-del:hover { background: #fef2f2; }
+.chip-del { border: 1px solid var(--line); border-left: none; background: var(--card); border-radius: 0 999px 999px 0; padding: 0 12px; font-size: 12px; color: var(--rot); cursor: pointer; min-height: 44px; }
+.chip-del:hover { background: var(--rot-flaeche); }
 .subhint { font-size: 11.5px; color: var(--grey); margin: 12px 0 6px; }
 
 /* Eingabeformular */
 .addform { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 6px; }
-.addform input { border: 1px solid var(--line); border-radius: 10px; padding: 10px; font-size: 14px; background: #fff; }
+.addform input { border: 1px solid var(--line); border-radius: 10px; padding: 10px; font-size: 14px; background: var(--card); }
 .addform input#fname { flex: 1 1 100%; }
 .addform input.n { flex: 1; min-width: 64px; width: 64px; text-align: center; }
 .formbtns { display: flex; gap: 7px; margin-top: 8px; }
-.btn { background: var(--navy); color: #fff; border: none; border-radius: 10px; padding: 12px 14px; min-height: 44px; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.btn { background: var(--fuell); color: var(--fuell-ink); border: none; border-radius: 10px; padding: 12px 14px; min-height: 44px; font-size: 13.5px; font-weight: 700; cursor: pointer; }
 .btn:active { transform: scale(.98); }
-.btn.ghost { background: #fff; color: var(--navy); border: 1px solid var(--navy); }
-.btn.amber { background: #fff; color: var(--amber); border: 1px solid #eccf9e; }
-.btn.danger { background: #fff; color: #c0392b; border: 1px solid #e8b4b4; }
+.btn.ghost { background: var(--card); color: var(--navy); border: 1px solid var(--navy); }
+.btn.amber { background: var(--card); color: var(--amber); border: 1px solid var(--warn-linie); }
+.btn.danger { background: var(--card); color: var(--rot); border: 1px solid var(--rot-linie); }
 
 /* Tagesliste */
 .slotgroup { margin-top: 12px; }
@@ -231,15 +295,15 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .slothead { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--grey); padding: 4px 2px; border-bottom: 1px solid var(--line); }
 .slothead .sum { font-weight: 600; color: var(--navy); }
 .fettdeckel { font-size: 11px; color: var(--grey); padding: 5px 2px 0; line-height: 1.45; }
-.fettdeckel.drueber { color: #8a5a12; }
+.fettdeckel.drueber { color: var(--warn-text); }
 
 /* Natrium-Korridor */
 .natriumzeile { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--grey); margin: 9px 2px 0; }
 ul.log { list-style: none; margin: 0; padding: 0; }
-ul.log li { display: flex; align-items: center; justify-content: space-between; padding: 9px 2px; border-bottom: 1px solid #f0f3f8; font-size: 13.5px; }
+ul.log li { display: flex; align-items: center; justify-content: space-between; padding: 9px 2px; border-bottom: 1px solid var(--line); font-size: 13.5px; }
 ul.log li:last-child { border-bottom: none; }
 ul.log .meta { color: var(--grey); font-size: 11.5px; }
-.del { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 16px; padding: 2px 8px; min-width: 44px; min-height: 44px; }
+.del { background: none; border: none; color: var(--rot); cursor: pointer; font-size: 16px; padding: 2px 8px; min-width: 44px; min-height: 44px; }
 .empty { color: var(--grey); font-size: 12.5px; padding: 10px 2px; }
 
 /* Wasser */
@@ -250,20 +314,20 @@ ul.log .meta { color: var(--grey); font-size: 11.5px; }
 .supps { display: flex; gap: 8px; flex-wrap: wrap; }
 .supp { display: flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 11px; padding: 9px 11px; font-size: 13px; cursor: pointer; user-select: none; }
 .supp input { width: 17px; height: 17px; accent-color: var(--green); }
-.supp.done { background: #eaf6ea; border-color: #bfe3bf; }
+.supp.done { background: var(--ok-flaeche); border-color: var(--ok-linie); }
 
 /* Verlauf-Chart */
 .seg { display: flex; gap: 6px; }
-.seg button { border: 1px solid var(--line); background: #fff; border-radius: 9px; padding: 5px 12px; font-size: 12px; cursor: pointer; color: var(--grey); font-weight: 600; min-height: 40px; }
-.seg button.active { color: #fff; border-color: transparent; }
-.seg button.active[data-m="k"] { background: var(--navy); }
-.seg button.active[data-m="p"] { background: var(--green); }
-.seg button.active[data-m="c"] { background: var(--amber); }
+.seg button { border: 1px solid var(--line); background: var(--card); border-radius: 9px; padding: 5px 12px; font-size: 12px; cursor: pointer; color: var(--grey); font-weight: 600; min-height: 40px; }
+.seg button.active { color: var(--fuell-ink); border-color: transparent; }
+.seg button.active[data-m="k"] { background: var(--fuell); }
+.seg button.active[data-m="p"] { background: var(--f-training); }
+.seg button.active[data-m="c"] { background: var(--f-regen); }
 .chartbox { height: 180px; margin-top: 4px; }
 
 /* KH-Baustein-Rechner */
 .khhead { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
-.khrow { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 10px 2px; border-bottom: 1px solid #f0f3f8; font-size: 13px; }
+.khrow { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 10px 2px; border-bottom: 1px solid var(--line); font-size: 13px; }
 .khrow:last-child { border-bottom: none; }
 .khrow .nm { flex: 1; min-width: 0; }
 .khrow .nm small { display: block; color: var(--grey); font-size: 11px; margin-top: 2px; }
@@ -282,23 +346,23 @@ ul.log .meta { color: var(--grey); font-size: 11.5px; }
 .rezbody h5 { font-size: 12px; color: var(--navy); margin: 11px 0 5px; }
 .rezbody ul { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.6; color: var(--ink); }
 .badge { display: inline-block; border-radius: 999px; padding: 2px 8px; font-size: 10px; font-weight: 700; margin-left: 5px; vertical-align: middle; }
-.badge.ger { background: #eaf6ea; color: var(--green); }
-.badge.sch { background: #fff6e9; color: #8a5a12; }
-.badge.off { background: #fdeeee; color: #a03434; }
-.badge.kue { background: #eef4fc; color: var(--navy); }
+.badge.ger { background: var(--ok-flaeche); color: var(--green); }
+.badge.sch { background: var(--warn-flaeche); color: var(--warn-text); }
+.badge.off { background: var(--rot-flaeche); color: var(--rot); }
+.badge.kue { background: var(--akzent-flaeche); color: var(--navy); }
 .portwahl { display: flex; align-items: center; gap: 8px; margin-top: 11px; flex-wrap: wrap; }
 .portwahl input { width: 62px; border: 1px solid var(--line); border-radius: 9px; padding: 9px; font-size: 14px; text-align: center; min-height: 40px; }
 .ortbar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--grey); }
 
 /* Prep-Planer */
-.preprow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 2px; border-bottom: 1px solid #f0f3f8; font-size: 13px; }
+.preprow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 2px; border-bottom: 1px solid var(--line); font-size: 13px; }
 .preprow .tagname small { display: block; color: var(--grey); font-size: 11px; margin-top: 1px; }
 .ortwahl { display: inline-flex; gap: 5px; flex: none; }
-.ortbtn { width: 46px; height: 44px; border: 1px solid var(--line); background: #fff; border-radius: 11px; font-size: 17px; cursor: pointer; }
-.ortbtn.on { border-color: var(--navy); background: #eef4fc; }
-.prepplan { background: #eef4fc; border: 1px solid #cfe0f5; border-radius: 12px; padding: 12px; margin-top: 12px; }
+.ortbtn { width: 46px; height: 44px; border: 1px solid var(--line); background: var(--card); border-radius: 11px; font-size: 17px; cursor: pointer; }
+.ortbtn.on { border-color: var(--navy); background: var(--akzent-flaeche); }
+.prepplan { background: var(--akzent-flaeche); border: 1px solid var(--akzent-linie); border-radius: 12px; padding: 12px; margin-top: 12px; }
 .prepplan .kochtag { font-size: 13.5px; font-weight: 700; color: var(--navy); margin-bottom: 3px; }
-.einkaufrow { display: flex; align-items: center; gap: 10px; padding: 11px 2px; border-bottom: 1px solid #f0f3f8; font-size: 13px; cursor: pointer; min-height: 46px; }
+.einkaufrow { display: flex; align-items: center; gap: 10px; padding: 11px 2px; border-bottom: 1px solid var(--line); font-size: 13px; cursor: pointer; min-height: 46px; }
 .einkaufrow input { width: 21px; height: 21px; accent-color: var(--green); flex: none; }
 .einkaufrow span { flex: 1; }
 .einkaufrow b { color: var(--navy); white-space: nowrap; }
@@ -308,36 +372,36 @@ ul.log .meta { color: var(--grey); font-size: 11.5px; }
 /* Zeilen, Skalen, Statistik (Schlaf + Haut) */
 .zeile { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
 .zeile:last-of-type { border-bottom: none; }
-.zeile input[type="time"] { border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; font-size: 15px; min-height: 44px; background: #fff; }
+.zeile input[type="time"] { border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; font-size: 15px; min-height: 44px; background: var(--card); }
 .skala { display: inline-flex; gap: 6px; }
-.punkt { width: 44px; height: 44px; border: 1px solid var(--line); background: #fff; border-radius: 11px; font-size: 14px; font-weight: 700; color: var(--grey); cursor: pointer; }
-.punkt.on { background: var(--navy); color: #fff; border-color: transparent; }
-.statzeile { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f0f3f8; font-size: 13px; }
+.punkt { width: 44px; height: 44px; border: 1px solid var(--line); background: var(--card); border-radius: 11px; font-size: 14px; font-weight: 700; color: var(--grey); cursor: pointer; }
+.punkt.on { background: var(--fuell); color: var(--fuell-ink); border-color: transparent; }
+.statzeile { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
 .statzeile:last-child { border-bottom: none; }
 
 /* Haut: Routine-Schritte in fester Reihenfolge */
-.schritt { display: flex; align-items: center; gap: 11px; padding: 12px 2px; border-bottom: 1px solid #f0f3f8; font-size: 13.5px; cursor: pointer; min-height: 48px; }
+.schritt { display: flex; align-items: center; gap: 11px; padding: 12px 2px; border-bottom: 1px solid var(--line); font-size: 13.5px; cursor: pointer; min-height: 48px; }
 .schritt:last-child { border-bottom: none; }
 .schritt input { width: 22px; height: 22px; accent-color: var(--green); flex: none; }
-.schritt .nr { width: 22px; height: 22px; border-radius: 50%; background: #eef1f6; color: var(--grey); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none; }
+.schritt .nr { width: 22px; height: 22px; border-radius: 50%; background: var(--schiene); color: var(--grey); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none; }
 .schritt.fertig { color: var(--green); }
 .fotoleiste { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 8px; }
 .fotokachel { position: relative; flex: none; width: 84px; }
 .fotokachel img { width: 84px; height: 108px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); display: block; }
 .fotokachel .dat { font-size: 10px; color: var(--grey); text-align: center; margin-top: 3px; }
-.fotokachel .weg { position: absolute; top: 3px; right: 3px; background: rgba(255,255,255,.92); border: none; border-radius: 6px; font-size: 11px; padding: 3px 6px; cursor: pointer; color: #c0392b; }
+.fotokachel .weg { position: absolute; top: 3px; right: 3px; background: rgba(255,255,255,.92); border: none; border-radius: 6px; font-size: 11px; padding: 3px 6px; cursor: pointer; color: var(--rot); }
 .notizfeld { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px; font-size: 13.5px; font-family: inherit; resize: vertical; min-height: 62px; }
 
 /* Tagesplan */
 .planwahl { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-.planrow { display: flex; gap: 10px; padding: 11px 2px; border-bottom: 1px solid #f0f3f8; font-size: 13px; }
+.planrow { display: flex; gap: 10px; padding: 11px 2px; border-bottom: 1px solid var(--line); font-size: 13px; }
 .planrow:last-child { border-bottom: none; }
 .planrow .zeit { flex: none; width: 46px; font-weight: 700; color: var(--navy); font-variant-numeric: tabular-nums; }
 .planrow .inhalt { flex: 1; min-width: 0; }
 .planrow .lbl { font-weight: 600; }
 .planrow .makros { font-size: 11.5px; color: var(--grey); margin-top: 2px; }
 .planrow .note { font-size: 11.5px; color: var(--grey); margin-top: 4px; line-height: 1.5; }
-.planrow.getraenk { background: #f3f8fd; border-radius: 9px; padding: 11px 8px; }
+.planrow.getraenk { background: var(--akzent-flaeche); border-radius: 9px; padding: 11px 8px; }
 .planrow.ereignis .lbl { color: var(--grey); font-weight: 700; }
 .planquelle { font-size: 11px; color: var(--grey); margin-top: 11px; padding-top: 9px; border-top: 1px solid var(--line); }
 .slotsoll { font-size: 11px; color: var(--grey); font-weight: 600; }
@@ -347,12 +411,12 @@ ul.log .meta { color: var(--grey); font-size: 11.5px; }
 footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22px; }
 
 /* Banner + Modal */
-#installBanner { display: none; background: var(--navy); color: #fff; border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px; align-items: center; justify-content: space-between; gap: 10px; }
+#installBanner { display: none; background: var(--fuell); color: var(--fuell-ink); border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px; align-items: center; justify-content: space-between; gap: 10px; }
 #installBanner.show { display: flex; }
-#installBanner button { background: #fff; color: var(--navy); border: none; border-radius: 9px; padding: 7px 13px; font-size: 12px; font-weight: 700; cursor: pointer; }
+#installBanner button { background: var(--card); color: var(--navy); border: none; border-radius: 9px; padding: 7px 13px; font-size: 12px; font-weight: 700; cursor: pointer; }
 .modal-bg { display: none; position: fixed; inset: 0; background: rgba(16,22,34,.45); z-index: 50; align-items: flex-end; justify-content: center; padding: 0; }
 .modal-bg.show { display: flex; }
-.modal { background: #fff; width: 100%; max-width: 480px; border-radius: 18px 18px 0 0; padding: 20px 18px calc(20px + env(safe-area-inset-bottom)); box-shadow: 0 -8px 30px rgba(10,16,30,.2); }
+.modal { background: var(--card); width: 100%; max-width: 480px; border-radius: 18px 18px 0 0; padding: 20px 18px calc(20px + env(safe-area-inset-bottom)); box-shadow: 0 -8px 30px rgba(10,16,30,.2); }
 @media (min-width: 620px) { .modal-bg { align-items: center; } .modal { border-radius: 18px; } }
 .modal h3 { margin: 0 0 14px; color: var(--navy); font-size: 16px; }
 .modal label { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13.5px; color: var(--ink); padding: 9px 0; border-bottom: 1px solid var(--line); }
@@ -380,12 +444,12 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
   <header>
     <div class="brand">
       <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
-        <circle cx="15" cy="15" r="11" fill="none" stroke="#dfe7f2" stroke-width="5"/>
-        <circle cx="15" cy="15" r="11" fill="none" stroke="#2E7D32" stroke-width="5" stroke-linecap="round"
+        <circle cx="15" cy="15" r="11" fill="none" style="stroke:var(--schiene)" stroke-width="5"/>
+        <circle cx="15" cy="15" r="11" fill="none" style="stroke:var(--green)" stroke-width="5" stroke-linecap="round"
                 stroke-dasharray="69.1" stroke-dashoffset="17" transform="rotate(-90 15 15)"/>
       </svg>
       <div>
-        <h1>Ernährungs-Tracker</h1>
+        <h1>Gesundheits-Cockpit</h1>
         <div class="sub">Ernährung · Training · Haut · Schlaf</div>
       </div>
     </div>
@@ -412,7 +476,6 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
 
   <div class="natriumzeile" id="natriumZeile"></div>
   <div class="flagbar" id="flagbar"></div>
-  <div id="timingHinweise"></div>
 
   <div class="modeseg">
     <span class="seg2" id="ringSeg">
@@ -449,6 +512,8 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
       <div class="rest" id="watRest"></div>
     </div>
   </div>
+
+  <div id="timingHinweise"></div>
 
   <div class="macrobar-wrap">
     <div class="macrobar">
@@ -586,6 +651,9 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
   <!-- ============ Ansicht: Schlaf ============ -->
   <div class="view" id="view-schlaf"></div>
 
+  <!-- ============ Ansicht: Sport ============ -->
+  <div class="view" id="view-sport"></div>
+
   <!-- ============ Ansicht: Wissen ============ -->
   <div class="view" id="view-wissen">
     <div class="section">
@@ -603,6 +671,7 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
 <nav class="tabbar" id="tabbar">
   <button class="tabbtn active" data-v="heute"><span class="ic">📊</span>Heute</button>
   <button class="tabbtn" data-v="rezepte"><span class="ic">🍳</span>Rezepte</button>
+  <button class="tabbtn" data-v="sport"><span class="ic">⚽</span>Sport</button>
   <button class="tabbtn" data-v="haut"><span class="ic">🧴</span>Haut</button>
   <button class="tabbtn" data-v="schlaf"><span class="ic">😴</span>Schlaf</button>
   <button class="tabbtn" data-v="wissen"><span class="ic">💡</span>Warum</button>
@@ -1507,6 +1576,11 @@ function normalizeDay(d){
   /* Schlaf bewusst mit null statt Beispielzeiten: „nicht erfasst" muss von „erfasst"
      unterscheidbar bleiben, sonst rechnet die Statistik in Etappe 6 mit Phantomdaten. */
   if (!d.sleep) d.sleep = { bett:null, auf:null, subjektiv:null };
+  if (!d.sport) d.sport = {
+    aufwaermen:false, sprint:false, praevention:false,
+    beschwerden:null,   // "ja" | "nein" — wöchentliche Beschwerdefrage (R1 §6)
+    squeeze:null        // mmHg, Adduktoren-Squeeze
+  };
   if (d.gewicht === undefined) d.gewicht = null;
   return d;
 }
@@ -1657,8 +1731,8 @@ function ring(el, pct, color){
   const r=42, c=2*Math.PI*r, off=c*(1-Math.max(0,Math.min(pct,1)));
   el.innerHTML =
     `<svg width="92" height="92" viewBox="0 0 92 92">
-       <circle cx="46" cy="46" r="${r}" fill="none" stroke="#eef1f6" stroke-width="9"/>
-       <circle class="fg" cx="46" cy="46" r="${r}" fill="none" stroke="${color}" stroke-width="9"
+       <circle cx="46" cy="46" r="${r}" fill="none" style="stroke:var(--schiene)" stroke-width="9"/>
+       <circle class="fg" cx="46" cy="46" r="${r}" fill="none" style="stroke:${color}" stroke-width="9"
                stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"/>
      </svg>
      <div class="val">${Math.round(pct*100)}%</div>`;
@@ -1676,11 +1750,13 @@ function render(){
 
   // Datumszeile
   const dt = dateFromKey(viewKey);
-  const wd = dt.toLocaleDateString("de-DE",{weekday:"long"});
-  const dm = dt.toLocaleDateString("de-DE",{day:"numeric",month:"long"});
   const mk = keyOf(new Date(Date.now()+86400000));
   let prefix = "";
   if (viewKey===tk) prefix="Heute · "; else if (viewKey===yk) prefix="Gestern · "; else if (viewKey===mk) prefix="Morgen · ";
+  // Mit Präfix wird der Wochentag gekürzt — „Heute · Mittwoch, 19. August"
+  // bricht auf 375 px sonst auf zwei Zeilen und verschiebt alles darunter.
+  const wd = dt.toLocaleDateString("de-DE",{weekday: prefix ? "short" : "long"});
+  const dm = dt.toLocaleDateString("de-DE",{day:"numeric", month: prefix ? "short" : "long"});
   document.getElementById("today").textContent = `${prefix}${wd}, ${dm}`;
   document.getElementById("nextDay").disabled = (viewKey >= maxAheadKey());
   document.getElementById("todayBtn").style.display = (viewKey===tk) ? "none" : "inline-block";
@@ -1701,10 +1777,10 @@ function render(){
   document.getElementById("carbNow").textContent = nf(carb); document.getElementById("carbGoal").textContent = nf(g.carb);
   document.getElementById("watNow").textContent  = de1(ist.water/1000); document.getElementById("watGoal").textContent = de1(g.wat);
 
-  ring(document.getElementById("ringKcal"), kcal/g.kcal, "#1F3864");
-  ring(document.getElementById("ringPro"),  pro/g.pro,   "#2E7D32");
-  ring(document.getElementById("ringCarb"), carb/g.carb, "#E08A1E");
-  ring(document.getElementById("ringWat"),  ist.water/(g.wat*1000), "#2196c4");
+  ring(document.getElementById("ringKcal"), kcal/g.kcal, "var(--navy)");
+  ring(document.getElementById("ringPro"),  pro/g.pro,   "var(--green)");
+  ring(document.getElementById("ringCarb"), carb/g.carb, "var(--amber)");
+  ring(document.getElementById("ringWat"),  ist.water/(g.wat*1000), "var(--aqua)");
   document.getElementById("watBig").textContent = de1(d.water/1000)+" L";   // Wasser-Sektion bleibt tagesbezogen
 
   // „Noch übrig" je Ring
@@ -1749,6 +1825,8 @@ function render(){
     renderHaut();
   } else if (aktiveView === "schlaf"){
     renderSchlaf();
+  } else if (aktiveView === "sport"){
+    renderSport();
   } else if (aktiveView === "wissen"){
     renderRegister();
   }
@@ -1816,7 +1894,7 @@ function renderRezepte(){
     const b = document.createElement("button");
     b.className = "chip" + (ort === wert ? " active" : "");
     b.textContent = label;
-    if (ort === wert) { b.style.borderColor = "var(--navy)"; b.style.background = "#eef4fc"; b.style.fontWeight = "700"; }
+    if (ort === wert) { b.style.borderColor = "var(--navy)"; b.style.background = "var(--akzent-flaeche)"; b.style.fontWeight = "700"; }
     b.onclick = () => { day().flags.ort = wert; save(); render(); };
     ortbar.appendChild(b);
   });
@@ -2208,7 +2286,7 @@ function renderPrep(){
     const b = document.createElement("button");
     b.className = "chip";
     b.textContent = `${n} Tage`;
-    if (n === prepTageAnzahl){ b.style.borderColor = "var(--navy)"; b.style.background = "#eef4fc"; b.style.fontWeight = "700"; }
+    if (n === prepTageAnzahl){ b.style.borderColor = "var(--navy)"; b.style.background = "var(--akzent-flaeche)"; b.style.fontWeight = "700"; }
     b.onclick = () => { prepTageAnzahl = n; renderPrep(); };
     spanne.appendChild(b);
   });
@@ -2401,6 +2479,344 @@ document.addEventListener("click", e => {
 /* ---------- Wissens-Register ---------- */
 let regSortierung = "bereich";        // "bereich" | "rot" | "gelb" | "schwarz"
 
+/* ---------- Ansicht: Sport ----------
+   Quellen: „Trainingsvorbereitung & Verletzungsprophylaxe (2026-08)" (R1, 38 Quellen)
+   und „Ergänzungstraining neben Fußball (2026-08)" (R2, 25 Quellen), beide eingelöst
+   am 19.08.2026. Jede Zahl hier steht dort. Nichts ergänzt, nichts gerundet. */
+
+const SPORT_AUFWAERMEN = [
+  { min:"0–3",  phase:"Raise", was:"Lockeres Laufen, steigende Intensität bis ~70–80 % HFmax. Richtungswechsel, Ball erlaubt.",
+    warum:"Muskeltemperatur trägt den gesamten Aufwärmeffekt. 10–15 min bei 50–90 % HFmax ist die belegte Vorgabe." },
+  { min:"3–6",  phase:"Mobilise + Activate", was:"In Bewegung, je ~20 m: Ausfallschritt mit Rumpfrotation · Beinpendel vor/zurück · Beinpendel seitlich · Kniehebelauf · Anfersen · Seitgalopp · Carioca. Keine Position länger als 20–30 s halten.",
+    warum:"Dynamisches Dehnen +1,3 % gegenüber Kontrolle. Statisch unter 60 s liegt bei −1,1 % und ist damit irrelevant." },
+  { min:"6–8",  phase:"Balance / Landing", was:"2 × 20 s einbeiniges Stehen je Seite (Augen offen, dann Ball fangen) · 5 einbeinige Landungen je Seite, Knie über Fuß.",
+    warum:"Einzige Amateur-Feldassoziation: einbeinige Balanceübungen −18 % Spiel- und −28,6 % Trainingsverletzungsrate. Propriozeptives Training RR 0,65." },
+  { min:"8–10", phase:"Potentiate", was:"3–4 progressive Antritte (70 → 85 → 95 → 100 %) über 20–30 m · 3–5 maximale Countermovement-Jumps.",
+    warum:"Sprungbasierte PAPE ES 0,54–0,62, Fenster 0–15 min. Braucht keine Gewichte." }
+];
+
+const SPORT_PRAEVENTION = [
+  { nr:1, ue:"Nordic Hamstring", dosis:"3 × 8 → 48 Wdh./Woche", zeit:"~4 min", ampel:"🟡",
+    effekt:"Exzentrische Kraft g = 0,77 (0,49–1,06). Hamstringverletzungen bis −51 %, Schätzung unsicher." },
+  { nr:2, ue:"Copenhagen Adduction", dosis:"Level 1→3 progressiv, 2 × 6–8 je Seite. In der Saison genügt 1×/Woche", zeit:"~3 min", ampel:"🔴",
+    effekt:"OR 0,59 (0,40–0,86) für Leistenprobleme, Cluster-RCT an 652 Spielern. Bestes Effekt-pro-Minute-Verhältnis beider Recherchen." },
+  { nr:3, ue:"Isometrische Wadenhalte", dosis:"einbeinig, ~90 % Anspannung, 4 × 4 Wdh. × 3 s, beidseitig", zeit:"~4 min", ampel:"🟡",
+    effekt:"Sehnensteifigkeit SMD 1,07 (0,40–1,74) — stärkster nicht-supplementärer Sehnenreiz." },
+  { nr:4, ue:"Einbeinige Landungen / Sprünge", dosis:"3 × 5 je Seite, mit Landekontrolle", zeit:"~2 min", ampel:"🟡",
+    effekt:"VKB bei Männern IRR 0,50 (0,29–0,88). Relativ groß, absolut ~1 Ereignis pro 45 Saisons." }
+];
+
+const SPORT_PLAENE = {
+  a: { name:"1 Zusatzeinheit", unter:"Standardfall ab September · ~105 min/Woche mit R1",
+    zeilen:[
+      { t:"Mo", z:"flexibel", l:"Krafttraining Ganzkörper", m:"50 min",
+        n:"Kniebeuge/Beinpresse 3×5–8 · Rum. Kreuzheben 3×6–8 · Drücken 3×6–10 · Rudern/Klimmzug 3×6–10 · optional Wade 2×10. ~118 h vor Anpfiff, ~48 h vor Di." },
+      { t:"Di", z:"18:50", l:"Sprintblock", m:"+10 min",
+        n:"4–6 maximale Läufe über 20–30 m, 2–3 min Pause — im Anschluss an die Potentiate-Phase. Kostet keine eigene Einheit." },
+      { t:"Di", z:"19:00", l:"Fußball", m:"105 min", n:"" },
+      { t:"Di", z:"~20:50", l:"Präventionsblock am Platz", m:"+12–14 min",
+        n:"Nach dem Training, nicht davor — sonst sprintest du auf vorermüdeten Hamstrings." },
+      { t:"Mi", z:"—", l:"frei", m:"", n:"Erholung zwischen den beiden Fußballeinheiten." },
+      { t:"Do", z:"19:00", l:"Fußball + Präventionsblock", m:"105 + 12–14 min", n:"" },
+      { t:"Fr/Sa", z:"—", l:"frei — kein schweres Beintraining", m:"",
+        n:"Unter 72 h vor Anpfiff: MVC noch bei −6 bis −13 %, kontraktile Funktion −9 %." },
+      { t:"So", z:"14:00", l:"Spiel", m:"90+ min", n:"" }
+    ]},
+  b: { name:"2 Zusatzeinheiten", unter:"wenn der Stundenplan es hergibt · ~130 min/Woche mit R1",
+    zeilen:[
+      { t:"Mo", z:"flexibel", l:"Kraft A — Unterkörper", m:"50 min",
+        n:"Kniebeuge 3×5–8 · Rum. Kreuzheben 3×6–8 · Bulgarian Split Squat 2×8 · Rudern 2×8." },
+      { t:"Di", z:"18:50", l:"Sprintblock + Fußball + Prävention", m:"10 + 105 + 13 min", n:"" },
+      { t:"Mi", z:"flexibel", l:"Kraft B — Oberkörper", m:"40 min",
+        n:"Drücken 3×6–10 · Klimmzug/Latzug 3×6–10 · Schulterdrücken 2×8–12 · Rumpf 2 Sätze. Der Oberkörper ist die einzige Region ohne jeden Fußballreiz — hier ist Interferenz kein Thema." },
+      { t:"Do", z:"19:00", l:"Fußball + Prävention", m:"105 + 13 min", n:"" },
+      { t:"Fr/Sa", z:"—", l:"frei", m:"", n:"Unter 72 h vor Anpfiff." },
+      { t:"So", z:"14:00", l:"Spiel", m:"90+ min", n:"Volumencheck: Beine ~8, Oberkörper ~10 Sätze/Woche — im effizientesten Bereich." }
+    ]},
+  c: { name:"Erhaltungsmodus", unter:"Klausur- und Prüfungsphasen · ~32 min/Woche mit R1",
+    zeilen:[
+      { t:"Mo", z:"fest", l:"1 Satz je Übung, jeder bis nahe Muskelversagen", m:"20–25 min",
+        n:"Kniebeuge/Beinpresse · Rum. Kreuzheben · Drücken · Rudern. Eine Einheit pro Woche mit einem Satz je Übung erhielt bei 20–35-Jährigen Kraft und Muskelmasse bis zu 32 Wochen." },
+      { t:"Di/Do", z:"19:00", l:"Fußball, wenn möglich", m:"",
+        n:"Fällt auch Fußball aus, ist die Krafteinheit umso wichtiger." },
+      { t:"Di o. Do", z:"danach", l:"Winterprogramm statt vollem Block", m:"~7 min",
+        n:"Copenhagen Adduction (1×/Woche genügt) + Nordic Hamstring 3 × 8. Die Nordic bedient hier gleichzeitig den Hamstring-Kraftreiz." },
+      { t:"—", z:"", l:"Was wegfällt", m:"",
+        n:"Sprintblock, zweite Einheit, Zusatzvolumen. Alles außer der Intensität ist reduzierbar. Untergrenze: 1 Einheit alle zwei Wochen reicht nicht." }
+    ]}
+};
+
+const SPORT_STUFEN = [
+  { p:"Woche 1–4", n:"Aufbau, je 1 Satz, langsam steigern", r:"weglassen",
+    b:"Die Nordic ist in dieser Phase dein Hamstring-Kraftreiz. Zwei neue exzentrische Reize gleichzeitig sind der klassische Weg in eine Zerrung." },
+  { p:"Woche 5–8", n:"volles Volumen 3 × 8", r:"1 Satz, moderat",
+    b:"Verträglichkeit prüfen. Marker: Squeeze-Test und Nordic-Wiederholungen." },
+  { p:"ab Woche 9", n:"3 × 8 beibehalten", r:"2–3 Sätze",
+    b:"Erst hier ist das volle Kraftvolumen sinnvoll." },
+  { p:"Klausurphase", n:"Winterprogramm", r:"weglassen",
+    b:"Die Nordic deckt in der Erhaltungsdosis beides ab." }
+];
+
+const SPORT_HEBEL = [
+  { a:"🔴", t:"Copenhagen Adduction, 1×/Woche", z:"3 min/Woche", q:"R1",
+    b:"OR 0,59 (0,40–0,86) aus einem Cluster-RCT an 652 Spielern — bestes Effekt-pro-Minute-Verhältnis beider Recherchen." },
+  { a:"🔴", t:"Re-Warm-up in der Halbzeit", z:"2 min/Spiel", q:"R1",
+    b:"2 min Traben + 3–4 Antritte + 3 Sprünge. Vertikalsprung ES 0,66 (p = 0,001, I² = 0 %). Du verbringst die Halbzeit sitzend — reine Nettoverbesserung." },
+  { a:"🔴", t:"Letzte explosive Aktion ≤ 5 min vor Beginn", z:"0 min", q:"R1",
+    b:"Ab ~15 min Übergangszeit ist ein wesentlicher Teil des Effekts weg. Eine Zeitplanungs-, keine Trainingsentscheidung." },
+  { a:"🔴", t:"Nicht angeschlagen spielen", z:"0 min", q:"R1",
+    b:"Bestehende Verletzung zu Saisonbeginn: RR 1,92 (1,27–2,89) — größere Effektgröße als jede Trainingsintervention in beiden Recherchen." },
+  { a:"🔴", t:"Wöchentliche Beschwerdefrage", z:"10 s/Woche", q:"R1",
+    b:"Über die Hälfte der Amateurverletzungen entsteht schleichend — der einzige Marker, der sie überhaupt erfasst." },
+  { a:"🔴", t:"Eine Krafteinheit pro Woche, Ganzkörper, Montag", z:"50 min", q:"R2",
+    b:"Krafttraining führt in 7 von 8 Endpunkten der einzigen Netzwerk-Metaanalyse an Fußballern. Der einzige Reiz, der in deiner Woche vollständig fehlt." },
+  { a:"🔴", t:"Kniebeuge + rumänisches Kreuzheben als Basis", z:"—", q:"R2",
+    b:"Der Sprinttransfer läuft über den Kniebeugen-Kraftzuwachs (r = −0,77). Die hintere Kette belastet Fußball, ohne sie zu kräftigen." },
+  { a:"🔴", t:"6–8 maximale Antritte zu Beginn des Dienstagstrainings", z:"10 min", q:"R2",
+    b:"Sport-only-Gruppen verbessern ihre Sprintzeit nicht. Die ~29 Beschleunigungen im Spiel sind Belastung, kein Reiz." },
+  { a:"🔴", t:"Freitag und Samstag frei von schwerer Beinarbeit", z:"0 min", q:"R2",
+    b:"Unter 72 h vor Anpfiff: MVC −6 bis −13 %. Der planbarste vermeidbare Fehler." },
+  { a:"🔴", t:"Nie Kraft direkt vor dem Fußballtraining", z:"0 min", q:"R2",
+    b:"0 h Abstand halbierte den Kraftzuwachs (+16,8 % gegenüber +31,2 % bei 6 h) und verstärkt die Schnellkraftdämpfung signifikant." }
+];
+
+const SPORT_MARKER = [
+  { m:"Wöchentliche Beschwerdefrage", w:"„Hast du diese Woche wegen Beschwerden Training oder Spiel reduziert, verpasst oder verändert?\"", f:"wöchentlich",
+    s:"Der wichtigste Marker. Über die Hälfte der Amateurverletzungen entsteht schleichend.", a:"🔴" },
+  { m:"Adduktoren-Squeeze", w:"Blutdruckmanschette zwischen die Knie, Hüfte ~45° gebeugt, 5 s maximal drücken, mmHg notieren", f:"alle 2 Wochen",
+    s:"Abfall über 15 % gegenüber deinem Bestwert = Warnzeichen, Belastung anpassen.", a:"🔴" },
+  { m:"Körpergewicht", w:"morgens nüchtern, Wochenmittel aus mindestens 3 Messungen", f:"wöchentlich",
+    s:"Anstieg über 0,4 kg/Woche über 4 Wochen löst den Abbruchindikator aus.", a:"🔴" },
+  { m:"Countermovement-Jump", w:"Smartphone-App, gleiche Bedingungen", f:"wöchentlich, gelesen alle 8 Wochen",
+    s:"r = 0,984 gegen Kraftmessplatte, aber Variationskoeffizient 5,8 %. Erst Änderungen über 8–10 % sind interpretierbar.", a:"🟡" },
+  { m:"Nordic-Wiederholungen bis Formverlust", w:"Handyvideo, zählen bis der Rumpf einknickt", f:"monatlich",
+    s:"Anstieg über 8–12 Wochen zeigt, dass das Programm greift.", a:"🟡" },
+  { m:"Einbein-Weitsprung, Seitenvergleich", w:"3 Versuche je Bein, bester Wert, L/R-Verhältnis", f:"monatlich",
+    s:"Unter 90 % Symmetrie = Handlungsbedarf.", a:"🟡" },
+  { m:"10- oder 20-m-Zeit", w:"Handystoppuhr oder Lichtschranke", f:"alle 6–8 Wochen",
+    s:"Ohne Lichtschranke sehr rauschanfällig. Nur als Trend über Monate lesen.", a:"🟡" }
+];
+
+const SPORT_NICHT = [
+  { t:"Kollagenpeptide", b:"Keine Daten auf Verletzungsinzidenz oder Ausfalltagen. Gepoolt kein Effekt auf mechanische Sehneneigenschaften und Kraft (SMD 0,079, p = 0,445), 11 von 13 Studien herstellernah. Isometrische Belastung schlägt Kollagen auf demselben Endpunkt zum Preis von null (SMD 1,07)." },
+  { t:"Faszienrolle vor der Belastung", b:"Sprung g = 0,09 (−1,9 %), Kraft g = 0,12. Die Zeit gehört ins dynamische Aufwärmen. Danach angewendet: Muskelschmerz g = 0,47 — Wohlfühlendpunkt, kein Leistungsargument." },
+  { t:"Kompressionskleidung", b:"Der reale Effekt sitzt auf der Krafterholung 2–8 h nach Belastung. Dein kürzester Abstand zwischen Einheiten ist 48 h." },
+  { t:"Kinesiotape", b:"Keine Evidenz für Prävention, keine für Leistung." },
+  { t:"Statisches Dauerdehnen vor Belastung", b:"−4,6 bis −7,5 % bei ≥ 60 s je Muskel. Unter 60 s harmlos, aber auch nutzlos gegenüber dynamischer Arbeit." },
+  { t:"„Auslaufen\" gegen Muskelkater", b:"Kein Effekt auf Muskelkater, kein Effekt auf die Verletzungsrate." },
+  { t:"Sorge vor höherem Verletzungsrisiko im Winter", b:"2.142 Bundesligaspiele über eine Spanne von 48 °C: kein Zusammenhang zwischen Temperatur und Verletzungsvorkommen (p > 0,10). Der Winterunterschied ist ein Leistungs-, kein Sicherheitsthema." },
+  { t:"PAPE mit schweren Gewichten", b:"Kniebeuge 80–100 % 1RM: ES 0,12 auf Sprint. Die kostenlose Sprungvariante (ES 0,54–0,62) ist die wirksamere." },
+  { t:"Das FIFA 11+ als 20-Minuten-Block im Aufwärmen", b:"Der Präventionswirkstoff ist der Krafteffekt, nicht die Platzierung. Als 12-Minuten-Block nach dem Training kostet er nichts an Trainingszeit und Frische." },
+  { t:"Separate Mobility- und Ausdauereinheiten", b:"Mobility: Nutzen nur auf Beweglichkeitsmarkern, die Krafttraining im vollen Bewegungsumfang gratis liefert. Ausdauer: verbessert alles außer dem, was du willst — Kraft, Schnelligkeit, Sprunghöhe und Schussgeschwindigkeit blieben unverändert." },
+  { t:"Bodybuilding-Splits und hohes Volumen", b:"Ab ~10 Sätzen/Woche braucht jeder weitere Zuwachs 8,5–12,5 zusätzliche Sätze. Mehr Sätze pro Einheit waren sogar negativ assoziiert (−0,03; p = 0,04)." },
+  { t:"Sorge, dass Fußball die Kraftzuwächse wegnimmt", b:"Hypertrophie SMD −0,01 (p = 0,919), Maximalkraft SMD −0,06 (p = 0,446). Beides null. Nur Schnellkraft wird gedämpft (SMD −0,28) — und nur bei zu geringem Abstand zwischen den Einheiten." },
+  { t:"Die Vorstellung, 90 kg auf 1,89 m seien zu viel für den Antritt", b:"Der Kostenfaktor in den Daten ist der Fettanteil, nicht das Gewicht. Relative Kraft schlägt absolute signifikant nur beim Sprung, nicht beim Sprint." }
+];
+
+const SPORT_ERNAEHRUNG = [
+  { t:"72-Stunden-Glykogen", a:"Typ-II-Sprintfasern füllen bis 72 h nach dem Spiel auf. Der Montag ist kein Ruhetag.", q:"Post-Workout & Leber (2026-08)", w:"kh_regen" },
+  { t:"Anaboles Fenster widerlegt", a:"Der Hebel ist die Prä-Trainings-Mahlzeit 2–3 h vorher, nicht die Mahlzeit danach.", q:"Post-Workout & Leber (2026-08)", w:"pre_workout" },
+  { t:"Insulinsensitivierung hält Tage an", a:"Und sie ist nicht glykogenabhängig (Steenberg 2022).", q:"Zucker — Wirkung, Dosis, Sportkontext (2026-08) §2.2", w:null },
+  { t:"Kreatin 5 g pro Tag", a:"Bei 90 kg nicht 3 g. Der bestbelegte Posten im Stack.", q:"Supplement-Stack (2026-07)", w:"kreatin" },
+  { t:"Beta-Alanin gestrichen", a:"Keine Wirkung an der Repeated-Sprint-Ability. Natriumbicarbonat ebenfalls.", q:"Supplement-Stack (2026-07)", w:"beta_alanin" },
+  { t:"Nitrat-Ladeprotokoll", a:"3 Tage laden, 2 × 70 ml, Anpfiff −3 h. Kein antibakterielles Mundwasser in der Ladephase.", q:"Nitrat & Rote-Bete-Saft — Timing (2026-08)", w:"rote_bete" },
+  { t:"Koffein 3 mg/kg am Spieltag", a:"Höchstens 2 Tage pro Woche, Deadline 15:00.", q:"Ernährung & Kognition (2026-08) §4.5", w:"koffein_deadline" },
+  { t:"Natrium nach Tagestyp", a:"Ruhetag unter 2.000 · Trainingstag 2.000–2.800 · Spieltag 2.500–3.500 mg. Dein Schweißverlust ist nie gemessen worden.", q:"Bestandsrevision (2026-08)", w:"natrium" },
+  { t:"Zahn- und Erosionsrisiko bei Sportlern", a:"44,4 % Karies- und 36,5 % Erosionsprävalenz trotz guter Hygiene.", q:"Zucker — Wirkung, Dosis, Sportkontext (2026-08) §6.4", w:null }
+];
+
+let sportPlan = "a";
+
+function renderSport(){
+  const d = readDay(viewKey);
+  const s = d.sport;
+
+  /* --- Heute abhaken --- */
+  const haken = [
+    { id:"aufwaermen", l:"Aufwärmen 10 min", n:"Raise · Mobilise · Balance · Potentiate" },
+    { id:"sprint",     l:"Sprintblock",      n:"4–6 maximale Läufe über 20–30 m" },
+    { id:"praevention",l:"Präventionsblock", n:"Nordic · Copenhagen · Wade · Landungen — nach dem Training" }
+  ].map((h,i) =>
+    '<label class="schritt' + (s[h.id] ? ' fertig' : '') + '">' +
+      '<span class="nr">' + (i+1) + '</span>' +
+      '<input type="checkbox" data-sp="' + h.id + '"' + (s[h.id] ? ' checked' : '') + '>' +
+      '<span>' + h.l + '<br><small class="muted">' + h.n + '</small></span></label>').join("");
+
+  /* --- Beschwerdefrage: der laut R1 wichtigste Marker --- */
+  const bw = s.beschwerden;
+  const beschwerde =
+    '<div class="zeile"><span>Beschwerden diese Woche?<br>' +
+      '<small class="muted">Training oder Spiel reduziert, verpasst oder verändert?</small></span>' +
+      '<span class="skala">' +
+        '<button class="punkt' + (bw === "nein" ? " on" : "") + '" data-bw="nein">nein</button>' +
+        '<button class="punkt' + (bw === "ja"   ? " on" : "") + '" data-bw="ja">ja</button>' +
+      '</span></div>';
+
+  /* --- Squeeze-Test mit Bestwertvergleich --- */
+  const werte = letzteTage(180, viewKey).map(k => readDay(k).sport?.squeeze).filter(x => x > 0);
+  const best  = werte.length ? Math.max(...werte) : null;
+  let squeezeNote = "Blutdruckmanschette zwischen die Knie, Hüfte ~45°, 5 s maximal drücken.";
+  if (s.squeeze > 0 && best) {
+    const ab = Math.round((1 - s.squeeze / best) * 100);
+    squeezeNote = ab > 15
+      ? "⚠️ " + ab + " % unter deinem Bestwert (" + best + " mmHg). Über 15 % gilt als Warnzeichen — Belastung anpassen."
+      : (ab > 0 ? ab + " % unter deinem Bestwert (" + best + " mmHg). Unter der 15-%-Schwelle."
+                : "Das ist dein Bestwert.");
+  }
+  const squeeze =
+    '<div class="zeile"><span>Adduktoren-Squeeze<br><small class="muted">' + squeezeNote + '</small></span>' +
+      '<span class="flagzeit"><input type="number" id="spSqueeze" min="0" max="400" step="1" ' +
+      'value="' + (s.squeeze ?? "") + '" style="width:78px;text-align:center"> mmHg</span></div>';
+
+  /* --- Wochenplan --- */
+  const planKnoepfe = Object.entries(SPORT_PLAENE).map(([k,p]) =>
+    '<button class="flagchip' + (sportPlan === k ? " on" : "") + '" data-plan="' + k + '">' + p.name + '</button>').join("");
+  const plan = SPORT_PLAENE[sportPlan];
+  const planZeilen = plan.zeilen.map(z =>
+    '<div class="planrow"><div class="zeit">' + z.t + '</div><div class="inhalt">' +
+    '<div class="lbl">' + z.l + (z.m ? ' <span class="muted">· ' + z.m + '</span>' : '') + '</div>' +
+    (z.z && z.z !== "—" ? '<div class="makros">' + z.z + '</div>' : '') +
+    (z.n ? '<div class="note">' + z.n + '</div>' : '') + '</div></div>').join("");
+
+  const aufwaermen = SPORT_AUFWAERMEN.map(a =>
+    '<div class="planrow"><div class="zeit">' + a.min + '</div><div class="inhalt">' +
+    '<div class="lbl">' + a.phase + '</div><div class="note">' + a.was + '</div>' +
+    '<div class="makros" style="margin-top:4px">' + a.warum + '</div></div></div>').join("");
+
+  const praevention = SPORT_PRAEVENTION.map(p =>
+    '<div class="regcard" style="cursor:default"><div class="rt">' + p.ampel + ' ' + p.nr + '. ' + p.ue +
+    '<span class="badge kue">' + p.zeit + '</span></div>' +
+    '<div class="ra"><b>' + p.dosis + '</b></div><div class="ra">' + p.effekt + '</div></div>').join("");
+
+  const stufen = SPORT_STUFEN.map(x =>
+    '<div class="regcard" style="cursor:default"><div class="rt">' + x.p + '</div>' +
+    '<div class="ra">Nordic Hamstring: <b>' + x.n + '</b> · Rum. Kreuzheben: <b>' + x.r + '</b></div>' +
+    '<div class="ra" style="margin-top:4px">' + x.b + '</div></div>').join("");
+
+  const hebel = SPORT_HEBEL.map(h =>
+    '<div class="regcard" style="cursor:default"><div class="rt">' + h.a + ' ' + h.t +
+    '<span class="badge ger">' + h.z + '</span></div>' +
+    '<div class="ra">' + h.b + '</div>' +
+    '<div class="quellzeile">Quelle: ' + (h.q === "R1"
+      ? "Trainingsvorbereitung &amp; Verletzungsprophylaxe (2026-08)"
+      : "Ergänzungstraining neben Fußball (2026-08)") + '</div></div>').join("");
+
+  const marker = SPORT_MARKER.map(m =>
+    '<div class="regcard" style="cursor:default"><div class="rt">' + m.a + ' ' + m.m +
+    '<span class="badge kue">' + m.f + '</span></div>' +
+    '<div class="ra">' + m.w + '</div>' +
+    '<div class="ra" style="margin-top:4px"><b>' + m.s + '</b></div></div>').join("");
+
+  const nicht = SPORT_NICHT.map(n =>
+    '<div class="regcard" style="cursor:default"><div class="rt">⚫ ' + n.t + '</div>' +
+    '<div class="ra">' + n.b + '</div></div>').join("");
+
+  document.getElementById("view-sport").innerHTML =
+    '<div class="section"><h2>Heute</h2>' + haken + beschwerde + squeeze + '</div>' +
+
+    '<div class="section"><h2>Wochenplan</h2>' +
+      '<div class="planwahl">' + planKnoepfe + '</div>' +
+      '<p class="muted" style="margin:0 0 10px">' + plan.unter + '</p>' + planZeilen +
+      '<div class="planquelle">Annahme: Spiel Sonntag 14:00, Fußball Di und Do 19:00–20:45. ' +
+      'Bei Samstagsspiel verschiebt sich alles einen Tag nach vorn.<br>' +
+      'Quelle: Ergänzungstraining neben Fußball (2026-08), Tabelle 2</div></div>' +
+
+    '<div class="section"><h2>Aufwärmen — 10 Minuten</h2>' +
+      '<p class="muted" style="margin:0 0 10px">Ziel ist <b>Leistung</b>, nicht Prävention. Beides findet nur ' +
+      'zufällig im selben Zeitfenster statt. Die eine Regel, die wichtiger ist als die Reihenfolge: ' +
+      'die letzte explosive Aktion soll ≤ 5 min vor Beginn liegen.</p>' + aufwaermen +
+      '<div class="planquelle">Ein Cluster-Trial fand keinen Unterschied zwischen 10- und 20-Minuten-Einheiten. ' +
+      'Die zweiten 10 Minuten sind ein Bonus, kein Defizit.<br>' +
+      'Quelle: Trainingsvorbereitung &amp; Verletzungsprophylaxe (2026-08) §5.1</div></div>' +
+
+    '<div class="section"><h2>Präventionsblock — 2×/Woche</h2>' +
+      '<p class="muted" style="margin:0 0 12px">Das ist der Teil, der die Verletzungen verhindert — und der, ' +
+      'den du unter Zeitdruck zuerst streichst, wenn er nicht an etwas hängt, das ohnehin stattfindet. ' +
+      'Empfehlung: unmittelbar <b>nach</b> dem Di- und Do-Training, am Platz, 12–14 Minuten.</p>' + praevention +
+      '<div class="hint on" style="margin-top:12px"><span>⚠️ <b>Aufbau:</b> Woche 1 nur je ein Satz aller vier Übungen. ' +
+      'Die Nordic Hamstring erzeugt bei Untrainierten 3–5 Tage Muskelkater. Volles Volumen frühestens ab Woche 4–5.<br><br>' +
+      '<b>Wenn die Zeit kippt:</b> Behalte Copenhagen (1×/Woche genügt) + Nordic 3 × 8. Streiche zuerst ' +
+      'Wade und Landungen.</span></div>' +
+      '<div class="planquelle">Quelle: Trainingsvorbereitung &amp; Verletzungsprophylaxe (2026-08) §5.3</div></div>' +
+
+    '<div class="section"><h2>Die ersten Wochen — Nordic und Kreuzheben</h2>' +
+      '<p class="muted" style="margin:0 0 12px">Die einzige echte Kollision zwischen beiden Recherchen: ' +
+      'Nordic Hamstring 2×/Woche plus rumänisches Kreuzheben am Montag plus Spiel am Sonntag sind drei bis vier ' +
+      'exzentrische Hamstringreize pro Woche bei jemandem, der bisher keinen einzigen hatte.</p>' + stufen +
+      '<div class="planquelle">In den ersten vier Wochen ist die Nordic Hamstring dein rumänisches Kreuzheben. ' +
+      'Danach ergänzen sie sich — die eine arbeitet exzentrisch bei langer Muskellänge, die andere konzentrisch ' +
+      'unter hoher Last.<br>Quelle: Ergänzungstraining neben Fußball (2026-08) §10.2 — ausdrücklich eine Setzung, ' +
+      'keine Studie hat diese Kombination untersucht</div></div>' +
+
+    '<div class="section"><h2>Hoher Hebel — jetzt umsetzen</h2>' + hebel + '</div>' +
+
+    '<div class="section"><h2>Marker und Abbruchindikator</h2>' +
+      '<p class="muted" style="margin:0 0 12px">Du kannst nicht messen, ob die Prävention wirkt — bei rund ' +
+      '1,3 erwarteten Verletzungen pro Saison bräuchtest du Jahrzehnte. Messbar ist der Mediator: Kraft und ' +
+      'Kontrollfähigkeit. Wenn du nur zwei Dinge trackst, dann die Beschwerdefrage und den Squeeze-Test.</p>' + marker +
+      '<div class="hint on" style="margin-top:12px"><span><b>Abbruchindikator Masseaufbau:</b> Wenn dein Gewicht über ' +
+      'zwei aufeinanderfolgende Messzyklen (8 Wochen) steigt, während Sprunghöhe, 10-m-Zeit <i>oder</i> relative ' +
+      'Kraft nicht mithalten, geht der Überschuss nicht mehr in nutzbare Masse. Dann den Überschuss halbieren — ' +
+      'nicht das Training ändern. Korridor 90–95 kg bei 1,89 m; ab ~95 kg kippt die Beweislast.</span></div>' +
+      '<div class="planquelle">Quelle: Ergänzungstraining neben Fußball (2026-08) §4.3 · ' +
+      'Trainingsvorbereitung &amp; Verletzungsprophylaxe (2026-08) §6</div></div>' +
+
+    '<div class="section"><h2>Bewusst nicht verfolgt</h2>' +
+      '<p class="muted" style="margin:0 0 12px">Zu wissen, warum etwas nicht verfolgt wird, ist so viel wert ' +
+      'wie die Empfehlung selbst.</p>' + nicht + '</div>' +
+
+    '<div class="section"><h2>Ernährungsseitig belegt</h2>' +
+      '<p class="muted" style="margin:0 0 12px">Neun trainingsrelevante Befunde, die ernährungsseitig hergeleitet ' +
+      'sind und in ihren Notizen bleiben. Hier stehen sie zusammen, damit der Trainingsblick nicht durch neun ' +
+      'Notizen muss.</p>' +
+      SPORT_ERNAEHRUNG.map(b =>
+        '<div class="regcard" style="cursor:default"><div class="rt">' + b.t + ' ' + (b.w ? iBtn(b.w) : "") + '</div>' +
+        '<div class="ra">' + b.a + '</div>' +
+        '<div class="quellzeile">Quelle: ' + b.q + '</div></div>').join("") + '</div>' +
+
+    '<div class="section"><h2>Was die Recherchen nicht hergeben</h2>' +
+      '<div class="regcard" style="cursor:default"><div class="rt">🔴 Die Populationen passen an der entscheidenden Stelle nicht</div>' +
+      '<div class="ra">Fast alles zum Aufwärmen stammt aus Elite-, Semiprofi- oder College-Kollektiven. ' +
+      'In der einzigen großen Studie an <b>erwachsenen männlichen Amateuren</b> (n = 456, Compliance 71–73 %) ' +
+      'zeigte das Programm <b>null Effekt</b>: 9,6 gegenüber 9,7 Verletzungen je 1.000 Stunden.</div></div>' +
+      '<div class="regcard" style="cursor:default"><div class="rt">🔴 Dein Risiko sitzt zu ~70 % in 90 Minuten pro Woche</div>' +
+      '<div class="ra">Amateurfußball: 17,56 Verletzungen je 1.000 h im Spiel gegenüber 3,22 im Training — Faktor 5,45. ' +
+      'Hochgerechnet ~1,3 Verletzungen pro Saison. Und 57 % der Verletzungen bei Männern entstehen schleichend, ' +
+      'nicht akut. Belastungssteuerung ist damit der eigentliche Nachbar dieses Themas — und noch nicht recherchiert (R3).</div></div>' +
+      '<div class="regcard" style="cursor:default"><div class="rt">🟡 Die Nordic-Hamstring-Kontroverse ist nicht entschieden</div>' +
+      '<div class="ra">Originalschätzung RR 0,49 (0,32–0,74), Neubewertung 2021 mit Prädiktionsintervall 0,06–5,14 — ' +
+      '<i>inconclusive</i>. Beide Seiten arbeiten mit denselben schwachen Primärdaten. Der Kraftgewinn ist belegt ' +
+      '(g = 0,77), der Präventionseffekt nicht.</div></div>' +
+      '<div class="regcard" style="cursor:default"><div class="rt">🟡 Der Leisten-Befund steht auf einem einzelnen RCT</div>' +
+      '<div class="ra">Die Copenhagen-Metaanalyse von 2025 wurde 2026 zurückgezogen; ihr qualitatives Ergebnis war ' +
+      'skeptischer als der zugrundeliegende RCT. Die Effektgröße wird möglicherweise nach unten korrigiert.</div></div>' +
+      '<div class="regcard" style="cursor:default"><div class="rt">🔴 Keine dieser Studien misst, was du wissen willst</div>' +
+      '<div class="ra">Du willst wissen, ob du in fünf Jahren noch verletzungsfrei spielst. Gemessen werden ' +
+      '90-Minuten-Sprungeffekte, 10-Wochen-Kraftzuwächse und Saison-Inzidenzen in Kohorten, die dir größtenteils ' +
+      'nicht ähneln. Der Sprung dazwischen ist überall eine Annahme.</div></div>' +
+      '<div class="planquelle">R1: 38 Quellen, 31 Tier 1 · R2: 25 Quellen, 24 Tier 1. Beide eingelöst 19.08.2026.</div></div>';
+
+  /* --- Bedienung --- */
+  document.querySelectorAll('#view-sport input[data-sp]').forEach(inp => {
+    inp.onchange = () => { day().sport[inp.dataset.sp] = inp.checked; save(); render(); };
+  });
+  document.querySelectorAll('#view-sport [data-bw]').forEach(b => {
+    b.onclick = () => {
+      const w = b.dataset.bw;
+      day().sport.beschwerden = (day().sport.beschwerden === w ? null : w);
+      save(); render();
+    };
+  });
+  document.querySelectorAll('#view-sport [data-plan]').forEach(b => {
+    b.onclick = () => { sportPlan = b.dataset.plan; renderSport(); };
+  });
+  const sq = document.getElementById("spSqueeze");
+  if (sq) sq.onchange = () => {
+    const v = parseInt(sq.value, 10);
+    day().sport.squeeze = (v > 0 ? v : null); save(); render();
+  };
+}
+
 function renderRegister(){
   const filter = document.getElementById("regFilter");
   filter.innerHTML = "";
@@ -2408,7 +2824,7 @@ function renderRegister(){
     const b = document.createElement("button");
     b.className = "chip";
     b.textContent = label;
-    if (wert === regSortierung){ b.style.borderColor = "var(--navy)"; b.style.background = "#eef4fc"; b.style.fontWeight = "700"; }
+    if (wert === regSortierung){ b.style.borderColor = "var(--navy)"; b.style.background = "var(--akzent-flaeche)"; b.style.fontWeight = "700"; }
     b.onclick = () => { regSortierung = wert; renderRegister(); };
     filter.appendChild(b);
   });
@@ -2512,7 +2928,7 @@ function renderPlan(){
     const b = document.createElement("button");
     b.className = "chip";
     b.textContent = pl.name;
-    if (id === aktiv){ b.style.borderColor = "var(--navy)"; b.style.background = "#eef4fc"; b.style.fontWeight = "700"; }
+    if (id === aktiv){ b.style.borderColor = "var(--navy)"; b.style.background = "var(--akzent-flaeche)"; b.style.fontWeight = "700"; }
     b.onclick = () => { day().flags.plan = (id === aktiv ? null : id); save(); render(); };
     wahl.appendChild(b);
   });
@@ -2829,8 +3245,10 @@ function renderSupps(d){
 function drawChart(){
   if (typeof Chart === "undefined") return;
   const field = chartMetric;                       // "k" | "p" | "c"
-  const colorMap = {k:"#1F3864", p:"#2E7D32", c:"#E08A1E"};
-  const lightMap = {k:"#b9c6dd", p:"#a9d3ab", c:"#f0cd97"};
+  // Aus den CSS-Token lesen, damit der dunkle Modus nicht danebenliegt
+  const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const colorMap = {k:tok("--navy"),   p:tok("--green"),  c:tok("--amber")};
+  const lightMap = {k:tok("--k-hell"), p:tok("--p-hell"), c:tok("--c-hell")};
   const goalKey  = {k:"kcal", p:"pro", c:"carb"}[field];
 
   const labels=[], data=[], colors=[], borders=[];
@@ -2841,7 +3259,7 @@ function drawChart(){
     const v=sumDay(k,field); data.push(v);
     const goalV = eff(k)[goalKey];
     colors.push(v>=goalV ? colorMap[field] : lightMap[field]);
-    borders.push(k===viewKey ? "#19212e" : "transparent");   // angesehenen Tag umranden
+    borders.push(k===viewKey ? tok("--ink") : "transparent");   // angesehenen Tag umranden
   }
   if (window._ch) window._ch.destroy();
   window._ch = new Chart(document.getElementById("chart"), {
@@ -2850,8 +3268,8 @@ function drawChart(){
     options:{
       plugins:{ legend:{display:false} },
       scales:{
-        y:{ beginAtZero:true, grid:{color:"#eef1f6"}, ticks:{font:{size:10}} },
-        x:{ grid:{display:false}, ticks:{font:{size:11}} }
+        y:{ beginAtZero:true, grid:{color:tok("--schiene")}, ticks:{font:{size:10}, color:tok("--grey")} },
+        x:{ grid:{display:false}, ticks:{font:{size:11}, color:tok("--grey")} }
       }
     }
   });

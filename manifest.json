@@ -1,7 +1,7 @@
 {
-  "name": "Ernährungs-Tracker",
-  "short_name": "Tracker",
-  "description": "Kalorien, Makros & Wasser – täglich tracken",
+  "name": "Gesundheits-Cockpit",
+  "short_name": "Cockpit",
+  "description": "Ernährung, Training, Haut und Schlaf — ein Tag als Einheit",
   "scope": "./",
   "start_url": "./",
   "display": "standalone",

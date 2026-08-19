@@ -1,5 +1,5 @@
 /* Service Worker v2 — relative Pfade (funktioniert unter jedem Unterordner) */
-const CACHE = "tracker-v5";
+const CACHE = "cockpit-v5-5";
 const ASSETS = [
   "./",
   "./index.html",
