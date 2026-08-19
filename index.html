@@ -1011,26 +1011,29 @@ const TAGESPLAENE = {
     ] },
 
   spiel: {
-    name: "Spieltag — Anpfiff 15:00", profil: "spiel", quelle: "Wochenplan · Supplement-Stack (2026-07)",
+    name: "Spieltag", profil: "spiel", quelle: "Wochenplan · Nitrat & Rote-Bete-Saft — Timing (2026-08)",
     summe: "~4.000 kcal · 175 g P · 630 g KH · 85 g F",
-    hinweis: "Bei Anpfiff 14:00 alles um eine Stunde nach vorn.",
+    anpfiffbasiert: true,
+    /* Alle Zeiten als Abstand zum Anpfiff in Minuten — so stimmt der Plan für 11:00,
+       14:00 und 15:00 gleichermaßen. Referenz ist der 15:00-Ablauf aus dem Wochenplan
+       („bei 14:00 alles um 1 h nach vorn"), hier auf beliebige Anpfiffzeiten verallgemeinert. */
     punkte: [
-      { zeit:"08:00", slot:"frueh",  label:"Frühstück",          k:null, p:44, c:160, f:null,
+      { off:-420, slot:"frueh",  label:"Frühstück",            p:44, c:160,
         note:"Fett- und ballaststoffarm." },
-      { zeit:"11:00", slot:"mittag", label:"Vor-Spiel-Mahlzeit ⭐", k:null, p:40, c:225, f:null,
+      { off:-240, slot:"mittag", label:"Vor-Spiel-Mahlzeit ⭐", p:40, c:225,
         note:"180–270 g Kohlenhydrate, 3–4 h vor Anpfiff (UEFA: 1–3 g/kg). Rezept M3-B oder M3-C passt hier." },
-      { zeit:"12:00", label:"🥤 Rote-Bete-Saft — 2 × 70 ml", getraenk:true,
-        note:"Merkregel: Anpfiff minus 3 Stunden. 12,9 mmol (~800 mg Nitrat) peaken nach etwa 3 h — 2 h wären zu früh dran, 1 h ist wirkungslos. Wirkt nur mit Ladephase seit Donnerstag. Seitdem auch kein antibakterielles Mundwasser." },
-      { zeit:"13:30", slot:"snack",  label:"Letzte Kohlenhydrate", k:null, p:null, c:50, f:null,
+      { off:-180, label:"🥤 Rote-Bete-Saft — 2 × 70 ml", getraenk:true,
+        note:"Merkregel: Anpfiff minus 3 Stunden. 12,9 mmol (~800 mg Nitrat) peaken nach etwa 3 h — 2 h wären zu früh dran, 1 h ist wirkungslos. Wirkt nur mit Ladephase seit drei Tagen. Seitdem auch kein antibakterielles Mundwasser." },
+      { off:-90,  slot:"snack",  label:"Letzte Kohlenhydrate", c:50,
         note:"40–60 g leicht verdaulich." },
-      { zeit:"14:00", label:"☕ Koffein ~270 mg", getraenk:true,
-        note:"3 mg/kg, 45–60 min vor Anpfiff. Nicht zur eisenreichen Mahlzeit." },
-      { zeit:"15:00", label:"Anpfiff" },
-      { zeit:"15:45", label:"Halbzeit", note:"20–30 g Kohlenhydrate flüssig plus Elektrolyte." },
-      { zeit:"17:00", slot:"snack",  label:"Direkt nach dem Spiel ⭐", k:790, p:28, c:75, f:null,
-        note:"Flüssig: 60–90 g KH + 25–30 g Protein (Rezept B). Weil der Appetit fehlt — nicht wegen eines Fensters. 🍇 Saft ist hier optional: Der Fruktoseanteil füllt die Leber schneller, für den Muskel bringt er nichts. Zügig trinken statt nippen, danach Wasser nachspülen, 30–60 min nicht putzen (Säure)." },
-      { zeit:"19:30", slot:"abend",  label:"Abendmahlzeit",      k:null, p:44, c:150, f:null },
-      { zeit:"22:00", slot:"snack",  label:"Langsames Protein",  k:null, p:35, c:50, f:null,
+      { off:-60,  label:"☕ Koffein ~270 mg", getraenk:true,
+        note:"3 mg/kg, 45–60 min vor Anpfiff. Eigenes Fenster, kein additiver Effekt mit Nitrat." },
+      { off:0,    label:"Anpfiff" },
+      { off:45,   label:"Halbzeit", note:"20–30 g Kohlenhydrate flüssig plus Elektrolyte." },
+      { off:120,  slot:"snack",  label:"Direkt nach dem Spiel ⭐", k:790, p:28, c:75,
+        note:"Flüssig: 60–90 g KH + 25–30 g Protein (Rezept B). Weil der Appetit fehlt — nicht wegen eines Fensters. 🍇 Saft ist optional: Der Fruktoseanteil füllt die Leber schneller, für den Muskel bringt er nichts. Zügig trinken statt nippen, danach Wasser nachspülen, 30–60 min nicht putzen (Säure)." },
+      { off:270,  slot:"abend",  label:"Abendmahlzeit",        p:44, c:150 },
+      { off:420,  slot:"snack",  label:"Langsames Protein",    p:35, c:50,
         note:"Typ-II-Fasern füllen bis 72 h — der Montag bleibt deshalb hoch." },
     ] },
 
@@ -1495,6 +1498,7 @@ function normalizeDay(d){
   // v3 kannte nur „B12"; seit v5 steht der B-Komplex dort (er liefert zusätzlich Riboflavin)
   if (d.supps["B12"] !== undefined && d.supps["B-Komplex"] === undefined) d.supps["B-Komplex"] = d.supps["B12"];
   if (!d.flags) d.flags = { klausur:false, lernblock:false, ort:"heim", blockbeginn:null };
+  if (d.flags.anpfiff === undefined) d.flags.anpfiff = null;   // Spieltag: Anpfiffzeit, leer = 15:00
   if (!d.skin)  d.skin  = {
     am: { wasser:false, moist:false, spf:false },
     pm: { cleanser:false, wirkstoff:false, moist:false },
@@ -2459,6 +2463,38 @@ function slotSoll(slotId){
                         {k:0,p:0,c:0,f:0});
 }
 
+/* Aus den Offsets eines anpfiffbasierten Plans echte Uhrzeiten machen.
+   Punkte, die rechnerisch mitten in der Nacht lägen, werden ausgeblendet —
+   bei einem 11-Uhr-Anpfiff gibt es schlicht keinen Platz für zwei Mahlzeiten davor. */
+const ANPFIFF_STD = "15:00";
+const ANPFIFF_WAHL = ["11:00", "14:00", "15:00"];
+function anpfiffZeit(){ const f = readDay(viewKey).flags || {}; return f.anpfiff || ANPFIFF_STD; }
+function minInZeit(min){
+  const m = ((min % 1440) + 1440) % 1440;
+  return String(Math.floor(m/60)).padStart(2,"0") + ":" + String(m%60).padStart(2,"0");
+}
+function planPunkte(plan){
+  if (!plan.anpfiffbasiert) return { punkte: plan.punkte, entfallen: [] };
+  const basis = zeitInMin(anpfiffZeit());
+  const punkte = [], entfallen = [];
+  plan.punkte.forEach(x => {
+    const abs = basis + x.off;
+    if (abs < 330) { entfallen.push(x); return; }   // vor 05:30 ist keine realistische Mahlzeit
+    punkte.push(Object.assign({}, x, { zeit: minInZeit(abs) }));
+  });
+  return { punkte, entfallen };
+}
+/* Umschalter für die Anpfiffzeit — nur bei anpfiffbasierten Plänen */
+function anpfiffWahl(plan){
+  if (!plan.anpfiffbasiert) return "";
+  const jetzt = anpfiffZeit();
+  const knoepfe = ANPFIFF_WAHL.map(z =>
+    '<button class="chip anpfiffbtn" data-anpfiff="' + z + '"' +
+    (z === jetzt ? ' style="border-color:var(--navy);background:#eef4fc;font-weight:700"' : "") +
+    '>' + z + '</button>').join("");
+  return '<div class="ortbar" style="margin-bottom:12px"><span>🏟️ Anpfiff:</span>' + knoepfe + '</div>';
+}
+
 function renderPlan(){
   const wahl = document.getElementById("planWahl");
   if (!wahl) return;
@@ -2490,7 +2526,9 @@ function renderPlan(){
     return profilOf(keyOf(d)) === "spiel";
   });
   const el = document.getElementById("planAblauf");
-  el.innerHTML = plan.punkte.filter(x => !x.nurVorSpiel || spielVoraus).map(x => {
+  const pp = planPunkte(plan);
+  const punkte = pp.punkte, entfallen = pp.entfallen;
+  el.innerHTML = anpfiffWahl(plan) + punkte.filter(x => !x.nurVorSpiel || spielVoraus).map(x => {
     const makros = x.k != null
       ? `${nf(x.k)} kcal · ${x.p != null ? nf(x.p)+" g P" : "—"} · ${x.c != null ? nf(x.c)+" g KH" : "—"}${x.f != null ? " · "+nf(x.f)+" g F" : ""}`
       : (x.p != null || x.c != null
@@ -2505,6 +2543,11 @@ function renderPlan(){
         ${x.note ? `<div class="note">${x.note}</div>` : ""}
       </span></div>`;
   }).join("")
+  + (entfallen.length ? '<div class="hint on" style="margin-top:10px"><span>Bei Anpfiff '
+      + anpfiffZeit() + ' bleibt für ' + entfallen.map(x => '„' + x.label + '“').join(" und ")
+      + ' kein Platz — 3–4 h vorher wäre mitten in der Nacht. <b>Die Vor-Spiel-Mahlzeit ist dann dein Frühstück</b>,'
+      + ' und die Kohlenhydrate des Vorabends tragen den größeren Teil. Der Rote-Bete-Shot bleibt bei'
+      + ' Anpfiff minus 3 Stunden.</span></div>' : "")
   + `<div class="planquelle">${plan.hinweis ? plan.hinweis + " · " : ""}${
       plan.abgeleitet
         ? "⚠️ Dieser Ablauf ist <b>abgeleitet</b>: Die Tagessumme steht in „Tagesprofile &amp; Zielwerte\", die Verteilung auf die vier Mahlzeiten ist proportional aus dem Trainingstag gerechnet und im Vault nicht eigens durchgerechnet."
@@ -2884,6 +2927,15 @@ document.getElementById("profilHintClose").onclick=()=>{
 /* Migrations-Bestätigung */
 if (zeigeMigNotice) document.getElementById("migNotice").classList.add("on");
 document.getElementById("migOk").onclick=()=>document.getElementById("migNotice").classList.remove("on");
+
+/* Anpfiffzeit umstellen — der ganze Spieltagsplan rechnet sich neu */
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-anpfiff]");
+  if (!b) return;
+  const wert = b.dataset.anpfiff;
+  day().flags.anpfiff = (wert === ANPFIFF_STD ? null : wert);
+  save(); render();
+});
 
 /* Tab-Leiste */
 document.getElementById("tabbar").addEventListener("click", e => {
