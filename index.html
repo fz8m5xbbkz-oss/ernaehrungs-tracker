@@ -952,6 +952,8 @@ const TAGESPLAENE = {
       { zeit:"12:00", slot:"mittag", label:"M2 — Hauptenergie",          k:1000, p:44, c:150, f:25 },
       { zeit:"16:30", slot:"prae",   label:"M3 — Prä-Training ⭐",        k:850,  p:44, c:130, f:18,
         note:"Der eigentliche Hebel. 2,5 h vor Trainingsbeginn, max. 18 g Fett." },
+      { zeit:"16:00", label:"🥤 Rote Bete — Ladetag (1 × 70 ml)", getraenk:true, nurVorSpiel:true,
+        note:"Nur wenn in den nächsten Tagen ein Spiel ansteht: 6,4 mmol. Fällt mit der Prä-Trainings-Mahlzeit zusammen, du brauchst keinen eigenen Slot. Ab jetzt kein antibakterielles Mundwasser mehr." },
       { zeit:"19:00", label:"Training 19:00–20:45",
         note:"105 min — 30–60 g Kohlenhydrate während der Einheit (Banane, Getränk zur Pause)." },
       { zeit:"21:15", slot:"abend",  label:"M4 — Post + Pre-Sleep",      k:1000, p:44, c:145, f:28,
@@ -1017,8 +1019,8 @@ const TAGESPLAENE = {
         note:"Fett- und ballaststoffarm." },
       { zeit:"11:00", slot:"mittag", label:"Vor-Spiel-Mahlzeit ⭐", k:null, p:40, c:225, f:null,
         note:"180–270 g Kohlenhydrate, 3–4 h vor Anpfiff (UEFA: 1–3 g/kg). Rezept M3-B oder M3-C passt hier." },
-      { zeit:"12:00", label:"🥤 Rote-Bete-Saft", getraenk:true,
-        note:"2–3 h vor Anpfiff, 400–800 mg Nitrat. An diesem Tag KEIN antibakterielles Mundwasser — orale Bakterien wandeln das Nitrat um, Mundspülung hebt den Effekt komplett auf." },
+      { zeit:"12:00", label:"🥤 Rote-Bete-Saft — 2 × 70 ml", getraenk:true,
+        note:"Merkregel: Anpfiff minus 3 Stunden. 12,9 mmol (~800 mg Nitrat) peaken nach etwa 3 h — 2 h wären zu früh dran, 1 h ist wirkungslos. Wirkt nur mit Ladephase seit Donnerstag. Seitdem auch kein antibakterielles Mundwasser." },
       { zeit:"13:30", slot:"snack",  label:"Letzte Kohlenhydrate", k:null, p:null, c:50, f:null,
         note:"40–60 g leicht verdaulich." },
       { zeit:"14:00", label:"☕ Koffein ~270 mg", getraenk:true,
@@ -1026,7 +1028,7 @@ const TAGESPLAENE = {
       { zeit:"15:00", label:"Anpfiff" },
       { zeit:"15:45", label:"Halbzeit", note:"20–30 g Kohlenhydrate flüssig plus Elektrolyte." },
       { zeit:"17:00", slot:"snack",  label:"Direkt nach dem Spiel ⭐", k:790, p:28, c:75, f:null,
-        note:"Flüssig: 60–90 g KH + 25–30 g Protein (Rezept B). Weil der Appetit fehlt — nicht wegen eines Fensters. 🍇 Wenn Saft, dann Traubensaft: überwiegend Glukose. Apfelsaft ist überwiegend Fruktose und für das Muskelglykogen schlechter." },
+        note:"Flüssig: 60–90 g KH + 25–30 g Protein (Rezept B). Weil der Appetit fehlt — nicht wegen eines Fensters. 🍇 Saft ist hier optional: Der Fruktoseanteil füllt die Leber schneller, für den Muskel bringt er nichts. Zügig trinken statt nippen, danach Wasser nachspülen, 30–60 min nicht putzen (Säure)." },
       { zeit:"19:30", slot:"abend",  label:"Abendmahlzeit",      k:null, p:44, c:150, f:null },
       { zeit:"22:00", slot:"snack",  label:"Langsames Protein",  k:null, p:35, c:50, f:null,
         note:"Typ-II-Fasern füllen bis 72 h — der Montag bleibt deshalb hoch." },
@@ -1039,6 +1041,8 @@ const TAGESPLAENE = {
     punkte: [
       { zeit:"07:30", slot:"frueh",  label:"M1", k:900, p:44, c:135, f:20 },
       { zeit:"12:00", slot:"mittag", label:"M2", k:950, p:44, c:145, f:21 },
+      { zeit:"16:00", label:"🥤 Rote Bete — Ladetag (1 × 70 ml)", getraenk:true, nurVorSpiel:true,
+        note:"Am Samstag vor dem Spiel: 6,4 mmol. Kein antibakterielles Mundwasser." },
       { zeit:"16:30", slot:"prae",   label:"M3", k:800, p:44, c:125, f:15 },
       { zeit:"21:00", slot:"abend",  label:"M4", k:950, p:43, c:135, f:24 },
     ] },
@@ -1163,19 +1167,40 @@ const WISSEN = {
     grenze:"Für komplexes, mehrschrittiges Denken ist kein Nutzen belegt, teils sogar das Gegenteil: Akute Gabe verschlechterte das räumliche Arbeitsgedächtnis bei Gewohnheitstrinkern (RCT 2024). Nicht zur eisenreichen Mahlzeit — Kaffee senkt die Eisenaufnahme um rund 40 %.",
     quelle:"Supplement-Stack (2026-07) · Ernährung & Kognition (2026-08) Teil 4" },
 
-  rote_bete: { titel:"Rote Bete — eng, aber real", bereich:"Supplemente", ampel:"gelb",
-    antwort:"Wirkt bei vielen kurzen Sprints, nicht bei langen Intervallen — und ein antibakterielles Mundwasser hebt den Effekt komplett auf.",
-    mechanismus:"Das Nitrat aus dem Saft wird erst durch Bakterien auf der Zunge zu Nitrit umgewandelt, aus dem der Körper dann Stickstoffmonoxid bildet. Das verbessert die Sauerstoffnutzung im Muskel. Genau deshalb ist Mundspülung an dem Tag der häufigste Anwendungsfehler: Sie tötet die Bakterien, die den ersten Schritt machen.",
-    studienlage:"Das IOC führt Nitrat als belegt für intermittierende Teamsportbelastung. Umbrella Review 2025 und Metaanalyse 2026: robust für kurze, dichte Sprints (24 × 6 s), nicht für 7 × 30 s oder 6 × 60 s. Dosis 400–800 mg Nitrat, 2–3 h vor Anpfiff.",
-    grenze:"Der Effekt ist klein, rund 2–3 %, und verschwindet bei Sprintintervallen mit langen Pausen. Kein Muss — eher etwas, das man vor wichtigen Spielen einmal im Training testet. Der Nitratgehalt wird auf Shots selten deklariert; 500 ml roter Rübensaft tun es auch.",
-    quelle:"Supplement-Stack (2026-07)" },
+  rote_bete: { titel:"Rote Bete — laden schlägt Einzeldosis", bereich:"Supplemente", ampel:"gelb",
+    antwort:"Drei bis sechs Tage laden plus 12,9 mmol drei Stunden vor Anpfiff — die einzelne Portion am Spieltag ist die Version, die in Studien am häufigsten scheitert.",
+    mechanismus:"Nitrat wird über den Speichel in den Mund zurückgeschleust, wo Bakterien es zu Nitrit umwandeln — erst daraus entsteht Stickstoffmonoxid, verstärkt bei Sauerstoffmangel, also genau im Sprint. Über Tage füllen sich zusätzlich die Nitratspeicher im Muskel.",
+    studienlage:"Wylie 2013: Nitrit-Peak nach 146 min bei 8,4 mmol, nach 198 min bei 16,8 mmol — höhere Dosen peaken später. 4,2 mmol war wirkungslos, Sättigung bei 8,4 mmol. Umbrella-Review (Poon 2025): chronisch über 3 Tage mit mindestens 6 mmol täglich wirkt ausgeprägter als akut. Beide positiven Fußballstudien nutzten Mehrtagesprotokolle: +3,4 bis +4,2 % im Yo-Yo-Test.",
+    grenze:"Rowland 2024 gab 13 mmol 2,5 h vorher an Männer in genau deinem Fitnesskorridor: Nitrit stieg massiv, die Leistung blieb unverändert. Der Effekt ist klein und nicht garantiert — vor wichtigen Spielen einmal im Training testen.",
+    quelle:"Nitrat & Rote-Bete-Saft — Timing (2026-08)" },
 
-  traubensaft: { titel:"Traubensaft statt Apfelsaft — wenn überhaupt Saft", bereich:"Ernährung", ampel:"rot",
-    antwort:"Traubensaft ist überwiegend Glukose, Apfelsaft überwiegend Fruktose — und Fruktose füllt den Muskel schlecht.",
-    mechanismus:"Fruktose nimmt den Umweg über die Leber und landet dort im Leberglykogen statt im Muskel. Glukose geht direkt in den Muskel. Nach einem Spiel, in dem die Sprintfasern geleert wurden, ist genau das der Unterschied. Haushaltszucker ist dabei übrigens Traubenzucker ebenbürtig, entgegen der verbreiteten Annahme.",
-    studienlage:"Glukose gilt als Referenzstandard für die Muskelglykogen-Resynthese, Saccharose liegt gleichauf, Fruktose allein deutlich darunter. Ein Vorteil der 2:1-Mischung entsteht erst oberhalb von etwa 90 g Kohlenhydraten pro Stunde — für dich fast durchweg akademisch.",
-    grenze:"Fruchtsaft zählt WHO-seitig als freier Zucker, ganze Früchte und Trockenobst nicht. Die bessere Lösung ist deshalb, die Kohlenhydrate nach dem Spiel über Banane, Datteln, Reis und Kartoffeln zu holen — dann stellt sich die Saftfrage gar nicht.",
-    quelle:"Post-Workout & Leber (2026-08) §2.2 und Teil 7" },
+  nitrat_mundwasser: { titel:"Antibakterielles Mundwasser löscht den Nitrateffekt", bereich:"Supplemente", ampel:"rot",
+    antwort:"Wer die Bakterien auf der Zunge killt, killt die Wirkung — und zwar für die ganze Ladephase, nicht nur für den Spieltag.",
+    mechanismus:"Der erste Umwandlungsschritt von Nitrat zu Nitrit passiert ausschließlich durch orale Bakterien. Eine antibakterielle Spülung entfernt genau diese Population. Sie erholt sich nicht innerhalb von Stunden, deshalb reicht es nicht, am Spieltag darauf zu verzichten.",
+    studienlage:"Woessner 2016 testete es in genau dieser Dosierung: 8,4 mmol Rote-Bete-Saft, danach vier Stunden Spülung — Plasma- und Speichelnitrit brachen stufenweise ein, je antibakterieller das Mittel. Bondonno 2015: drei Tage antibakterielles Mundwasser hoben den systolischen Blutdruck um 2,3 mmHg. Ein Review formuliert es als klare Empfehlung, während einer Nitratstrategie darauf zu verzichten.",
+    grenze:"Das betrifft antibakterielle Spülungen vom Chlorhexidin- oder Listerine-Typ. Normales Zähneputzen mit Fluoridzahnpasta ist unproblematisch, und eine reine Fluoridspülung ohne antibakterielle Wirkstoffe verträgt sich mit der Nitratstrategie. Zur Zungenreinigung ist die Datenlage widersprüchlich — daran nichts ändern.",
+    quelle:"Nitrat & Rote-Bete-Saft — Timing (2026-08) §3.1" },
+
+  traubensaft: { titel:"Traubensaft ist ein Leber-, kein Muskel-Werkzeug", bereich:"Ernährung", ampel:"gelb",
+    antwort:"Der Fruktoseanteil füllt die Leber doppelt so schnell — für die Sprintfasern leistet er nichts, was Reis oder Kartoffeln nicht auch leisten.",
+    mechanismus:"Glukose geht direkt in den Muskel, Fruktose über die Leber. Die Mischung hilft dort, wo Leberglykogen zählt: nachts und vor einer frühen Belastung. Für den Muskel bringt sie nichts — dessen Auffüllung ist zeitlimitiert, nicht substratlimitiert.",
+    studienlage:"Gonzalez 2017 und eine Übersicht von 2025: Glukose plus Fruktose steigert die Muskelglykogen-Resynthese nicht gegenüber Glukose allein, verdoppelt aber die Leberrate (3,6 auf 7,3 g/h). Fuchs 2025 gab trainierten Radfahrern 10 g Kohlenhydrate je Kilogramm über 12 Stunden — die Leber war schnell voll, der Muskel nicht.",
+    grenze:"Nach deinem Sonntagsspiel folgt ein Regenerationstag ohne Belastung, dort verpufft der Lebervorteil weitgehend. Er zählt vor einer Morgenbelastung oder einem frühen Anpfiff nach der Nacht. Und: Saft ist sauer (pH 3,0–3,5) — das ist der Erosionspfad für die Zähne, unabhängig vom Zucker.",
+    quelle:"Zucker — Wirkung, Dosis, Sportkontext (2026-08) §3.2" },
+
+  zaehne_sport: { titel:"Zähne — das unterschätzte Sportlerrisiko", bereich:"Ernährung", ampel:"rot",
+    antwort:"Leistungssportler haben trotz überdurchschnittlicher Mundhygiene überdurchschnittlich schlechte Zähne — und deine Intra-Training-Kohlenhydrate sind Teil des Grundes.",
+    mechanismus:"Unter Belastung sinkt der Speichelfluss deutlich, und Mundatmung trocknet die Schleimhaut zusätzlich aus. Speichel ist aber der körpereigene Säurepuffer. Dieselbe Zuckermenge wirkt in diesem Zustand stärker. Dazu kommt bei Saft die Säure selbst: Traubensaft liegt bei pH 3,0–3,5, klar unter der Schwelle, ab der Schmelz demineralisiert.",
+    studienlage:"Systematischer Review 2025 über 10 Studien mit 1.747 Leistungssportlern: 44,4 % Karies, 36,5 % dentale Erosion, 41,4 % Gingivitis. Das ist der Endpunkt mit dem besten Aufwand-Nutzen-Verhältnis in der ganzen Zuckerfrage.",
+    grenze:"Vier Maßnahmen kosten nichts: Saft und Sportgetränk zügig trinken statt über eine halbe Stunde nippen, danach mit Wasser nachspülen, 30–60 Minuten nicht putzen (der Schmelz ist direkt nach Säure weich), Fluorid ab 1.450 ppm. Eine reine Fluoridspülung stört die Nitratstrategie nicht — antibakterielle schon.",
+    quelle:"Zucker — Wirkung, Dosis, Sportkontext (2026-08) §6.4" },
+
+  freier_zucker: { titel:"Freier Zucker — die Quelle zählt mehr als die Menge", bereich:"Ernährung", ampel:"rot",
+    antwort:"Unter 10 % der Energie bleibt richtig, aber das oft zitierte „ideal unter 5 %\" ist ein Kariesvorsichtswert, kein Herz-Kreislauf-Wert.",
+    mechanismus:"Entscheidend ist das Vehikel, nicht die Grammzahl. Getränke sättigen kaum und zeigen als einzige Kategorie eine lineare Dosis-Wirkungs-Beziehung ohne Optimum; feste Quellen verhalten sich U-förmig. Dieselbe Fruktosedosis erzeugte bei 4.500 Schritten am Tag deutliche Triglyzerid- und Entzündungsanstiege — bei 12.500 Schritten keinen davon.",
+    studienlage:"Zuckergesüßte Getränke: relatives Risiko 1,27 für Typ-2-Diabetes. Fruchtsaft: 0,98, also statistisch null (Metaanalyse 2023, 1,25 Mio. Teilnehmer). In der UK-Biobank-Kohorte lag das kardiovaskuläre Risikominimum bei etwa 9 % der Energie — und 0 % freier Zucker aus festen Lebensmitteln war mit einem höheren Risiko assoziiert.",
+    grenze:"Die WHO stuft den 5-Prozent-Wert selbst als bedingte Empfehlung auf Evidenz sehr niedriger Qualität ein, mit Karies als Endpunkt. Die brauchbare Leitplanke ist höchstens 40 g freier Zucker außerhalb des Sportfensters. Rigide Restriktion ist der Risikomarker, nicht der Cheat Day.",
+    quelle:"Zucker — Wirkung, Dosis, Sportkontext (2026-08) §5.3 und §13" },
 
   /* ---- Gestrichene Supplemente: zu wissen, warum etwas NICHT im Stack ist, zählt genauso ---- */
   beta_alanin: { titel:"Beta-Alanin — gestrichen", bereich:"Gestrichen", ampel:"schwarz",
@@ -2228,13 +2253,18 @@ function renderSpieltagEinkauf(tage){
   const spieltage = tage.filter(k => profilOf(k) === "spiel");
   if (!spieltage.length){ ziel.innerHTML = ""; return; }
   const namen = spieltage.map(k => dateFromKey(k).toLocaleDateString("de-DE",{weekday:"long"})).join(" und ");
+  const start = spieltage[0];
+  const ladeStart = dateFromKey(start); ladeStart.setDate(ladeStart.getDate()-3);
+  const ladeName = ladeStart.toLocaleDateString("de-DE",{weekday:"long"});
   ziel.innerHTML = `<div class="hint on" style="margin-top:12px">
-    <span><b>Spieltag am ${namen} — vorher besorgen:</b><br>
-    🥤 <b>Rote-Bete-Saft</b> (400–800 mg Nitrat) für 2–3 h vor Anpfiff. An dem Tag kein
-    antibakterielles Mundwasser, sonst wirkt er nicht. Vorher einmal im Training testen. ${iBtn("rote_bete")}<br>
-    🍇 <b>Traubensaft</b> für direkt nach dem Spiel — überwiegend Glukose, Apfelsaft ist
-    überwiegend Fruktose und fürs Muskelglykogen schlechter. ${iBtn("traubensaft")}<br>
-    ☕ <b>Koffein</b> ~270 mg, 45–60 min vor Anpfiff.</span></div>`;
+    <span><b>Spieltag am ${namen} — das ist eine Ladephase, kein Einzelshot:</b><br><br>
+    🥤 <b>5 × 70-ml-Rote-Bete-Shots</b> für die Woche. Ab ${ladeName} täglich 1 Shot (6,4 mmol),
+    am Spieltag 2 Shots (12,9 mmol) drei Stunden vor Anpfiff. Die Einzeldosis am Spieltag ist die
+    Version, die in Studien am häufigsten scheitert. ${iBtn("rote_bete")}<br><br>
+    🚫 <b>Ab ${ladeName} kein antibakterielles Mundwasser</b> — es löscht den Effekt, und die
+    Mundflora erholt sich nicht über Nacht. Fluoridspülung ohne antibakterielle Wirkstoffe ist in Ordnung. ${iBtn("nitrat_mundwasser")}<br><br>
+    ☕ <b>Koffein</b> ~270 mg, 45–60 min vor Anpfiff — eigenes Fenster, kein additiver Effekt mit Nitrat. ${iBtn("koffein")}<br><br>
+    🍇 <b>Traubensaft</b> nur optional: füllt die Leber schneller, für den Muskel bringt er nichts. ${iBtn("traubensaft")}</span></div>`;
 }
 
 function renderPrepPlan(tage){
@@ -2454,8 +2484,13 @@ function renderPlan(){
   const plan = TAGESPLAENE[aktiv];
   document.getElementById("planSumme").textContent = plan.summe || "";
 
+  // Ladephase-Punkte nur einblenden, wenn wirklich ein Spiel bevorsteht
+  const spielVoraus = [1,2,3,4].some(i => {
+    const d = dateFromKey(viewKey); d.setDate(d.getDate()+i);
+    return profilOf(keyOf(d)) === "spiel";
+  });
   const el = document.getElementById("planAblauf");
-  el.innerHTML = plan.punkte.map(x => {
+  el.innerHTML = plan.punkte.filter(x => !x.nurVorSpiel || spielVoraus).map(x => {
     const makros = x.k != null
       ? `${nf(x.k)} kcal · ${x.p != null ? nf(x.p)+" g P" : "—"} · ${x.c != null ? nf(x.c)+" g KH" : "—"}${x.f != null ? " · "+nf(x.f)+" g F" : ""}`
       : (x.p != null || x.c != null
