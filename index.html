@@ -197,6 +197,27 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .flagzeit { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--grey); }
 .flagzeit input { border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; font-size: 14px; min-height: 40px; }
 
+/* Anpfiffzeit und kognitive Blöcke */
+.anpfiffbtn.on { border-color: var(--fuell); background: var(--akzent-flaeche); color: var(--navy); font-weight: 700; }
+.anpfifffrei { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--grey); }
+.anpfifffrei input { border: 1px solid var(--line); border-radius: var(--r-s); padding: 8px 10px;
+  font-size: 14px; min-height: 44px; background: var(--card); color: var(--ink); }
+
+.blockliste { margin: 10px 0 0; }
+.blockzeile { display: grid; grid-template-columns: 1fr auto; gap: 8px 7px; align-items: center;
+  border: 1px solid var(--line); border-radius: var(--r-m); background: var(--card);
+  padding: 10px; margin-bottom: 7px; box-shadow: var(--sch-1); }
+.blockzeile .zeiten { grid-column: 1 / -1; display: flex; align-items: center; gap: 7px; }
+.blockzeile .zeiten input { flex: 1; min-width: 0; }
+.blockzeile select, .blockzeile input[type="time"] {
+  border: 1px solid var(--line); border-radius: var(--r-s); padding: 8px 9px;
+  font-size: 14px; min-height: 44px; background: var(--card); color: var(--ink); }
+.blockzeile .bis { color: var(--grey); font-size: 12.5px; }
+.blockzeile .weg { margin-left: auto; background: none; border: none; color: var(--rot);
+  font-size: 16px; cursor: pointer; min-width: 44px; min-height: 44px; }
+.blockdauer { font-size: 11.5px; color: var(--grey); width: 100%; margin-top: 2px; line-height: 1.45; }
+.blockneu { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 2px; }
+
 /* Supplement-Begründungen */
 .suppzeile { font-size: 11.5px; color: var(--grey); line-height: 1.5; padding: 6px 0; border-bottom: 1px solid var(--line); }
 .suppzeile:last-child { border-bottom: none; }
@@ -476,6 +497,7 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
 
   <div class="natriumzeile" id="natriumZeile"></div>
   <div class="flagbar" id="flagbar"></div>
+  <div class="blockliste" id="bloecke"></div>
 
   <div class="modeseg">
     <span class="seg2" id="ringSeg">
@@ -531,6 +553,7 @@ footer { text-align: center; color: var(--grey); font-size: 11px; margin-top: 22
   <div class="section">
     <h2>Tagesplan <span class="muted" id="planSumme"></span></h2>
     <div class="planwahl" id="planWahl"></div>
+    <div class="ortbar" id="anpfiffBar" style="display:none;margin-bottom:12px"></div>
     <div id="planAblauf"></div>
   </div>
 
@@ -1568,6 +1591,16 @@ function normalizeDay(d){
   if (d.supps["B12"] !== undefined && d.supps["B-Komplex"] === undefined) d.supps["B-Komplex"] = d.supps["B12"];
   if (!d.flags) d.flags = { klausur:false, lernblock:false, ort:"heim", blockbeginn:null };
   if (d.flags.anpfiff === undefined) d.flags.anpfiff = null;   // Spieltag: Anpfiffzeit, leer = 15:00
+  /* Mehrere kognitive Blöcke pro Tag. Der alte Einzelblock (klausur/lernblock +
+     blockbeginn) wandert verlustfrei in den ersten Eintrag. Die alten Felder
+     bleiben stehen, damit ein älterer Export lesbar bleibt. */
+  if (!Array.isArray(d.flags.bloecke)) {
+    d.flags.bloecke = [];
+    if ((d.flags.klausur || d.flags.lernblock) && d.flags.blockbeginn) {
+      d.flags.bloecke.push({ art: d.flags.klausur ? "klausur" : "lernblock",
+                             von: d.flags.blockbeginn, bis: null });
+    }
+  }
   if (!d.skin)  d.skin  = {
     am: { wasser:false, moist:false, spf:false },
     pm: { cleanser:false, wirkstoff:false, moist:false },
@@ -2896,19 +2929,50 @@ function planPunkte(plan){
   plan.punkte.forEach(x => {
     const abs = basis + x.off;
     if (abs < 330) { entfallen.push(x); return; }   // vor 05:30 ist keine realistische Mahlzeit
-    punkte.push(Object.assign({}, x, { zeit: minInZeit(abs) }));
+    // abs ≥ 1440 heißt Folgetag — vorher wurde das per Modulo auf den Vormittag
+    // zurückgefaltet und stand dann falsch einsortiert in der Liste.
+    punkte.push(Object.assign({}, x, { zeit: minInZeit(abs), folgetag: abs >= 1440 }));
   });
   return { punkte, entfallen };
 }
-/* Umschalter für die Anpfiffzeit — nur bei anpfiffbasierten Plänen */
-function anpfiffWahl(plan){
-  if (!plan.anpfiffbasiert) return "";
+/* Anpfiff-Steuerung — eigener Container, den renderPlan nicht neu aufbaut.
+   Grund: Ein Neuaufbau würde das Zeitfeld ersetzen und die native Uhrzeitauswahl
+   am Handy mitten im Einstellen schließen. */
+function renderAnpfiff(plan){
+  const bar = document.getElementById("anpfiffBar");
+  if (!bar) return;
+  if (!plan.anpfiffbasiert){ bar.style.display = "none"; bar.innerHTML = ""; bar.dataset.auf = ""; return; }
+  bar.style.display = "";
+
+  if (bar.dataset.auf !== "1"){
+    bar.innerHTML = '<span>🏟️ Anpfiff:</span>'
+      + ANPFIFF_WAHL.map(z => '<button class="chip anpfiffbtn" data-anpfiff="' + z + '">' + z + '</button>').join("")
+      + '<label class="anpfifffrei"><span>oder</span>'
+      + '<input type="time" id="anpfiffFrei" aria-label="Andere Anpfiffzeit"></label>';
+    bar.dataset.auf = "1";
+    bar.querySelector("#anpfiffFrei").onchange = e => {
+      const w = e.target.value;
+      if (!w) return;
+      day().flags.anpfiff = (w === ANPFIFF_STD ? null : w);
+      save();
+      renderPlan();          // baut nur #planAblauf neu, nicht diese Leiste
+      anpfiffStandSetzen();
+    };
+  }
+  anpfiffStandSetzen();
+}
+
+/* Markiert die aktive Zeit — ohne die Eingabefelder anzufassen */
+function anpfiffStandSetzen(){
+  const bar = document.getElementById("anpfiffBar");
+  if (!bar || bar.dataset.auf !== "1") return;
   const jetzt = anpfiffZeit();
-  const knoepfe = ANPFIFF_WAHL.map(z =>
-    '<button class="chip anpfiffbtn" data-anpfiff="' + z + '"' +
-    (z === jetzt ? ' style="border-color:var(--navy);background:#eef4fc;font-weight:700"' : "") +
-    '>' + z + '</button>').join("");
-  return '<div class="ortbar" style="margin-bottom:12px"><span>🏟️ Anpfiff:</span>' + knoepfe + '</div>';
+  bar.querySelectorAll(".anpfiffbtn").forEach(b =>
+    b.classList.toggle("on", b.dataset.anpfiff === jetzt));
+  const frei = bar.querySelector("#anpfiffFrei");
+  // Freies Feld nur füllen, wenn die Zeit keine der Schnellwahlen ist
+  if (frei && document.activeElement !== frei)
+    frei.value = ANPFIFF_WAHL.includes(jetzt) ? "" : jetzt;
 }
 
 function renderPlan(){
@@ -2944,7 +3008,8 @@ function renderPlan(){
   const el = document.getElementById("planAblauf");
   const pp = planPunkte(plan);
   const punkte = pp.punkte, entfallen = pp.entfallen;
-  el.innerHTML = anpfiffWahl(plan) + punkte.filter(x => !x.nurVorSpiel || spielVoraus).map(x => {
+  renderAnpfiff(plan);
+  el.innerHTML = punkte.filter(x => !x.nurVorSpiel || spielVoraus).map(x => {
     const makros = x.k != null
       ? `${nf(x.k)} kcal · ${x.p != null ? nf(x.p)+" g P" : "—"} · ${x.c != null ? nf(x.c)+" g KH" : "—"}${x.f != null ? " · "+nf(x.f)+" g F" : ""}`
       : (x.p != null || x.c != null
@@ -2952,13 +3017,18 @@ function renderPlan(){
           : "");
     const klasse = x.getraenk ? " getraenk" : (x.slot ? "" : " ereignis");
     return `<div class="planrow${klasse}">
-      <span class="zeit">${x.zeit}</span>
+      <span class="zeit">${x.zeit}${x.folgetag ? "<small> +1</small>" : ""}</span>
       <span class="inhalt">
         <span class="lbl">${x.label}</span>
         ${makros ? `<div class="makros">${makros}</div>` : ""}
         ${x.note ? `<div class="note">${x.note}</div>` : ""}
       </span></div>`;
   }).join("")
+  + (punkte.some(x => x.folgetag) ? '<div class="hint on" style="margin-top:10px"><span>Bei Anpfiff '
+      + anpfiffZeit() + ' fallen die letzten Punkte auf den <b>Folgetag</b> (mit +1 markiert). '
+      + 'Der Ablauf ist für Nachmittagsspiele gerechnet — bei einem so späten Anpfiff ist er keine '
+      + 'sinnvolle Vorlage mehr. Die Mahlzeit direkt nach dem Spiel bleibt richtig, alles danach '
+      + 'gehört auf den nächsten Tag verschoben.</span></div>' : '')
   + (entfallen.length ? '<div class="hint on" style="margin-top:10px"><span>Bei Anpfiff '
       + anpfiffZeit() + ' bleibt für ' + entfallen.map(x => '„' + x.label + '“').join(" und ")
       + ' kein Platz — 3–4 h vorher wäre mitten in der Nacht. <b>Die Vor-Spiel-Mahlzeit ist dann dein Frühstück</b>,'
@@ -2985,23 +3055,109 @@ function renderFlags(){
     b.onclick = klick;
     bar.appendChild(b);
   };
-  chip("🧠 Klausur", f.klausur, () => { day().flags.klausur = !f.klausur; save(); render(); },
-       "Warnt vor zu großen Mahlzeiten kurz vor dem Block");
-  chip("📖 Lernblock", f.lernblock, () => { day().flags.lernblock = !f.lernblock; save(); render(); });
   chip(f.ort === "auswaerts" ? "🎒 auswärts" : "🏠 zu Hause", false,
        () => { day().flags.ort = (f.ort === "auswaerts" ? "heim" : "auswaerts"); save(); render(); },
        "Steuert Rezeptauswahl und Prep-Planer");
+  chip("＋ Klausur", false, () => blockAnlegen("klausur"),
+       "Warnt vor zu großen Mahlzeiten kurz vor dem Block");
+  chip("＋ Lernblock", false, () => blockAnlegen("lernblock"),
+       "Gleiche Regeln wie die Klausur, nur meist länger");
+  renderBloecke();
+}
 
-  if (f.klausur || f.lernblock){
-    const wrap = document.createElement("label");
-    wrap.className = "flagzeit";
-    wrap.innerHTML = `<span>Block beginnt</span>`;
-    const inp = document.createElement("input");
-    inp.type = "time"; inp.value = f.blockbeginn || "";
-    inp.onchange = e => { day().flags.blockbeginn = e.target.value || null; save(); render(); };
-    wrap.appendChild(inp);
-    bar.appendChild(wrap);
-  }
+/* ---------- Kognitive Blöcke ----------
+   Mehrere pro Tag möglich. Sie ändern die Makros nicht, sondern nur Verteilung
+   und Hinweise — genau wie Ort und Profil-Flag.
+   Quelle: „Ernährung & Kognition (2026-08)" §2.2, §2.6, §3.3, §4.5. */
+const BLOCK_ART = { klausur:  { ic:"🧠", label:"Klausur",   dativ:"der Klausur" },
+                    lernblock:{ ic:"📖", label:"Lernblock", dativ:"dem Lernblock" } };
+
+function blockAnlegen(art){
+  const b = day().flags.bloecke;
+  // Vorbelegung: Klausur vormittags, Lernblock nachmittags — beides überschreibbar
+  b.push({ art, von: art === "klausur" ? "09:00" : "14:00",
+                 bis: art === "klausur" ? "12:00" : "17:00" });
+  save(); render();
+}
+
+function blockDauer(b){
+  if (!b.von || !b.bis) return null;
+  let d = zeitInMin(b.bis) - zeitInMin(b.von);
+  if (d < 0) d += 1440;               // über Mitternacht
+  return d;
+}
+
+function renderBloecke(){
+  const el = document.getElementById("bloecke");
+  if (!el) return;
+  const bloecke = readDay(viewKey).flags.bloecke || [];
+  el.innerHTML = "";
+
+  bloecke.forEach((b, i) => {
+    const zeile = document.createElement("div");
+    zeile.className = "blockzeile";
+
+    const wahl = document.createElement("select");
+    wahl.setAttribute("aria-label", "Art des Blocks");
+    Object.entries(BLOCK_ART).forEach(([k, m]) => {
+      const o = document.createElement("option");
+      o.value = k; o.textContent = m.ic + " " + m.label; o.selected = (k === b.art);
+      wahl.appendChild(o);
+    });
+    // Nur speichern und die Hinweise neu rechnen — die Zeile bleibt stehen
+    wahl.onchange = () => { day().flags.bloecke[i].art = wahl.value; save(); blockUpdate(); };
+
+    const von = document.createElement("input");
+    von.type = "time"; von.value = b.von || ""; von.setAttribute("aria-label", "Beginn");
+    const bis = document.createElement("input");
+    bis.type = "time"; bis.value = b.bis || ""; bis.setAttribute("aria-label", "Ende");
+
+    /* Wichtig: KEIN render() im onchange. Ein voller Neuaufbau ersetzt das Eingabefeld,
+       der Fokus geht verloren und die native Uhrzeitauswahl am Handy schließt sich
+       mitten im Einstellen. */
+    von.onchange = () => { day().flags.bloecke[i].von = von.value || null; save(); blockUpdate(); };
+    bis.onchange = () => { day().flags.bloecke[i].bis = bis.value || null; save(); blockUpdate(); };
+
+    const weg = document.createElement("button");
+    weg.className = "weg"; weg.textContent = "✕";
+    weg.setAttribute("aria-label", "Block entfernen");
+    weg.onclick = () => { day().flags.bloecke.splice(i, 1); save(); render(); };
+
+    const bisLabel = document.createElement("span");
+    bisLabel.className = "bis"; bisLabel.textContent = "bis";
+
+    const dauer = document.createElement("div");
+    dauer.className = "blockdauer";
+
+    const zeiten = document.createElement("div");
+    zeiten.className = "zeiten";
+    zeiten.append(von, bisLabel, bis);
+    zeile.append(wahl, weg, zeiten, dauer);
+    el.appendChild(zeile);
+  });
+
+  blockUpdate();
+}
+
+/* Aktualisiert nur die abgeleiteten Texte — nie die Eingabefelder selbst */
+function blockUpdate(){
+  const el = document.getElementById("bloecke");
+  if (!el) return;
+  const bloecke = readDay(viewKey).flags.bloecke || [];
+  el.querySelectorAll(".blockdauer").forEach((n, i) => {
+    const b = bloecke[i]; if (!b) return;
+    const min = blockDauer(b);
+    if (min == null) { n.textContent = "Ohne Ende lässt sich die Dauer nicht bewerten."; return; }
+    const h = Math.floor(min/60), m = min%60;
+    let txt = h + " h" + (m ? " " + m + " min" : "");
+    // §2.6: Für 180 min reicht die Ausgangsmahlzeit; jenseits von ~4 h wird Nachlegen sinnvoll
+    txt += min > 240
+      ? " — jenseits von ~4 h ununterbrochener Belastung ist Nachlegen sinnvoll, und zwar als reguläre kleine Mahlzeit. Kein Traubenzucker, kein Gel."
+      : " — dafür reicht die Ausgangsmahlzeit. Substratmangel ist bei 180 min nicht möglich.";
+    n.textContent = txt;
+  });
+  const t = document.getElementById("timingHinweise");
+  if (t) renderTiming();
 }
 
 /* ---------- Timing-Hinweise ----------
@@ -3024,16 +3180,52 @@ function timingHinweise(){
     liste.push({ id:"nachspiel", wissen:"montag", text:"Tag nach dem Spiel: Kohlenhydrate nicht senken — die Typ-II-Sprintfasern füllen bis zu 72 h auf." });
   }
 
-  // Klausur-/Lernblock: zu große Mahlzeit zu kurz vor dem Block
-  if ((f.klausur || f.lernblock) && f.blockbeginn){
-    const blockMin = zeitInMin(f.blockbeginn);
+  /* Kognitive Blöcke — je Block geprüft.
+     Quelle: „Ernährung & Kognition (2026-08)" §2.2 (Mahlzeitengröße), §3.3 (Trinken),
+     §2.6 (Nachlegen). Die Blöcke ändern die Makros nicht, nur die Verteilung. */
+  const bloecke = (f.bloecke || []).filter(b => b.von);
+  const splitBedarf = [];
+  bloecke.forEach((b, bi) => {
+    const blockMin = zeitInMin(b.von);
+    const m = BLOCK_ART[b.art] || { label:"Block", dativ:"dem Block" };
+    const art = m.label, dativ = m.dativ;
+
     d.items.forEach(it => {
       if (!it.zeit || it.k <= 850) return;
       const abstand = blockMin - zeitInMin(it.zeit);
       if (abstand > 0 && abstand < 120){
-        liste.push({ id:"klausur-" + it.zeit, wissen:"mahlzeitengroesse", text:`„${it.n}" liegt mit ${nf(it.k)} kcal weniger als 2 h vor dem Block. Besser aufteilen: ~650 kcal und ~350 kcal fettarm (unter 20 g). Die Tagessumme bleibt gleich, das Volumen wandert nach hinten.` });
+        splitBedarf.push(it.n);
+        liste.push({ id:"block-" + bi + "-" + it.zeit, wissen:"mahlzeitengroesse",
+          text:`„${it.n}" liegt mit ${nf(it.k)} kcal weniger als 2 h vor ${dativ} um ${b.von}. ` +
+               `Besser aufteilen: ~650 kcal und ~350 kcal, fettarm unter 20 g. ` +
+               `Die Tagessumme bleibt gleich, das Volumen wandert nach hinten.` });
       }
     });
+
+    // §3.3: Harndrang ist der praktisch relevantere Störfaktor, abgeleitet aus Physiologie
+    liste.push({ id:"block-trinken-" + bi, wissen:"wasser",
+      text:`${art} ${b.von}: Große Mengen ab 400 ml spätestens bis ${minInZeit(blockMin-90)}. ` +
+           `Zwischen ${minInZeit(blockMin-60)} und ${b.von} höchstens 100 ml, unmittelbar vorher die Blase leeren — ` +
+           `der wirksamste Einzelschritt. Während des Blocks 100–150 ml alle 30–45 min in kleinen Schlucken.` });
+  });
+
+  /* Die Grenze, die erst bei mehreren Blöcken beißt: Die 350-kcal-Hälfte trägt nur
+     ~14 g Protein und liegt damit unter der Leucinschwelle. Deshalb darf pro Tag
+     nur EINE Mahlzeit gesplittet werden — die anderen bleiben bei ≥ 40 g. */
+  if (splitBedarf.length > 1){
+    liste.push({ id:"block-leucin", wissen:"protein",
+      text:`Mehrere Mahlzeiten würden hier vor einem Block liegen (${[...new Set(splitBedarf)].join(", ")}). ` +
+           `Splitte trotzdem nur eine davon: Die 350-kcal-Hälfte trägt nur ~14 g Protein und liegt damit ` +
+           `unter der Leucinschwelle. Die übrigen Mahlzeiten bleiben bei mindestens 40 g. Die andere ` +
+           `Mahlzeit lieber vorziehen statt teilen.` });
+  }
+
+  // Koffein-Deadline an einem Blocktag ausdrücklich nennen
+  if (bloecke.length && !d.items.some(it => /koffein|kaffee|espresso/i.test(it.n))){
+    liste.push({ id:"block-koffein", wissen:"koffein_deadline",
+      text:`Blocktag: Koffein wirkt, aber die Deadline bleibt ${settings.koffein_deadline}. ` +
+           `Ein Teil des Nachmittagstiefs ist zirkadian und tritt auch ohne Mahlzeit auf — ` +
+           `dagegen hilft weder eine kleinere Mahlzeit noch ein späterer Kaffee.` });
   }
 
   // Organfleisch-Slot: einmal pro Woche, Ruhetag-Vormittag
@@ -3352,6 +3544,7 @@ document.addEventListener("click", e => {
   if (!b) return;
   const wert = b.dataset.anpfiff;
   day().flags.anpfiff = (wert === ANPFIFF_STD ? null : wert);
+  const frei = document.getElementById("anpfiffFrei"); if (frei) frei.value = "";
   save(); render();
 });
 
@@ -3408,6 +3601,12 @@ function mdTag(k){
   if (dauer) zeilen.push(`schlaf_min: ${dauer}`);
   if (d.sleep && d.sleep.subjektiv) zeilen.push(`schlaf_subjektiv: ${d.sleep.subjektiv}`);
   if (d.flags && d.flags.ort) zeilen.push(`ort: ${d.flags.ort}`);
+  // Kognitive Blöcke als YAML-Liste, damit sie in Obsidian abfragbar bleiben
+  if (d.flags && (d.flags.bloecke || []).length) {
+    zeilen.push("bloecke:");
+    d.flags.bloecke.forEach(b => zeilen.push(
+      `  - { art: ${b.art}, von: "${b.von || ""}", bis: "${b.bis || ""}" }`));
+  }
   zeilen.push("---", "");
   zeilen.push(`# Tracker — ${dateFromKey(k).toLocaleDateString("de-DE",{weekday:"long", day:"numeric", month:"long", year:"numeric"})}`, "");
   zeilen.push(`**${PROFILE_META[profilOf(k)].lang}** — Ziel ${nf(g.kcal)} kcal · ${g.pro} g Protein · ${g.carb} g KH · ${g.fat} g Fett`, "");
